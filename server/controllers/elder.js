@@ -324,7 +324,8 @@ const getElderDashboardStats = async (req, res) => {
       FROM appointment 
       WHERE elder_id = $1 
       AND date_time > NOW()
-      AND status IN ('approved', 'confirmed')
+      AND status IN ('confirmed')
+      AND status != 'cancelled'
     `,
       [elderId]
     );
@@ -336,7 +337,8 @@ const getElderDashboardStats = async (req, res) => {
       FROM session 
       WHERE elder_id = $1 
       AND date_time > NOW()
-      AND status IN ('pending', 'completed')
+      AND status IN ('confirmed')
+      AND status != 'cancelled'
     `,
       [elderId]
     );
@@ -414,7 +416,7 @@ const getElderAppointments = async (req, res) => {
       FROM appointment a
       INNER JOIN doctor d ON a.doctor_id = d.doctor_id
       INNER JOIN "User" u ON d.user_id = u.user_id
-      WHERE a.elder_id = $1 AND a.status != 'pending'
+      WHERE a.elder_id = $1
       ORDER BY a.date_time DESC
     `,
       [elderId]
@@ -466,8 +468,9 @@ const getUpcomingAppointments = async (req, res) => {
       JOIN doctor d ON a.doctor_id = d.doctor_id
       JOIN "User" u ON d.user_id = u.user_id
       WHERE a.elder_id = $1
-            AND a.date_time > NOW()
-      AND a.status IN ('approved', 'confirmed')
+      AND a.date_time > NOW()
+      AND a.status IN ('confirmed')
+      AND a.status != 'cancelled'
       ORDER BY a.date_time ASC`;
     
     const queryParams = [elderId];
@@ -529,7 +532,7 @@ const getPastAppointments = async (req, res) => {
       JOIN doctor d ON a.doctor_id = d.doctor_id
       JOIN "User" u ON d.user_id = u.user_id
       WHERE a.elder_id = $1 
-      AND (a.date_time < NOW() )
+      AND (a.date_time < NOW() OR a.status IN ('completed', 'cancelled'))
       ORDER BY a.date_time DESC`;
     
     const queryParams = [elderId];
@@ -660,49 +663,6 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
-// Cancel appointment
-const cancelAppointment = async (req, res) => {
-  const { elderId, appointmentId } = req.params;
-  const { reason } = req.body;
-
-  try {
-    // Check if appointment exists and belongs to elder
-    const appointmentCheck = await pool.query(
-      "SELECT * FROM appointment WHERE appointment_id = $1 AND elder_id = $2",
-      [appointmentId, elderId]
-    );
-
-    if (appointmentCheck.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: "Appointment not found",
-      });
-    }
-
-    // Update appointment status to cancelled
-    const result = await pool.query(
-      `UPDATE appointment 
-       SET status = 'cancelled', 
-           updated_at = CURRENT_TIMESTAMP
-       WHERE appointment_id = $1 AND elder_id = $2
-       RETURNING *`,
-      [appointmentId, elderId]
-    );
-
-    res.json({
-      success: true,
-      message: "Appointment cancelled successfully",
-      appointment: result.rows[0],
-    });
-  } catch (err) {
-    console.error("Error cancelling appointment:", err);
-    res.status(500).json({
-      success: false,
-      error: "Error cancelling appointment",
-    });
-  }
-};
-
 // Join appointment (for online appointments)
 const joinAppointment = async (req, res) => {
   const { elderId, appointmentId } = req.params;
@@ -772,7 +732,6 @@ module.exports = {
   getPastAppointments,
   getAllAppointments,
   getAppointmentById,
-  cancelAppointment,
-  joinAppointment, // Replace rescheduleAppointment with joinAppointment
+  joinAppointment,
 };
 

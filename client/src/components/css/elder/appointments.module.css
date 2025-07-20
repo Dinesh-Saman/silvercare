@@ -387,6 +387,15 @@
   font-weight: 500;
 }
 
+.statusConfirmed {
+  background: #3b82f6;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 .statusCancelled {
   background: #ef4444;
   color: white;

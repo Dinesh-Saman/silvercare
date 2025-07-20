@@ -7,8 +7,10 @@ import {
   getElderDashboardStats,
   getUpcomingAppointments,
   getPastAppointments,
-  cancelAppointment,
   joinAppointment,
+  getUpcomingSessions,
+  getPastSessions,
+  joinSession,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/dashboard.module.css";
 
@@ -18,10 +20,14 @@ const ElderDashboard = () => {
   const [elderDetails, setElderDetails] = useState(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [pastAppointments, setPastAppointments] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [pastSessions, setPastSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeSessionTab, setActiveSessionTab] = useState("upcoming");
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
 
   // Real stats data from backend
@@ -46,10 +52,11 @@ const ElderDashboard = () => {
         const response = await getElderDetailsByEmail(currentUser.email);
         setElderDetails(response.data);
 
-        // Fetch appointments and stats after getting elder details
+        // Fetch appointments, sessions, and stats after getting elder details
         if (response.data?.elder_id) {
           await Promise.all([
             fetchAppointments(response.data.elder_id),
+            fetchSessions(response.data.elder_id),
             fetchDashboardStats(response.data.elder_id),
           ]);
         }
@@ -106,18 +113,22 @@ const ElderDashboard = () => {
     }
   };
 
-  const handleCancelAppointment = async (appointmentId) => {
+  const fetchSessions = async (elderId) => {
     try {
-      await cancelAppointment(elderDetails.elder_id, appointmentId);
-      // Refresh appointments and stats
-      await Promise.all([
-        fetchAppointments(elderDetails.elder_id),
-        fetchDashboardStats(elderDetails.elder_id),
+      setSessionsLoading(true);
+
+      // Fetch only 2 sessions for dashboard display
+      const [upcomingResponse, pastResponse] = await Promise.all([
+        getUpcomingSessions(elderId, { params: { limit: 2 } }),
+        getPastSessions(elderId, { params: { limit: 2 } }),
       ]);
-      alert("Appointment cancelled successfully");
+
+      setUpcomingSessions(upcomingResponse.data.sessions || []);
+      setPastSessions(pastResponse.data.sessions || []);
     } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      alert("Failed to cancel appointment");
+      console.error("Error fetching sessions:", error);
+    } finally {
+      setSessionsLoading(false);
     }
   };
 
@@ -134,6 +145,19 @@ const ElderDashboard = () => {
     }
   };
 
+  const handleJoinSession = async (sessionId) => {
+    try {
+      const response = await joinSession(elderDetails.elder_id, sessionId);
+      if (response.data.success) {
+        // Open meeting link in new tab
+        window.open(response.data.meetingUrl, '_blank');
+      }
+    } catch (error) {
+      console.error("Error joining session:", error);
+      alert(error.response?.data?.error || "Failed to join session");
+    }
+  };
+
   const handleViewProfile = () => {
     navigate("/elder/profile");
   };
@@ -141,6 +165,11 @@ const ElderDashboard = () => {
   const handleShowAllAppointments = () => {
     // For now, navigate to an empty page as requested
     navigate("/elder/appointments");
+  };
+
+  const handleShowAllSessions = () => {
+    // Navigate to sessions page
+    navigate("/elder/sessions");
   };
 
   const formatDate = (dateString) => {
@@ -184,6 +213,10 @@ const ElderDashboard = () => {
     return new Date(appointment.date_time) > new Date() && appointment.status !== "cancelled";
   };
 
+  const isUpcomingSession = (session) => {
+    return new Date(session.date_time) > new Date() && session.status !== "cancelled";
+  };
+
   const getAge = (dob) => {
     if (!dob) return "N/A";
     const today = new Date();
@@ -220,7 +253,9 @@ const ElderDashboard = () => {
         </div>
         <div className={styles.statusContainer}>
           <span className={
-            appointment.status === "completed" || appointment.status === "cancelled"
+            appointment.status === "cancelled"
+              ? styles.statusCompleted
+              : appointment.status === "completed"
               ? styles.statusCompleted
               : styles.statusUpcoming
           }>
@@ -273,24 +308,88 @@ const ElderDashboard = () => {
             🎥 Join Meeting
           </button>
         )}
-        {isUpcomingAppointment(appointment) && (
+        <button 
+          onClick={() => navigate(`/elder/appointment/${appointment.appointment_id}`)}
+          className={styles.detailsBtn}
+        >
+          📋 View Details
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderSessionCard = (session) => (
+    <div key={session.session_id} className={styles.appointmentCard}>
+      <div className={styles.cardHeader}>
+        <div className={styles.doctorInfo}>
+          <div className={styles.doctorAvatar}>👨‍💼</div>
+          <div className={styles.doctorDetails}>
+            <h3>{session.counselor_name}</h3>
+            <p className={styles.specialization}>{session.specialization}</p>
+            <p className={styles.institution}>{session.current_institution}</p>
+          </div>
+        </div>
+        <div className={styles.statusContainer}>
+          <span className={
+            session.status === "cancelled"
+              ? styles.statusCancelled
+              : session.status === "completed"
+              ? styles.statusCompleted
+              : session.status === "confirmed"
+              ? styles.statusConfirmed
+              : styles.statusUpcoming
+          }>
+            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.appointmentDetails}>
+        <div className={styles.appointmentMeta}>
+          <div className={styles.dateTimeGroup}>
+            <div className={styles.dateInfo}>
+              <span className={styles.dateText}>{formatDate(session.date_time)}</span>
+            </div>
+            <div className={styles.timeInfo}>
+              <span className={styles.timeText}>{formatTime(session.date_time)}</span>
+            </div>
+          </div>
+          <div className={styles.typeIndicator}>
+            <span className={`${styles.typeChip} ${
+              session.session_type === 'online' 
+                ? styles.onlineChip 
+                : styles.physicalChip
+            }`}>
+              {session.session_type === 'online' ? 'Online' : 'Physical'}
+            </span>
+          </div>
+        </div>
+        
+        {isUpcomingSession(session) && (
+          <div className={styles.timeRemainingBanner}>
+            <div className={`${styles.timeRemainingContent} ${
+              getTimeRemaining(session.date_time).urgent ? styles.urgent : styles.normal
+            }`}>
+              <div className={styles.timeRemainingLabel}>Starts in</div>
+              <div className={styles.timeRemainingValue}>
+                {getTimeRemaining(session.date_time).text}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.cardActions}>
+        {session.session_type === 'online' && isUpcomingSession(session) && (
           <button
-            className={styles.cancelBtn}
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Are you sure you want to cancel this appointment?"
-                )
-              ) {
-                handleCancelAppointment(appointment.appointment_id);
-              }
-            }}
+            className={styles.joinBtn}
+            onClick={() => handleJoinSession(session.session_id)}
           >
-            ❌ Cancel
+            🎥 Join Session
           </button>
         )}
         <button 
-          onClick={() => navigate(`/elder/appointment/${appointment.appointment_id}`)}
+          onClick={() => navigate(`/elder/session/${session.session_id}`)}
           className={styles.detailsBtn}
         >
           📋 View Details
@@ -503,6 +602,78 @@ const ElderDashboard = () => {
                 onClick={handleShowAllAppointments}
               >
                 Show All Appointments
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sessions Section */}
+        <div className={styles.appointmentsSection}>
+          <div className={styles.appointmentsHeader}>
+            <h2>Your Counselling Sessions</h2>
+            <div className={styles.appointmentTabs}>
+              <button
+                className={`${styles.tabBtn} ${
+                  activeSessionTab === "upcoming" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveSessionTab("upcoming")}
+              >
+                Upcoming
+              </button>
+              <button
+                className={`${styles.tabBtn} ${
+                  activeSessionTab === "past" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveSessionTab("past")}
+              >
+                Past
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.appointmentsContent}>
+            {sessionsLoading ? (
+              <div className={styles.loadingContainer}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading sessions...</p>
+              </div>
+            ) : (
+              <div className={styles.appointmentsGrid}>
+                {activeSessionTab === "upcoming" ? (
+                  upcomingSessions.length > 0 ? (
+                    upcomingSessions.map(renderSessionCard)
+                  ) : (
+                    <div className={styles.noAppointments}>
+                      <div className={styles.noAppointmentsIcon}>🧠</div>
+                      <h3>No Upcoming Sessions</h3>
+                      <p>
+                        You don't have any upcoming counselling sessions scheduled. Book
+                        a new session to get started.
+                      </p>
+                    </div>
+                  )
+                ) : pastSessions.length > 0 ? (
+                  pastSessions.map(renderSessionCard)
+                ) : (
+                  <div className={styles.noAppointments}>
+                    <div className={styles.noAppointmentsIcon}>📋</div>
+                    <h3>No Past Sessions</h3>
+                    <p>
+                      You haven't had any counselling sessions yet. Your session
+                      history will appear here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Show All Button */}
+            <div className={styles.showAllContainer}>
+              <button 
+                className={styles.showAllBtn}
+                onClick={handleShowAllSessions}
+              >
+                Show All Sessions
               </button>
             </div>
           </div>

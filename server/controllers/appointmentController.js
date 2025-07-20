@@ -322,7 +322,7 @@ const updateAppointmentStatus = async (req, res) => {
   try {
     console.log('Updating appointment status:', appointmentId, status);
     
-    const validStatuses = ['pending', 'approved', 'confirmed', 'cancelled', 'completed'];
+    const validStatuses = ['confirmed', 'cancelled', 'completed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

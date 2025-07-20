@@ -32,6 +32,8 @@ import PaymentSuccess from './pages/familemember/payment-success';
 
 import AllAppointments from "./pages/elder/appointments";
 import AppointmentDetails from "./pages/elder/appointment-details";
+import AllSessions from "./pages/elder/sessions";
+import SessionDetails from "./pages/elder/session-details";
 
 
 import DoctorDashboard from './pages/doctor/dashboard';
@@ -342,6 +344,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <AppointmentDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/sessions"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <AllSessions />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/session/:sessionId"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <SessionDetails />
               </ProtectedRoute>
             }
           />

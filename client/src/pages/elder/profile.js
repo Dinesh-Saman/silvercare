@@ -580,7 +580,7 @@ const ElderProfile = () => {
         {isEditing && (
           <div className={styles.actionButtons}>
             <button 
-              className={styles.saveBtn}
+              className={styles.editBtn}
               onClick={handleSaveChanges}
               disabled={saving}
             >
@@ -591,12 +591,12 @@ const ElderProfile = () => {
                 </>
               ) : (
                 <>
-                  💾 Save Changes
+                  Save Changes
                 </>
               )}
             </button>
             <button 
-              className={styles.cancelBtn}
+              className={styles.logoutBtn}
               onClick={handleCancelEdit}
               disabled={saving}
             >

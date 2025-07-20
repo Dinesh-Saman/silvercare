@@ -34,9 +34,16 @@ const {
   getPastAppointments,
   getAllAppointments,
   getAppointmentById,
-  cancelAppointment,
-  joinAppointment // Replace rescheduleAppointment with joinAppointment
+  joinAppointment
 } = require('../controllers/elder');
+
+const {
+  getUpcomingSessions,
+  getPastSessions,
+  getAllSessions,
+  getSessionById,
+  joinSession
+} = require('../controllers/session');
 
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
@@ -82,8 +89,14 @@ router.get('/:elderId/appointments', getElderAppointments);
 router.get('/:elderId/appointments/upcoming', getUpcomingAppointments);
 router.get('/:elderId/appointments/past', getPastAppointments);
 router.get('/:elderId/appointments/:appointmentId', getAppointmentById);
-router.put('/:elderId/appointments/:appointmentId/cancel', cancelAppointment);
-router.post('/:elderId/appointments/:appointmentId/join', joinAppointment); // Replace reschedule with join
+router.post('/:elderId/appointments/:appointmentId/join', joinAppointment);
+
+// Session routes for elders - MUST BE BEFORE /:elderId route
+router.get('/:elderId/sessions/upcoming', getUpcomingSessions);
+router.get('/:elderId/sessions/past', getPastSessions);
+router.get('/:elderId/sessions', getAllSessions);
+router.get('/:elderId/sessions/:sessionId', getSessionById);
+router.post('/:elderId/sessions/:sessionId/join', joinSession);
 
 // Get specific elder by ID
 router.get('/:elderId', getElderById);
