@@ -10,7 +10,7 @@ const {
   getAppointmentStats
 } = require('../controllers/appointmentController');
 
-// Get all confirmed appointments for a family member (with cancellation info)
+// Get all appointments for a family member (with filtering support)
 router.get('/family/:familyMemberId', getAllAppointmentsByFamily);
 
 // Get upcoming confirmed appointments for dashboard

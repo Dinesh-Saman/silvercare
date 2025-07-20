@@ -49,6 +49,8 @@ export const appointmentApi = {
     }
   },
 
+  
+
   // Update appointment status
   updateAppointmentStatus: async (appointmentId, status, notes = null) => {
     try {

@@ -4,28 +4,28 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // Get all appointments for a family member (only confirmed status)
 const getAllAppointmentsByFamily = async (req, res) => {
   const { familyMemberId } = req.params;
-  const { type, limit, offset = 0 } = req.query;
+  const { status, elder_id, history, type, limit, offset = 0 } = req.query;
   
   try {
-    console.log('Getting confirmed appointments for family member:', familyMemberId);
-    
-    // First, get the family_id from the familymember table using the user_id
-    const familyMemberResult = await pool.query(
+    console.log('Fetching appointments for family member:', familyMemberId);
+    console.log('Filters:', { status, elder_id, history, type, limit, offset });
+
+    // Get family_id from user_id
+    const familyResult = await pool.query(
       'SELECT family_id FROM familymember WHERE user_id = $1',
       [familyMemberId]
     );
-    
-    if (familyMemberResult.rows.length === 0) {
+
+    if (familyResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Family member not found'
       });
     }
-    
-    const familyId = familyMemberResult.rows[0].family_id;
-    console.log('Found family_id:', familyId);
-    
-    // Build dynamic query - ONLY show confirmed appointments with cancellation eligibility
+
+    const family_id = familyResult.rows[0].family_id;
+
+    // Build the query based on filters
     let query = `
       SELECT 
         a.appointment_id,
@@ -50,40 +50,73 @@ const getAllAppointmentsByFamily = async (req, res) => {
         d.current_institution,
         d.district as doctor_district,
         d.years_experience,
-        -- Calculate if cancellation is allowed (within 3 days of creation)
+        p.amount as payment_amount,
+        p.payment_status,
+        p.payment_method,
+        p.transaction_id,
+        p.payment_date,
+        EXTRACT(DAY FROM (CURRENT_TIMESTAMP - a.created_at)) as days_since_created,
         CASE 
-          WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 86400 <= 3 
+          WHEN a.status = 'confirmed' AND EXTRACT(DAY FROM (CURRENT_TIMESTAMP - a.created_at)) <= 3 
           THEN true 
           ELSE false 
         END as can_cancel,
-        -- Calculate days since creation
-        ROUND(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 86400, 1) as days_since_created,
-        -- Check if payment exists
-        p.payment_id,
-        p.amount as payment_amount,
-        p.transaction_id,
-        p.payment_method,
-        p.payment_status
+        CASE 
+          WHEN a.status = 'cancelled' AND p.payment_status = 'refunded' 
+          THEN p.amount 
+          ELSE 0 
+        END as refund_amount,
+        CASE 
+          WHEN a.status = 'cancelled' AND p.payment_status = 'refunded' 
+          THEN 'completed'
+          WHEN a.status = 'cancelled' AND p.payment_status = 'paid' 
+          THEN 'pending'
+          WHEN a.status = 'cancelled' AND p.payment_status IS NULL 
+          THEN 'no_payment'
+          ELSE NULL 
+        END as refund_status
       FROM appointment a
-      INNER JOIN elder e ON a.elder_id = e.elder_id
-      INNER JOIN doctor d ON a.doctor_id = d.doctor_id
-      INNER JOIN "User" u ON d.user_id = u.user_id
+      JOIN elder e ON a.elder_id = e.elder_id
+      JOIN doctor d ON a.doctor_id = d.doctor_id
+      JOIN "User" u ON d.user_id = u.user_id
       LEFT JOIN payment p ON a.appointment_id = p.appointment_id
-      WHERE a.family_id = $1 AND a.status = 'confirmed'
+      WHERE a.family_id = $1
     `;
-    
-    const queryParams = [familyId];
+
+    const queryParams = [family_id];
     let paramCount = 1;
-    
+
+    // Add status filter
+    if (status) {
+      paramCount++;
+      query += ` AND a.status = $${paramCount}`;
+      queryParams.push(status);
+    }
+
+    // Add elder filter
+    if (elder_id) {
+      paramCount++;
+      query += ` AND a.elder_id = $${paramCount}`;
+      queryParams.push(elder_id);
+    }
+
+    // Add history filter (completed or cancelled)
+    if (history === 'true') {
+      query += ` AND a.status IN ('completed', 'cancelled')`;
+    } else if (!status) {
+      // If no specific status and not history, show active appointments
+      query += ` AND a.status NOT IN ('completed', 'cancelled')`;
+    }
+
     // Add appointment type filter (if provided)
     if (type && type !== 'all') {
       paramCount++;
       query += ` AND a.appointment_type = $${paramCount}`;
       queryParams.push(type);
     }
-    
+
     query += ` ORDER BY a.date_time DESC`;
-    
+
     // Add limit if specified
     if (limit) {
       paramCount++;
@@ -96,33 +129,54 @@ const getAllAppointmentsByFamily = async (req, res) => {
         queryParams.push(parseInt(offset));
       }
     }
-    
+
+    console.log('Executing query:', query);
+    console.log('Query params:', queryParams);
+
     const result = await pool.query(query, queryParams);
-    
-    // Get total count for pagination (only confirmed appointments)
+
+    // Get total count for pagination
     let countQuery = `
       SELECT COUNT(*) as total
       FROM appointment a
-      WHERE a.family_id = $1 AND a.status = 'confirmed'
+      WHERE a.family_id = $1
     `;
-    
-    const countParams = [familyId];
+
+    const countParams = [family_id];
     let countParamCount = 1;
-    
+
+    // Apply same filters to count query
+    if (status) {
+      countParamCount++;
+      countQuery += ` AND a.status = $${countParamCount}`;
+      countParams.push(status);
+    }
+
+    if (elder_id) {
+      countParamCount++;
+      countQuery += ` AND a.elder_id = $${countParamCount}`;
+      countParams.push(elder_id);
+    }
+
+    if (history === 'true') {
+      countQuery += ` AND a.status IN ('completed', 'cancelled')`;
+    } else if (!status) {
+      countQuery += ` AND a.status NOT IN ('completed', 'cancelled')`;
+    }
+
     if (type && type !== 'all') {
       countParamCount++;
       countQuery += ` AND a.appointment_type = $${countParamCount}`;
       countParams.push(type);
     }
-    
+
     const countResult = await pool.query(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].total);
-    
-    console.log('Found confirmed appointments:', result.rows.length);
-    
+
     res.json({
       success: true,
       appointments: result.rows,
+      count: result.rows.length,
       pagination: {
         total: totalCount,
         limit: limit ? parseInt(limit) : null,
@@ -130,15 +184,16 @@ const getAllAppointmentsByFamily = async (req, res) => {
         hasMore: limit ? (parseInt(offset) + parseInt(limit)) < totalCount : false
       }
     });
-    
+
   } catch (err) {
-    console.error('Error fetching confirmed appointments:', err);
-    res.status(500).json({ 
+    console.error('Error fetching appointments:', err);
+    res.status(500).json({
       success: false,
-      error: 'Error fetching appointments' 
+      error: 'Error fetching appointments'
     });
   }
 };
+
 
 // NEW: Get upcoming appointments for dashboard (only confirmed status)
 const getUpcomingAppointmentsByFamily = async (req, res) => {

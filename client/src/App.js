@@ -26,6 +26,8 @@ import { DoctorRegStep2 } from "./pages/doctor/signup-step2";
 import PhysicalAppointment from './pages/familemember/physical-appointment';
 import OnlineAppointment from './pages/familemember/online-appointment';
 import Appointments from './pages/familemember/appointments';
+import CancelAppointment from "./pages/familemember/cancel-appointment";
+import AppointmentHistory from "./pages/familemember/appointment-history";
 import BookingSummary from './pages/familemember/booking-summary';
 import Payment from './pages/familemember/payment';
 import PaymentSuccess from './pages/familemember/payment-success';
@@ -169,6 +171,24 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+  path="/family-member/cancel-appointment"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <CancelAppointment />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/family-member/appointment-history"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <AppointmentHistory />
+    </ProtectedRoute>
+  }
+/>
 
           {/* Add the elders route */}
           <Route
