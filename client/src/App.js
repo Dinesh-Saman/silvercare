@@ -12,6 +12,8 @@ import FamilyMemberLayout from "./components/FamilyMemberLayout";
 import { CaregiverReg } from "./pages/caregiver/signup";
 import { CaregiverRegStep2 } from "./pages/caregiver/signup-step2";
 import CaregiverDashboard from "./pages/caregiver/dashboard";
+import CareRequestDetails from "./pages/caregiver/care-request-details";
+import CareRequests from "./pages/caregiver/care-requests";
 import AdminDashboard from "./pages/admin/dashboard";
 import { DoctorReg } from "./pages/doctor/signup";
 import { MentalHealthProfessionalReg } from "./pages/healthproffesional/signup";
@@ -282,6 +284,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
                 <CaregiverDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/care-requests"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <CareRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/care-request/:requestId"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <CareRequestDetails />
               </ProtectedRoute>
             }
           />
