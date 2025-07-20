@@ -4,11 +4,15 @@ console.log('Server timezone set to:', process.env.TZ);
 console.log('Current server time:', new Date().toString());
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json()); // Important: for parsing JSON body
+
+// Serve static files from uploads directory - ADD THIS LINE
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Load user routes
 const userRoutes = require('./routes/userRoutes');
@@ -33,8 +37,6 @@ app.use('/api/admin', adminRoutes); // Add this line by Nimal
 app.use('/api/caregivers', caregiverRoutes);
 app.use('/api/appointments', appointmentRoutes); // Add this line
 app.use('/api/payment', paymentRoutes);
-
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
