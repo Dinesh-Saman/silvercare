@@ -645,6 +645,16 @@ const fetchCareRequests = async (req, res) => {
   const caregiverId = req.params.id;
 
   try {
+    // First, auto-update any approved requests that have passed their end date
+    const updateQuery = `
+      UPDATE carerequest 
+      SET status = 'completed'
+      WHERE caregiver_id = $1 
+      AND status = 'approved' 
+      AND end_date < CURRENT_DATE;
+    `;
+    await pool.query(updateQuery, [caregiverId]);
+
     const query = `
       SELECT 
         cr.request_id,

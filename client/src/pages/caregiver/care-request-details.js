@@ -70,6 +70,7 @@ const CareRequestDetails = () => {
 
   const handleBack = () => {
     navigate('/caregiver/dashboard');
+    navigate('/caregiver/care-requests');
   };
 
   const formatDate = (dateString) => {
@@ -88,6 +89,22 @@ const CareRequestDetails = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Calculate time left until start date
+  const getTimeLeft = (startDate) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const diffMs = start - now;
+    if (diffMs <= 0) return 'Started';
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    let result = '';
+    if (diffDays > 0) result += `${diffDays} day${diffDays > 1 ? 's' : ''} `;
+    if (diffHours > 0) result += `${diffHours} hour${diffHours > 1 ? 's' : ''} `;
+    if (diffMinutes > 0 && diffDays === 0) result += `${diffMinutes} min${diffMinutes > 1 ? 's' : ''}`;
+    return result.trim();
   };
 
   if (loading) {
@@ -112,7 +129,7 @@ const CareRequestDetails = () => {
           <div className={styles.error}>
             <p>{error}</p>
             <button className={styles.backButton} onClick={handleBack}>
-              ← Back to Dashboard
+              ← Back to previous page
             </button>
           </div>
         </CaregiverLayout>
@@ -127,7 +144,7 @@ const CareRequestDetails = () => {
         <div className={styles.container}>
           <div className={styles.header}>
             <button className={styles.backButton} onClick={handleBack}>
-              ← Back to Dashboard
+            ← Back to previous page
             </button>
             <h1>Care Request Details</h1>
             <div className={styles.statusBadge}>
@@ -158,6 +175,17 @@ const CareRequestDetails = () => {
                     <label>Duration:</label>
                     <span>{careRequest?.duration} days</span>
                   </div>
+                  {/* Show time left only for pending requests */}
+                  {careRequest?.status === 'pending' && (
+                    <div className={styles.infoItem}>
+                      <label>Time Left:</label>
+                      <span className={
+                        (new Date(careRequest.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
+                      }>
+                        {getTimeLeft(careRequest.start_date)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

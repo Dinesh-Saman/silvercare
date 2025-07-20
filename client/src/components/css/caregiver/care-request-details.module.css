@@ -163,6 +163,16 @@
   padding: 8px 0;
 }
 
+.redText {
+  color: #e53e3e !important;
+  font-weight: 700;
+}
+
+.greenText {
+  color: #38a169 !important;
+  font-weight: 700;
+}
+
 .fullWidth {
   grid-column: 1 / -1;
   display: flex;
