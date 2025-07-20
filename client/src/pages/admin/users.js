@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../services/adminApi';
-import Navbar from '../../components/navbar';
+import AdminNavbar  from '../../components/AdminNavbar';
 import styles from '../../components/css/admin/users.module.css';
 
 const AdminUsers = () => {
@@ -214,7 +214,7 @@ const AdminUsers = () => {
 
   return (
     <div className={styles.usersContainer}>
-      <Navbar />
+      <AdminNavbar />
       
       {/* Header Section */}
       <div className={styles.headerSection}>

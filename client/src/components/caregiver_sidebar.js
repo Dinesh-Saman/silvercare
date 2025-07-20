@@ -38,8 +38,8 @@ const CaregiverSidebar = ({ onItemClick }) => {
       case 'family-member':
         navigate('/caregiver/family-member');
         break;
-      case 'schedules':
-        navigate('/caregiver/schedules');
+      case 'requests':
+        navigate('/caregiver/care-requests');
         break;
       case 'medications':
         navigate('/caregiver/medications');
@@ -83,10 +83,10 @@ const CaregiverSidebar = ({ onItemClick }) => {
       path: '/caregiver/family-member'
     },
     {
-      key: 'schedules',
-      label: 'Schedules',
-      icon: '📋',
-      path: '/caregiver/schedules'
+      key: 'requests',
+      label: 'Care Requests',
+      icon: '📥',
+      path: '/caregiver/care-requests'
     },
     {
       key: 'medications',

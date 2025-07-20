@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../services/adminApi';
 import Navbar from '../../components/navbar';
 import styles from '../../components/css/admin/dashboard.module.css';
-
+import AdminNavbar from '../../components/AdminNavbar';
 const AdminDashboard = () => {
   const { currentUser, logout, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -181,10 +181,6 @@ const AdminDashboard = () => {
     navigate('/admin/reports');
   };
 
-  const handleManageAppointments = () => {
-    navigate('/admin/appointments');
-  };
-
   const handleSystemSettings = () => {
     navigate('/admin/settings');
   };
@@ -274,7 +270,7 @@ const AdminDashboard = () => {
 
   return (
     <div className={styles.dashboardContainer}>
-      <Navbar />
+      <AdminNavbar />
       
       {/* Header Section */}
       <div className={styles.headerSection}>
@@ -370,16 +366,6 @@ const AdminDashboard = () => {
                   <h3 className={styles.quickActionTitle}>Manage Users</h3>
                   <p className={styles.quickActionDescription}>
                     View and manage all {dataLoading ? '...' : dashboardData.newBookings} registered users
-                  </p>
-                </div>
-              </div>
-              
-              <div className={styles.quickActionCard} onClick={handleManageAppointments}>
-                <div className={styles.quickActionIcon}>📅</div>
-                <div className={styles.quickActionContent}>
-                  <h3 className={styles.quickActionTitle}>Manage Appointments</h3>
-                  <p className={styles.quickActionDescription}>
-                    Oversee {stats.upcoming_appointments || 0} upcoming appointments
                   </p>
                 </div>
               </div>

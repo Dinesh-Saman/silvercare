@@ -15,9 +15,8 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'elder-' + uniqueSuffix + path.extname(file.originalname));
+    // Use only the original filename
+    cb(null, file.originalname);
   }
 });
 
@@ -208,7 +207,7 @@ const createElderRegistration = async (req, res) => {
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       
-      // Get profile photo path if uploaded
+      // Get profile photo path if uploaded - now uses original filename
       const profilePhotoPath = req.file ? req.file.path : null;
       
       // Start transaction
@@ -312,7 +311,6 @@ const createElderRegistration = async (req, res) => {
     }
   });
 };
-
 
 
 // CREATE a health professional registration
