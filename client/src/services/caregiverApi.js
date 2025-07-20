@@ -282,6 +282,58 @@ export const caregiverApi = {
     }
   },
 
+  // Update caregiver profile(role caregiver)
+  updateCaregiverProfile: async (caregiverId, profileData) => {
+    try {
+      console.log('API: Updating caregiver profile:', caregiverId, profileData);
+      const response = await fetch(`${API_BASE}/${caregiverId}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Update profile response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error updating profile:', error);
+      throw error;
+    }
+  },
+
+  // Update caregiver password(role caregiver)
+  updateCaregiverPassword: async (caregiverId, passwordData) => {
+    try {
+      console.log('API: Updating caregiver password:', caregiverId);
+      const response = await fetch(`${API_BASE}/${caregiverId}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(passwordData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Update password response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update password');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error updating password:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default caregiverApi;
