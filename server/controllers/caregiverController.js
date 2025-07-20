@@ -543,7 +543,7 @@ const getCareRequestById = async (req, res) => {
 };
 
 
-//get assigner elders(role caregiver)
+//get assigned elders(role caregiver)
 const getAssignedElders = async (req, res) => {
   const caregiverId = req.params.id;
 
