@@ -247,25 +247,21 @@ useEffect(() => {
                           <span className={styles.value}>{request.family_member_phone}</span>
                         </div>
 
-                        
-                      {/* Show time left only in pending tab */}
-                      {request.status === 'pending' && (
-                        <div className={styles.detailRow}>
-                          <div className={styles.detailItem}>
-                            <span className={styles.label}>Time Left:</span>
-                            <span className={
-                              `${styles.value} ` +
-                              (new Date(request.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
-                            }>
-                              {getTimeLeft(request.start_date)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
                       </div>
                     </div>
-
+{/* Show time left only in pending tab */}
+                      {request.status === 'pending' && (
+                        <div className={styles.timeLeftRow}>
+                            <span className={styles.label}>Time Left:</span>
+                            <span className={
+                            (new Date(request.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
+                            }>
+                            {getTimeLeft(request.start_date)}
+                            </span>
+                        </div>
+                        )}
                     <div className={styles.requestActions}>
+                      
                       <button 
                         className={styles.viewButton}
                         onClick={() => handleViewDetails(request.request_id)}
