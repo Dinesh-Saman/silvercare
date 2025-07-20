@@ -6,7 +6,74 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [appointmentStats, setAppointmentStats] = useState(null);
+  const [weeklySchedule, setWeeklySchedule] = useState([]);
   const navigate = useNavigate();
+
+  // Generate weekly schedule from appointments
+  const generateWeeklySchedule = (appointments) => {
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+    
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      
+      const dayAppointments = appointments.filter(apt => {
+        const aptDate = new Date(apt.date_time);
+        return aptDate.toDateString() === date.toDateString();
+      });
+      
+      weekDays.push({
+        date: date,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNumber: date.getDate(),
+        isToday: date.toDateString() === today.toDateString(),
+        appointments: dayAppointments.length,
+        hasAppointments: dayAppointments.length > 0
+      });
+    }
+    
+    return weekDays;
+  };
+
+  // Fetch today's appointments for sidebar preview
+  useEffect(() => {
+    const fetchAppointmentsPreview = async () => {
+      try {
+        // Mock doctor ID - in real app, get from user context
+        const doctorId = 1;
+        const [todayResponse, upcomingResponse] = await Promise.all([
+          fetch(`http://localhost:5000/api/doctor/${doctorId}/today`),
+          fetch(`http://localhost:5000/api/doctor/${doctorId}/upcoming`)
+        ]);
+        
+        if (todayResponse.ok && upcomingResponse.ok) {
+          const todayData = await todayResponse.json();
+          const upcomingData = await upcomingResponse.json();
+          
+          setUpcomingAppointments(todayData.appointments || []);
+          setAppointmentStats({
+            today: todayData.count || 0,
+            upcoming: upcomingData.count || 0
+          });
+
+          // Generate weekly schedule from upcoming appointments
+          const weekly = generateWeeklySchedule(upcomingData.appointments || []);
+          setWeeklySchedule(weekly);
+        }
+      } catch (error) {
+        console.error('Error fetching appointments preview:', error);
+      }
+    };
+
+    fetchAppointmentsPreview();
+    const interval = setInterval(fetchAppointmentsPreview, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Keyboard shortcut for toggle (Ctrl + B)
   useEffect(() => {
@@ -223,6 +290,84 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
           <div className={styles.userDetails}>
             <span className={styles.userName}>Doctor</span>
             <span className={styles.userRole}>Medical Professional</span>
+          </div>
+        </div>
+      )}
+
+      {/* Appointments Preview */}
+      {!sidebarCollapsed && (
+        <div className={styles.appointmentsPreview}>
+          <div className={styles.previewHeader}>
+            <span className={styles.previewTitle}>Today's Appointments</span>
+            {appointmentStats && (
+              <span className={styles.appointmentsBadge}>{appointmentStats.today}</span>
+            )}
+          </div>
+          <div className={styles.appointmentsList}>
+            {upcomingAppointments.length > 0 ? (
+              upcomingAppointments.slice(0, 3).map((appointment) => (
+                <div key={appointment.appointment_id || appointment.temp_booking_id} className={styles.appointmentItem}>
+                  <div className={styles.appointmentTime}>
+                    {new Date(appointment.date_time).toLocaleTimeString('en-US', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </div>
+                  <div className={styles.appointmentDetails}>
+                    <div className={styles.patientName}>
+                      {appointment.elder_name || appointment.patient_name}
+                    </div>
+                    <div className={styles.appointmentType}>
+                      {appointment.appointment_type || 'Consultation'}
+                    </div>
+                  </div>
+                  <div className={styles.appointmentStatus}>
+                    <span className={`${styles.statusDot} ${styles[appointment.status?.toLowerCase()]}`}></span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className={styles.noAppointments}>
+                <span>No appointments today</span>
+              </div>
+            )}
+          </div>
+          <div className={styles.previewFooter}>
+            <button 
+              className={styles.viewAllButton}
+              onClick={() => navigate('/doctor/appointments')}
+            >
+              View All Appointments
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Schedule Calendar */}
+      {!sidebarCollapsed && (
+        <div className={styles.weeklySchedule}>
+          <div className={styles.scheduleHeader}>
+            <span className={styles.scheduleTitle}>Weekly Schedule</span>
+            <button 
+              className={styles.scheduleViewButton}
+              onClick={() => navigate('/doctor/schedule')}
+            >
+              📅
+            </button>
+          </div>
+          <div className={styles.weeklyCalendar}>
+            {weeklySchedule.map((day, index) => (
+              <div 
+                key={index} 
+                className={`${styles.calendarDay} ${day.isToday ? styles.today : ''} ${day.hasAppointments ? styles.hasAppointments : ''}`}
+              >
+                <div className={styles.dayName}>{day.dayName}</div>
+                <div className={styles.dayNumber}>{day.dayNumber}</div>
+                {day.appointments > 0 && (
+                  <div className={styles.appointmentCount}>{day.appointments}</div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -4,8 +4,9 @@ const pool = require('../db');
 const getAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-      SELECT 
-        a.appointment_id,
+      (SELECT 
+        a.appointment_id as id,
+        'appointment' as source,
         a.elder_id,
         a.doctor_id,
         a.date_time,
@@ -18,11 +19,33 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar
+        e.profile_photo as elder_avatar,
+        'consultation' as appointment_type
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1
-      ORDER BY a.date_time ASC
+      WHERE a.doctor_id = $1)
+      UNION ALL
+      (SELECT 
+        tb.temp_booking_id as id,
+        'temporary_booking' as source,
+        tb.elder_id,
+        tb.doctor_id,
+        tb.date_time,
+        'confirmed' as status,
+        tb.notes,
+        tb.patient_name as elder_name,
+        null as elder_email,
+        null as elder_dob,
+        null as elder_gender,
+        tb.contact_number as elder_contact,
+        null as elder_address,
+        tb.symptoms as medical_conditions,
+        null as elder_avatar,
+        tb.appointment_type
+      FROM temporary_booking tb
+      WHERE tb.doctor_id = $1 
+      AND tb.expires_at > CURRENT_TIMESTAMP)
+      ORDER BY date_time ASC
     `, [doctorId]);
     return result.rows;
   } catch (error) {
@@ -35,8 +58,9 @@ const getAppointmentsByDoctorId = async (doctorId) => {
 const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-      SELECT 
-        a.appointment_id,
+      (SELECT 
+        a.appointment_id as id,
+        'appointment' as source,
         a.elder_id,
         a.doctor_id,
         a.date_time,
@@ -49,11 +73,33 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar
+        e.profile_photo as elder_avatar,
+        'consultation' as appointment_type
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 AND a.date_time >= CURRENT_TIMESTAMP
-      ORDER BY a.date_time ASC
+      WHERE a.doctor_id = $1 AND a.date_time >= CURRENT_TIMESTAMP)
+      UNION ALL
+      (SELECT 
+        tb.temp_booking_id as id,
+        'temporary_booking' as source,
+        tb.elder_id,
+        tb.doctor_id,
+        tb.date_time,
+        'confirmed' as status,
+        tb.notes,
+        tb.patient_name as elder_name,
+        null as elder_email,
+        null as elder_dob,
+        null as elder_gender,
+        tb.contact_number as elder_contact,
+        null as elder_address,
+        tb.symptoms as medical_conditions,
+        null as elder_avatar,
+        tb.appointment_type
+      FROM temporary_booking tb
+      WHERE tb.doctor_id = $1 AND tb.date_time >= CURRENT_TIMESTAMP
+      AND tb.expires_at > CURRENT_TIMESTAMP)
+      ORDER BY date_time ASC
     `, [doctorId]);
     return result.rows;
   } catch (error) {
@@ -66,8 +112,9 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
 const getTodaysAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-      SELECT 
-        a.appointment_id,
+      (SELECT 
+        a.appointment_id as id,
+        'appointment' as source,
         a.elder_id,
         a.doctor_id,
         a.date_time,
@@ -80,12 +127,35 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar
+        e.profile_photo as elder_avatar,
+        'consultation' as appointment_type
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
       WHERE a.doctor_id = $1 
-      AND DATE(a.date_time) = CURRENT_DATE
-      ORDER BY a.date_time ASC
+      AND DATE(a.date_time) = CURRENT_DATE)
+      UNION ALL
+      (SELECT 
+        tb.temp_booking_id as id,
+        'temporary_booking' as source,
+        tb.elder_id,
+        tb.doctor_id,
+        tb.date_time,
+        'confirmed' as status,
+        tb.notes,
+        tb.patient_name as elder_name,
+        null as elder_email,
+        null as elder_dob,
+        null as elder_gender,
+        tb.contact_number as elder_contact,
+        null as elder_address,
+        tb.symptoms as medical_conditions,
+        null as elder_avatar,
+        tb.appointment_type
+      FROM temporary_booking tb
+      WHERE tb.doctor_id = $1 
+      AND DATE(tb.date_time) = CURRENT_DATE
+      AND tb.expires_at > CURRENT_TIMESTAMP)
+      ORDER BY date_time ASC
     `, [doctorId]);
     return result.rows;
   } catch (error) {
