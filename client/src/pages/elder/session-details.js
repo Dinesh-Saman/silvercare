@@ -31,16 +31,14 @@ const SessionDetails = () => {
         setLoading(true);
         setError(null);
 
-        // Get elder details by email
-        const elderResponse = await getElderDetailsByEmail(currentUser.email);
-        const elderData = elderResponse.data.elder;
-        setElderDetails(elderData);
+      // Get elder details by email
+      const elderResponse = await getElderDetailsByEmail(currentUser.email);
+      const elderData = elderResponse.data;
+      setElderDetails(elderData);
 
-        if (elderData?.elder_id) {
-          // Get session details
-          const sessionResponse = await getSessionById(elderData.elder_id, sessionId);
-          
-          if (sessionResponse.data.success) {
+      if (elderData?.elder_id) {
+        // Get session details
+        const sessionResponse = await getSessionById(elderData.elder_id, sessionId);          if (sessionResponse.data.success) {
             setSession(sessionResponse.data.session);
           } else {
             setError(sessionResponse.data.error || 'Session not found');

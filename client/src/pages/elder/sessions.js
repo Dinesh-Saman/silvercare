@@ -42,7 +42,7 @@ const AllSessions = () => {
 
         // Get elder details by email
         const elderResponse = await getElderDetailsByEmail(currentUser.email);
-        const elderData = elderResponse.data.elder;
+        const elderData = elderResponse.data;
         setElderDetails(elderData);
 
         if (elderData?.elder_id) {
