@@ -148,7 +148,7 @@ const FamilyMemberDashboard = () => {
     navigate('/family-member/elders');
   };
 
-    const handleViewReports = () => {
+  const handleViewReports = () => {
     navigate('/family-member/reports');
   };
 
@@ -156,9 +156,9 @@ const FamilyMemberDashboard = () => {
     navigate(`/family-member/elder/${elderId}`);
   };
 
- const handleViewAllAppointments = () => {
-  navigate('/family-member/appointments'); // This will now navigate to the new appointments page
-};
+  const handleViewAllAppointments = () => {
+    navigate('/family-member/appointments'); // This will now navigate to the new appointments page
+  };
 
   const handleAppointmentDetails = (appointmentId) => {
     navigate(`/family-member/appointment/${appointmentId}`);
@@ -200,6 +200,29 @@ const FamilyMemberDashboard = () => {
       default:
         return '🩺';
     }
+  };
+
+  // Function to get the correct image URL - FIXED VERSION
+  const getElderImageUrl = (profilePhoto) => {
+    if (!profilePhoto) return null;
+    
+    console.log('Profile photo path from database:', profilePhoto);
+    
+    // If the path already includes the full URL, return as is
+    if (profilePhoto.startsWith('http')) {
+      return profilePhoto;
+    }
+    
+    // Convert backslashes to forward slashes for web URLs
+    const normalizedPath = profilePhoto.replace(/\\/g, '/');
+    
+    // If the path starts with uploads/, construct the full URL
+    if (normalizedPath.startsWith('uploads/')) {
+      return `http://localhost:5000/${normalizedPath}`;
+    }
+    
+    // If it's just the filename, construct the full path
+    return `http://localhost:5000/uploads/profiles/${normalizedPath}`;
   };
 
   // Show loading while checking authentication
@@ -379,7 +402,7 @@ const FamilyMemberDashboard = () => {
                         </div>
                       </div>
                     )}
-                  </>
+                                      </>
                 ) : (
                   <div className={styles.activityItem}>
                     <div className={styles.activityIcon}>📝</div>
@@ -418,60 +441,85 @@ const FamilyMemberDashboard = () => {
                 ) : (
                   <div className={styles.eldersLinkList}>
                     {/* Limit to only 2 elders */}
-                    {elders.slice(0, 2).map((elder, index) => (
-                      <div 
-                        key={elder.elder_id} 
-                        className={styles.elderLinkItem}
-                        onClick={() => handleElderDetails(elder.elder_id)}
-                      >
-                        <div className={styles.elderLinkContent}>
-                          <div className={styles.elderLinkLeft}>
-                            <div className={styles.elderLinkAvatar}>
-                              {elder.profile_photo ? (
-                                <img 
-                                  src={`http://localhost:5000/${elder.profile_photo}`} 
-                                  alt={elder.name}
-                                  className={styles.elderLinkPhoto}
-                                />
-                              ) : (
-                                <div className={styles.elderLinkInitial}>
-                                  {elder.name.charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div className={styles.elderLinkInfo}>
-                              <h3 className={styles.elderLinkName}>{elder.name}</h3>
-                              <div className={styles.elderLinkDetails}>
-                                <span className={styles.elderLinkDetail}>
-                                  📞 {elder.contact}
-                                </span>
-                                <span className={styles.elderLinkDetail}>
-                                  🎂 {new Date(elder.dob).toLocaleDateString()}
-                                </span>
-                                <span className={styles.elderLinkDetail}>
-                                  👤 {elder.gender}
-                                </span>
+                    {elders.slice(0, 2).map((elder, index) => {
+                      const imageUrl = getElderImageUrl(elder.profile_photo);
+                      console.log('Elder:', elder.name, 'Image URL:', imageUrl);
+                      
+                      return (
+                        <div 
+                          key={elder.elder_id} 
+                          className={styles.elderLinkItem}
+                          onClick={() => handleElderDetails(elder.elder_id)}
+                        >
+                          <div className={styles.elderLinkContent}>
+                            <div className={styles.elderLinkLeft}>
+                              <div className={styles.elderLinkAvatar}>
+                                {elder.profile_photo ? (
+                                  <>
+                                    <img 
+                                      src={imageUrl}
+                                      alt={elder.name}
+                                      className={styles.elderLinkPhoto}
+                                      onLoad={() => {
+                                        console.log('Image loaded successfully:', imageUrl);
+                                      }}
+                                      onError={(e) => {
+                                        console.log('Image failed to load:', imageUrl);
+                                        console.log('Original path:', elder.profile_photo);
+                                        e.target.style.display = 'none';
+                                        const fallback = e.target.parentNode.querySelector('.fallback-initial');
+                                        if (fallback) {
+                                          fallback.style.display = 'flex';
+                                        }
+                                      }}
+                                    />
+                                    <div 
+                                      className={`${styles.elderLinkInitial} fallback-initial`}
+                                      style={{ display: 'none' }}
+                                    >
+                                      {elder.name.charAt(0).toUpperCase()}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className={styles.elderLinkInitial}>
+                                    {elder.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
                               </div>
-                              {elder.medical_conditions && (
-                                <p className={styles.elderLinkMedical}>
-                                  🏥 {elder.medical_conditions.substring(0, 80)}
-                                  {elder.medical_conditions.length > 80 ? '...' : ''}
-                                </p>
-                              )}
+                              <div className={styles.elderLinkInfo}>
+                                <h3 className={styles.elderLinkName}>{elder.name}</h3>
+                                <div className={styles.elderLinkDetails}>
+                                  <span className={styles.elderLinkDetail}>
+                                    📞 {elder.contact}
+                                  </span>
+                                  <span className={styles.elderLinkDetail}>
+                                    🎂 {new Date(elder.dob).toLocaleDateString()}
+                                  </span>
+                                  <span className={styles.elderLinkDetail}>
+                                    👤 {elder.gender}
+                                  </span>
+                                </div>
+                                {elder.medical_conditions && (
+                                  <p className={styles.elderLinkMedical}>
+                                    🏥 {elder.medical_conditions.substring(0, 80)}
+                                    {elder.medical_conditions.length > 80 ? '...' : ''}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className={styles.elderLinkRight}>
+                              <div className={styles.elderLinkArrow}>
+                                <span>→</span>
+                              </div>
+                              <div className={styles.elderLinkAction}>
+                                <span>View Details</span>
+                              </div>
                             </div>
                           </div>
-                          <div className={styles.elderLinkRight}>
-                            <div className={styles.elderLinkArrow}>
-                              <span>→</span>
-                            </div>
-                            <div className={styles.elderLinkAction}>
-                              <span>View Details</span>
-                            </div>
-                          </div>
+                          <div className={styles.elderLinkDivider}></div>
                         </div>
-                        <div className={styles.elderLinkDivider}></div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -523,7 +571,7 @@ const FamilyMemberDashboard = () => {
                   {/* Limit to only 2 appointments */}
                   {appointments.slice(0, 2).map((appointment, index) => (
                     <div 
-                                            key={appointment.appointment_id} 
+                      key={appointment.appointment_id} 
                       className={styles.appointmentItem}
                       onClick={() => handleAppointmentDetails(appointment.appointment_id)}
                     >
@@ -546,7 +594,6 @@ const FamilyMemberDashboard = () => {
                               <span className={styles.appointmentDetail}>
                                 📅 {formatAppointmentDate(appointment.date_time)}
                               </span>
-
                               <span className={styles.appointmentDetail}>
                                 📍 {appointment.doctor_district}
                               </span>
@@ -598,5 +645,4 @@ const FamilyMemberDashboard = () => {
 };
 
 export default FamilyMemberDashboard;
-
 
