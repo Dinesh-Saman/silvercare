@@ -7,7 +7,8 @@ const {
   getAppointmentById,
   updateAppointmentStatus,
   cancelAppointment,
-  getAppointmentStats
+  getAppointmentStats,
+  getAppointmentHistory 
 } = require('../controllers/appointmentController');
 
 // Get all appointments for a family member (with filtering support)
@@ -27,6 +28,7 @@ router.get('/:appointmentId', getAppointmentById);
 
 // Update appointment status
 router.put('/:appointmentId/status', updateAppointmentStatus);
+router.get('/family/:familyMemberId/history', getAppointmentHistory);
 
 // Cancel appointment with refund processing
 router.put('/:appointmentId/cancel', cancelAppointment);

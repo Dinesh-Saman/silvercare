@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { appointmentApi } from '../../services/appointmentApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
-import styles from '../../components/css/familymember/appointments.module.css';
+import styles from '../../components/css/familymember/appointment-history.module.css';
+
 
 const AppointmentHistory = () => {
   const { currentUser } = useAuth();
@@ -31,7 +32,8 @@ const AppointmentHistory = () => {
       });
 
       if (response.success) {
-        setAppointments(response.appointments);
+        console.log('Fetched appointments:', response.appointments);
+        setAppointments(response.appointments || []);
       }
     } catch (err) {
       console.error('Error fetching appointment history:', err);
@@ -42,22 +44,30 @@ const AppointmentHistory = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'Invalid Date';
+    }
   };
 
   const getAppointmentTypeIcon = (type) => {
+    if (!type) return '🩺';
     return type === 'online' ? '💻' : '🏥';
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    if (!status) return '#95a5a6';
+    switch (status.toLowerCase()) {
       case 'completed':
         return '#27ae60'; // Green
       case 'cancelled':
@@ -68,7 +78,8 @@ const AppointmentHistory = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    if (!status) return '📅';
+    switch (status.toLowerCase()) {
       case 'completed':
         return '✅';
       case 'cancelled':
@@ -76,6 +87,16 @@ const AppointmentHistory = () => {
       default:
         return '📅';
     }
+  };
+
+  // Safe string operations with null checks
+  const safeCapitalize = (str) => {
+    if (!str || typeof str !== 'string') return 'N/A';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  const safeString = (str, defaultValue = 'N/A') => {
+    return str && typeof str === 'string' ? str : defaultValue;
   };
 
   if (loading) {
@@ -93,7 +114,7 @@ const AppointmentHistory = () => {
   }
 
   return (
-    <div>
+    <div className={styles.container}>
       <Navbar />
       <FamilyMemberLayout>
         <div className={styles.appointmentsContainer}>
@@ -113,7 +134,7 @@ const AppointmentHistory = () => {
               All History
             </button>
             <button
-                           className={`${styles.filterButton} ${filter === 'completed' ? styles.active : ''}`}
+              className={`${styles.filterButton} ${filter === 'completed' ? styles.active : ''}`}
               onClick={() => setFilter('completed')}
             >
               Completed
@@ -159,7 +180,7 @@ const AppointmentHistory = () => {
                         {getAppointmentTypeIcon(appointment.appointment_type)}
                       </span>
                       <span className={styles.typeText}>
-                        {appointment.appointment_type.charAt(0).toUpperCase() + appointment.appointment_type.slice(1)} Appointment
+                        {safeCapitalize(appointment.appointment_type)} Appointment
                       </span>
                     </div>
                     <div className={styles.appointmentStatus}>
@@ -167,43 +188,57 @@ const AppointmentHistory = () => {
                         className={styles.statusBadge}
                         style={{ backgroundColor: getStatusColor(appointment.status) }}
                       >
-                        {getStatusIcon(appointment.status)} {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        {getStatusIcon(appointment.status)} {safeCapitalize(appointment.status)}
                       </span>
                     </div>
                   </div>
 
                   <div className={styles.appointmentContent}>
                     <div className={styles.appointmentDetails}>
-                      <h3 className={styles.doctorName}>Dr. {appointment.doctor_name}</h3>
-                      <p className={styles.specialization}>{appointment.specialization}</p>
+                      <h3 className={styles.doctorName}>
+                        Dr. {safeString(appointment.doctor_name)}
+                      </h3>
+                      <p className={styles.specialization}>
+                        {safeString(appointment.specialization)}
+                      </p>
                       
                       <div className={styles.detailsGrid}>
                         <div className={styles.detailItem}>
                           <span className={styles.detailLabel}>👤 Elder:</span>
-                          <span className={styles.detailValue}>{appointment.elder_name}</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.elder_name)}
+                          </span>
                         </div>
                         <div className={styles.detailItem}>
                           <span className={styles.detailLabel}>📅 Date & Time:</span>
-                          <span className={styles.detailValue}>{formatDate(appointment.date_time)}</span>
+                          <span className={styles.detailValue}>
+                            {formatDate(appointment.date_time)}
+                          </span>
                         </div>
                         <div className={styles.detailItem}>
                           <span className={styles.detailLabel}>🏥 Institution:</span>
-                          <span className={styles.detailValue}>{appointment.current_institution}</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.current_institution)}
+                          </span>
                         </div>
                         <div className={styles.detailItem}>
                           <span className={styles.detailLabel}>📍 District:</span>
-                          <span className={styles.detailValue}>{appointment.doctor_district}</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.doctor_district)}
+                          </span>
                         </div>
                         {appointment.payment_amount && (
                           <div className={styles.detailItem}>
                             <span className={styles.detailLabel}>💰 Amount:</span>
-                            <span className={styles.detailValue}>Rs. {appointment.payment_amount}</span>
+                            <span className={styles.detailValue}>
+                              Rs. {appointment.payment_amount}
+                            </span>
                           </div>
                         )}
                         <div className={styles.detailItem}>
                           <span className={styles.detailLabel}>📅 Booked on:</span>
                           <span className={styles.detailValue}>
-                            {new Date(appointment.created_at).toLocaleDateString()}
+                            {formatDate(appointment.created_at)}
                           </span>
                         </div>
                       </div>
@@ -214,18 +249,22 @@ const AppointmentHistory = () => {
                         </div>
                       )}
 
-                      {appointment.cancellation_reason && (
+                      {appointment.status === 'cancelled' && appointment.notes && (
                         <div className={styles.cancellationReason}>
-                          <strong>Cancellation Reason:</strong> {appointment.cancellation_reason}
+                          <strong>Cancellation Reason:</strong> 
+                          {appointment.notes.includes('Cancellation reason:') 
+                            ? appointment.notes.split('Cancellation reason:')[1]?.split('|')[0]?.trim() || 'No reason provided'
+                            : 'No reason provided'
+                          }
                         </div>
                       )}
 
-                      {appointment.refund_amount && (
+                      {appointment.refund_amount && appointment.refund_amount > 0 && (
                         <div className={styles.refundInfo}>
                           <strong>Refund:</strong> Rs. {appointment.refund_amount} 
                           {appointment.refund_status && (
                             <span className={styles.refundStatus}>
-                              ({appointment.refund_status})
+                              ({safeCapitalize(appointment.refund_status)})
                             </span>
                           )}
                         </div>
@@ -233,25 +272,7 @@ const AppointmentHistory = () => {
                     </div>
                   </div>
 
-                  <div className={styles.appointmentActions}>
-                    {appointment.status === 'completed' && (
-                      <button
-                        className={styles.viewDetailsButton}
-                        onClick={() => navigate(`/family-member/appointment/${appointment.appointment_id}`)}
-                      >
-                        View Details
-                      </button>
-                    )}
-                    
-                    {appointment.status === 'completed' && (
-                      <button
-                        className={styles.bookAgainButton}
-                        onClick={() => navigate(`/family-member/elder/${appointment.elder_id}/doctors`)}
-                      >
-                        Book Again
-                      </button>
-                    )}
-                  </div>
+
                 </div>
               ))}
             </div>
@@ -285,4 +306,3 @@ const AppointmentHistory = () => {
 };
 
 export default AppointmentHistory;
-

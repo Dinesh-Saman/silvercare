@@ -194,6 +194,122 @@ const getAllAppointmentsByFamily = async (req, res) => {
   }
 };
 
+const getAppointmentHistory = async (req, res) => {
+  const { familyMemberId } = req.params;
+  const { status } = req.query;
+  
+  try {
+    console.log('Fetching appointment history for family member:', familyMemberId);
+    console.log('History status filter:', status);
+
+    // Get family_id from user_id
+    const familyResult = await pool.query(
+      'SELECT family_id FROM familymember WHERE user_id = $1',
+      [familyMemberId]
+    );
+
+    if (familyResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Family member not found'
+      });
+    }
+
+    const family_id = familyResult.rows[0].family_id;
+
+    // Build query specifically for history (completed and cancelled appointments)
+    let query = `
+      SELECT 
+        a.appointment_id,
+        a.elder_id,
+        a.family_id,
+        a.doctor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        a.created_at,
+        a.updated_at,
+        e.name as elder_name,
+        e.contact as elder_contact,
+        e.gender as elder_gender,
+        e.dob as elder_dob,
+        e.district as elder_district,
+        u.name as doctor_name,
+        u.email as doctor_email,
+        u.phone as doctor_phone,
+        d.specialization,
+        d.current_institution,
+        d.district as doctor_district,
+        d.years_experience,
+        p.amount as payment_amount,
+        p.payment_status,
+        p.payment_method,
+        p.transaction_id,
+        p.payment_date,
+        EXTRACT(DAY FROM (CURRENT_TIMESTAMP - a.created_at)) as days_since_created,
+        CASE 
+          WHEN a.status = 'cancelled' AND p.payment_status = 'refunded' 
+          THEN p.amount 
+          ELSE 0 
+        END as refund_amount,
+        CASE 
+          WHEN a.status = 'cancelled' AND p.payment_status = 'refunded' 
+          THEN 'completed'
+          WHEN a.status = 'cancelled' AND p.payment_status = 'paid' 
+          THEN 'pending'
+          WHEN a.status = 'cancelled' AND p.payment_status IS NULL 
+          THEN 'no_payment'
+          ELSE NULL 
+        END as refund_status
+      FROM appointment a
+      JOIN elder e ON a.elder_id = e.elder_id
+      JOIN doctor d ON a.doctor_id = d.doctor_id
+      JOIN "User" u ON d.user_id = u.user_id
+      LEFT JOIN payment p ON a.appointment_id = p.appointment_id
+      WHERE a.family_id = $1
+    `;
+
+    const queryParams = [family_id];
+    let paramCount = 1;
+
+    // Filter for history appointments (completed and cancelled)
+    if (status && (status === 'completed' || status === 'cancelled')) {
+      paramCount++;
+      query += ` AND a.status = $${paramCount}`;
+      queryParams.push(status);
+    } else {
+      // If no specific status, show both completed and cancelled
+      query += ` AND a.status IN ('completed', 'cancelled')`;
+    }
+
+    query += ` ORDER BY a.date_time DESC`;
+
+    console.log('Executing history query:', query);
+    console.log('Query params:', queryParams);
+
+    const result = await pool.query(query, queryParams);
+
+    console.log('Found history appointments:', result.rows.length);
+    console.log('Appointments by status:', result.rows.reduce((acc, apt) => {
+      acc[apt.status] = (acc[apt.status] || 0) + 1;
+      return acc;
+    }, {}));
+
+    res.json({
+      success: true,
+      appointments: result.rows,
+      count: result.rows.length
+    });
+
+  } catch (err) {
+    console.error('Error fetching appointment history:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching appointment history'
+    });
+  }
+};
 
 // NEW: Get upcoming appointments for dashboard (only confirmed status)
 const getUpcomingAppointmentsByFamily = async (req, res) => {
@@ -672,5 +788,6 @@ module.exports = {
   getAppointmentById,
   updateAppointmentStatus,
   cancelAppointment,
-  getAppointmentStats
+  getAppointmentStats,
+  getAppointmentHistory  
 };

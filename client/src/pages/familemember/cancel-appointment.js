@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { appointmentApi } from '../../services/appointmentApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
-import styles from '../../components/css/familymember/appointments.module.css';
+import styles from '../../components/css/familymember/cancel-appointment.module.css';
 
 const CancelAppointment = () => {
   const { currentUser } = useAuth();
@@ -91,7 +91,7 @@ const CancelAppointment = () => {
   }
 
   return (
-    <div>
+    <div className={styles.container}>
       <Navbar />
       <FamilyMemberLayout>
         <div className={styles.appointmentsContainer}>

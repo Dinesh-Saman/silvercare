@@ -49,6 +49,29 @@ export const appointmentApi = {
     }
   },
 
+    // Get appointment history (completed and cancelled)
+  getAppointmentHistory: async (familyMemberId, filters = {}) => {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('history', 'true');
+      if (filters.status) queryParams.append('status', filters.status);
+      
+      const url = `${API_BASE}/family/${familyMemberId}?${queryParams.toString()}`;
+      
+      console.log('API: Fetching appointment history from:', url);
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch appointment history');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching appointment history:', error);
+      throw error;
+    }
+  },
   
 
   // Update appointment status
