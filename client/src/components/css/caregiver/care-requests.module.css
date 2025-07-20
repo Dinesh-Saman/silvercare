@@ -88,6 +88,7 @@
 
 .requestsList {
   display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -201,14 +202,24 @@
   font-weight: 500;
 }
 
+.timeLeftRow {
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .redText {
   color: #e53e3e !important;
   font-weight: 700;
+  text-align: left;
 }
 
 .greenText {
   color: #38a169 !important;
   font-weight: 700;
+  text-align: left;
 }
 
 
