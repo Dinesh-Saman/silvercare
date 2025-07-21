@@ -186,13 +186,18 @@ useEffect(() => {
   };
 
   // Generate available time slots for physical appointments (2 hour duration)
+  // Generate available time slots for physical appointments (2 hour duration)
   const generateTimeSlots = () => {
     const slots = [];
-    // Morning slots (9 AM - 12 PM)
-    for (let hour = 9; hour < 12; hour++) {
+    // Morning slots (9 AM - 12:30 PM)
+    for (let hour = 9; hour <= 12; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
+    // Early afternoon slots (1:00 PM - 1:30 PM)
+    slots.push('13:00'); // 1:00 PM
+    slots.push('13:30'); // 1:30 PM
+    
     // Afternoon slots (2 PM - 5 PM)
     for (let hour = 14; hour < 17; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
@@ -200,6 +205,7 @@ useEffect(() => {
     }
     return slots;
   };
+
 
   // Check if a time slot is blocked
   const isTimeSlotBlocked = (timeSlot) => {
