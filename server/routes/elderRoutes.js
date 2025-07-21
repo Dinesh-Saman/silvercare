@@ -45,6 +45,12 @@ const {
   joinSession
 } = require('../controllers/session');
 
+const {
+  getCareAssignmentsByWeek,
+  getDayCareAssignments,
+  getCareAssignmentStats
+} = require('../controllers/carerequest');
+
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
 
@@ -97,6 +103,11 @@ router.get('/:elderId/sessions/past', getPastSessions);
 router.get('/:elderId/sessions', getAllSessions);
 router.get('/:elderId/sessions/:sessionId', getSessionById);
 router.post('/:elderId/sessions/:sessionId/join', joinSession);
+
+// Care assignment routes for elders - MUST BE BEFORE /:elderId route
+router.get('/:elderId/care-assignments/week', getCareAssignmentsByWeek);
+router.get('/:elderId/care-assignments/day', getDayCareAssignments);
+router.get('/:elderId/care-assignments/stats', getCareAssignmentStats);
 
 // Get specific elder by ID
 router.get('/:elderId', getElderById);

@@ -11,6 +11,9 @@ import {
   getUpcomingSessions,
   getPastSessions,
   joinSession,
+  getCareAssignmentsByWeek,
+  getDayCareAssignments,
+  getCareAssignmentStats,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/dashboard.module.css";
 
@@ -30,6 +33,23 @@ const ElderDashboard = () => {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Caregiver section state
+  const [careAssignments, setCareAssignments] = useState({
+    dailyAssignments: [],
+    weekStart: null,
+    weekEnd: null,
+  });
+  const [currentWeekStart, setCurrentWeekStart] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDayAssignments, setSelectedDayAssignments] = useState([]);
+  const [careStatsData, setCareStatsData] = useState({
+    thisWeekAssignments: 0,
+    activeAssignments: 0,
+    assignedCaregivers: 0,
+    pendingRequests: 0,
+  });
+  const [careAssignmentsLoading, setCareAssignmentsLoading] = useState(false);
+
   // Real stats data from backend
   const [statsData, setStatsData] = useState({
     upcomingAppointments: 0,
@@ -41,6 +61,12 @@ const ElderDashboard = () => {
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Initialize current week start
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+    setCurrentWeekStart(weekStart);
   }, []);
 
   useEffect(() => {
@@ -58,6 +84,8 @@ const ElderDashboard = () => {
             fetchAppointments(response.data.elder_id),
             fetchSessions(response.data.elder_id),
             fetchDashboardStats(response.data.elder_id),
+            fetchCareAssignments(response.data.elder_id),
+            fetchCareStats(response.data.elder_id),
           ]);
         }
       } catch (error) {
@@ -132,6 +160,65 @@ const ElderDashboard = () => {
     }
   };
 
+  const fetchCareAssignments = async (elderId, weekStart = null) => {
+    try {
+      setCareAssignmentsLoading(true);
+      
+      console.log('Fetching care assignments for elder:', elderId);
+      
+      // If no week start provided, use current week
+      if (!weekStart) {
+        const today = new Date();
+        weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+        setCurrentWeekStart(weekStart);
+      }
+
+      console.log('Week start:', weekStart?.toISOString().split('T')[0]);
+      const response = await getCareAssignmentsByWeek(elderId, weekStart?.toISOString().split('T')[0]);
+      
+      console.log('Care assignments response:', response.data);
+      
+      if (response.data.success) {
+        setCareAssignments(response.data);
+        console.log('Set care assignments:', response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching care assignments:", error);
+    } finally {
+      setCareAssignmentsLoading(false);
+    }
+  };
+
+  const fetchCareStats = async (elderId) => {
+    try {
+      console.log('Fetching care stats for elder:', elderId);
+      const response = await getCareAssignmentStats(elderId);
+      
+      console.log('Care stats response:', response.data);
+      
+      if (response.data.success) {
+        setCareStatsData(response.data.stats);
+        console.log('Set care stats:', response.data.stats);
+      }
+    } catch (error) {
+      console.error("Error fetching care stats:", error);
+    }
+  };
+
+  const fetchDayAssignments = async (elderId, date) => {
+    try {
+      const response = await getDayCareAssignments(elderId, date);
+      
+      if (response.data.success) {
+        setSelectedDayAssignments(response.data.assignments);
+        setSelectedDate(date);
+      }
+    } catch (error) {
+      console.error("Error fetching day assignments:", error);
+    }
+  };
+
   const handleJoinAppointment = async (appointmentId) => {
     try {
       const response = await joinAppointment(elderDetails.elder_id, appointmentId);
@@ -170,6 +257,29 @@ const ElderDashboard = () => {
   const handleShowAllSessions = () => {
     // Navigate to sessions page
     navigate("/elder/sessions");
+  };
+
+  const handlePreviousWeek = () => {
+    if (elderDetails?.elder_id && currentWeekStart) {
+      const prevWeek = new Date(currentWeekStart);
+      prevWeek.setDate(currentWeekStart.getDate() - 7);
+      setCurrentWeekStart(prevWeek);
+      fetchCareAssignments(elderDetails.elder_id, prevWeek);
+    }
+  };
+
+  const handleNextWeek = () => {
+    if (elderDetails?.elder_id && currentWeekStart) {
+      const nextWeek = new Date(currentWeekStart);
+      nextWeek.setDate(currentWeekStart.getDate() + 7);
+      setCurrentWeekStart(nextWeek);
+      fetchCareAssignments(elderDetails.elder_id, nextWeek);
+    }
+  };
+
+  const handleDateClick = (date, assignments) => {
+    setSelectedDate(date);
+    setSelectedDayAssignments(assignments);
   };
 
   const formatDate = (dateString) => {
@@ -467,11 +577,11 @@ const ElderDashboard = () => {
           </div>
 
           <div className={styles.statsCard}>
-            <div className={styles.statsIcon}>📅</div>
+            <div className={styles.statsIcon}>�‍⚕️</div>
             <div className={styles.statsContent}>
-              <h3>Caregiver Visits</h3>
+              <h3>Assigned Caregivers</h3>
               <p className={styles.statsNumber}>
-                {statsLoading ? "..." : statsData.assignedCaregivers}
+                {statsLoading ? "..." : careStatsData.assignedCaregivers}
               </p>
             </div>
           </div>
@@ -677,6 +787,154 @@ const ElderDashboard = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Caregiver Section */}
+        <div className={styles.appointmentsSection}>
+          <div className={styles.appointmentsHeader}>
+            <h2>Your Care Assignments</h2>
+            <div className={styles.weekNavigation}>
+              <button 
+                className={styles.weekNavBtn}
+                onClick={handlePreviousWeek}
+                disabled={careAssignmentsLoading}
+              >
+                ← Previous Week
+              </button>
+              <span className={styles.currentWeek}>
+                {currentWeekStart ? (
+                  `Week of ${currentWeekStart.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}`
+                ) : 'Current Week'}
+              </span>
+              <button 
+                className={styles.weekNavBtn}
+                onClick={handleNextWeek}
+                disabled={careAssignmentsLoading}
+              >
+                Next Week →
+              </button>
+            </div>
+          </div>
+
+          {careAssignmentsLoading ? (
+            <div className={styles.loadingContainer}>
+              <div className={styles.loadingSpinner}></div>
+              <p>Loading care assignments...</p>
+            </div>
+          ) : (
+            <div>
+              {/* Weekly Calendar */}
+              <div className={styles.weeklyCalendar}>
+                {careAssignments.dailyAssignments?.map((day) => (
+                  <div 
+                    key={day.date}
+                    className={`${styles.dayCard} ${day.isToday ? styles.todayCard : ''} ${
+                      day.assignments.length > 0 ? styles.hasAssignments : ''
+                    }`}
+                    onClick={() => handleDateClick(day.date, day.assignments)}
+                  >
+                    <div className={styles.dayHeader}>
+                      <span className={styles.dayName}>{day.dayName}</span>
+                      <span className={styles.dayDate}>
+                        {new Date(day.date).getDate()}
+                      </span>
+                    </div>
+                    <div className={styles.dayContent}>
+                      {day.assignments.length > 0 ? (
+                        <div className={styles.assignmentPreview}>
+                          <div className={styles.caregiverIndicator}>
+                            👨‍⚕️ {day.assignments.length} Caregiver{day.assignments.length > 1 ? 's' : ''}
+                          </div>
+                          <div className={styles.caregiverName}>
+                            {day.assignments[0].caregiver_name}
+                            {day.assignments.length > 1 && ` +${day.assignments.length - 1} more`}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.noAssignment}>
+                          <span className={styles.noAssignmentText}>No caregiver assigned</span>
+                        </div>
+                      )}
+                    </div>
+                    {day.isToday && <div className={styles.todayIndicator}>Today</div>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Selected Day Details */}
+              {selectedDate && selectedDayAssignments && (
+                <div className={styles.selectedDayDetails}>
+                  <h3 className={styles.selectedDayTitle}>
+                    Care Details for {new Date(selectedDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </h3>
+                  
+                  {selectedDayAssignments.length > 0 ? (
+                    <div className={styles.assignmentsList}>
+                      {selectedDayAssignments.map((assignment) => (
+                        <div key={assignment.request_id} className={styles.assignmentCard}>
+                          <div className={styles.assignmentHeader}>
+                            <div className={styles.caregiverInfo}>
+                              <div className={styles.caregiverAvatar}>👨‍⚕️</div>
+                              <div className={styles.caregiverDetails}>
+                                <h4>{assignment.caregiver_name}</h4>
+                                <p className={styles.caregiverCertifications}>
+                                  {assignment.certifications}
+                                </p>
+                                <p className={styles.caregiverContact}>
+                                  📞 {assignment.caregiver_phone}
+                                  {assignment.caregiver_fixed_line && (
+                                    <span> | 🏠 {assignment.caregiver_fixed_line}</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className={styles.assignmentStatus}>
+                              <span className={
+                                assignment.status === 'approved' 
+                                  ? styles.statusApproved 
+                                  : styles.statusCompleted
+                              }>
+                                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className={styles.assignmentPeriod}>
+                            <div className={styles.periodInfo}>
+                              <span className={styles.periodLabel}>Care Period:</span>
+                              <span className={styles.periodDates}>
+                                {formatDate(assignment.start_date)} - {formatDate(assignment.end_date)}
+                              </span>
+                            </div>
+                            {assignment.duration && (
+                              <div className={styles.durationInfo}>
+                                <span className={styles.durationLabel}>Duration:</span>
+                                <span className={styles.durationValue}>{assignment.duration} days</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.noAssignments}>
+                      <div className={styles.noAssignmentsIcon}>🏠</div>
+                      <h3>No Caregiver Assigned</h3>
+                      <p>You don't have any caregiver assignments for this date.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
