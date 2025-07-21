@@ -7,10 +7,11 @@ const {
   getAppointmentById,
   updateAppointmentStatus,
   cancelAppointment,
-  getAppointmentStats
+  getAppointmentStats,
+  getAppointmentHistory 
 } = require('../controllers/appointmentController');
 
-// Get all confirmed appointments for a family member (with cancellation info)
+// Get all appointments for a family member (with filtering support)
 router.get('/family/:familyMemberId', getAllAppointmentsByFamily);
 
 // Get upcoming confirmed appointments for dashboard
@@ -27,6 +28,7 @@ router.get('/:appointmentId', getAppointmentById);
 
 // Update appointment status
 router.put('/:appointmentId/status', updateAppointmentStatus);
+router.get('/family/:familyMemberId/history', getAppointmentHistory);
 
 // Cancel appointment with refund processing
 router.put('/:appointmentId/cancel', cancelAppointment);

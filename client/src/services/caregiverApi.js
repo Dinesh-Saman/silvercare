@@ -236,6 +236,17 @@ export const caregiverApi = {
     }
   },
 
+  // Get upcoming shifts for caregiver(role caregiver)
+  fetchUpcomingShifts: async (caregiverId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/${caregiverId}/upcoming-shifts`);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching upcoming shifts:', error);
+      return [];
+    }
+  },
+
   // Get care request details by ID(role caregiver)
   getCareRequestDetails: async (requestId) => {
     try {
@@ -278,6 +289,58 @@ export const caregiverApi = {
       return data;
     } catch (error) {
       console.error('API: Error updating care request status:', error);
+      throw error;
+    }
+  },
+
+  // Update caregiver profile(role caregiver)
+  updateCaregiverProfile: async (caregiverId, profileData) => {
+    try {
+      console.log('API: Updating caregiver profile:', caregiverId, profileData);
+      const response = await fetch(`${API_BASE}/${caregiverId}/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Update profile response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error updating profile:', error);
+      throw error;
+    }
+  },
+
+  // Update caregiver password(role caregiver)
+  updateCaregiverPassword: async (caregiverId, passwordData) => {
+    try {
+      console.log('API: Updating caregiver password:', caregiverId);
+      const response = await fetch(`${API_BASE}/${caregiverId}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(passwordData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Update password response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update password');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error updating password:', error);
       throw error;
     }
   },

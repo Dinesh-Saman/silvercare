@@ -11,6 +11,7 @@ import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
 import { CaregiverReg } from "./pages/caregiver/signup";
 import { CaregiverRegStep2 } from "./pages/caregiver/signup-step2";
+import Profile from "./pages/caregiver/profile";
 import CaregiverDashboard from "./pages/caregiver/dashboard";
 import CareRequestDetails from "./pages/caregiver/care-request-details";
 import CareRequests from "./pages/caregiver/care-requests";
@@ -26,6 +27,8 @@ import { DoctorRegStep2 } from "./pages/doctor/signup-step2";
 import PhysicalAppointment from './pages/familemember/physical-appointment';
 import OnlineAppointment from './pages/familemember/online-appointment';
 import Appointments from './pages/familemember/appointments';
+import CancelAppointment from "./pages/familemember/cancel-appointment";
+import AppointmentHistory from "./pages/familemember/appointment-history";
 import BookingSummary from './pages/familemember/booking-summary';
 import Payment from './pages/familemember/payment';
 import PaymentSuccess from './pages/familemember/payment-success';
@@ -170,6 +173,24 @@ function App() {
             }
           />
 
+          <Route
+  path="/family-member/cancel-appointment"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <CancelAppointment />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/family-member/appointment-history"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <AppointmentHistory />
+    </ProtectedRoute>
+  }
+/>
+
           {/* Add the elders route */}
           <Route
             path="/family-member/elders"
@@ -310,7 +331,7 @@ function App() {
             path="/caregiver/profile"
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
-                <CaregiverProfile />
+                <Profile />
               </ProtectedRoute>
             }
           />

@@ -137,8 +137,6 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       submenu: [
         { key: 'book-appointment', label: 'Book Appointment', path: '/family-member/appointments' },
         { key: 'upcoming-appointments', label: 'Upcoming', path: '/family-member/appointments' },
-        { key: 'approved-appointment', label: 'Approved', path: '/family-member/Approved-appointment' },
-        { key: 'pending-appointments', label: 'Pending', path: '/family-member/pending-appointments' },
         { key: 'cancel-appointment', label: 'Cancel', path: '/family-member/cancel-appointment' },
         { key: 'appointment-history', label: 'History', path: '/family-member/appointment-history' }
       ]
