@@ -30,6 +30,11 @@ export const CaregiverReg = () => {
 
   // Custom email validation function - Only Gmail addresses
   const validateEmail = (email) => {
+    // Check for capital letters first
+    if (/[A-Z]/.test(email)) {
+      return 'Email should not contain capital letters. Please use lowercase letters only.';
+    }
+    
     const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     return gmailRegex.test(email);
   };
@@ -49,6 +54,38 @@ export const CaregiverReg = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle email with lowercase conversion
+    if (name === 'email') {
+      const lowercaseEmail = value.toLowerCase();
+      setFormData(prev => ({
+        ...prev,
+        [name]: lowercaseEmail
+      }));
+      
+      // Check if user typed capital letters to show warning
+      if (/[A-Z]/.test(value)) {
+        setErrors(prev => ({
+          ...prev,
+          email: 'Email should not contain capital letters. Please use lowercase letters only.'
+        }));
+      } else {
+        // Clear capital letter error and check email format
+        if (!validateEmail(lowercaseEmail)) {
+          setErrors(prev => ({
+            ...prev,
+            email: 'Please enter a valid Gmail address (e.g., user@gmail.com)'
+          }));
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            email: ''
+          }));
+        }
+      }
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -61,15 +98,6 @@ export const CaregiverReg = () => {
     }));
 
     // Real-time validation
-    if (name === 'email' && value) {
-      if (!validateEmail(value)) {
-        setErrors(prev => ({
-          ...prev,
-          email: 'Please enter a valid Gmail address (e.g., user@gmail.com)'
-        }));
-      }
-    }
-
     if (name === 'phone' && value) {
       if (!validatePhone(value)) {
         setErrors(prev => ({
@@ -184,8 +212,9 @@ export const CaregiverReg = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      placeholder="e.g., user@gmail.com"
+                      placeholder="e.g., user@gmail.com (lowercase only)"
                       className={`${styles.formInput} ${errors.email ? styles.error : ''}`}
+                      style={{ textTransform: 'lowercase' }}
                       pattern="[a-zA-Z0-9._%+\-]+@gmail\.com"
                       title="Please enter a valid Gmail address (must end with @gmail.com)"
                       required

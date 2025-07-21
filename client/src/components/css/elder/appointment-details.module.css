@@ -1,24 +1,31 @@
+/* Online Appointment Instructions */
+.onlineInstructions {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+  border: 2px solid #a5b4fc;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
 /* Appointment Details Page Styles */
 .pageContainer {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 .contentContainer {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px;
 }
 
 /* Header */
 .header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: white;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 /* Modern Professional Back Button */
@@ -26,16 +33,16 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #3b82f6;
   border: 2px solid #3b82f6;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border-radius: 12px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -52,14 +59,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .headerContent h1 {
   color: #1e293b;
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -73,74 +82,83 @@
 .statusUpcoming {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statusPast {
   background: linear-gradient(135deg, #64748b 0%, #475569 100%);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statusCompleted {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statusConfirmed {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statusCancelled {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.875rem;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Details Grid */
 .detailsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
 /* Cards */
 .card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
 }
 
 .cardHeader {
@@ -148,26 +166,30 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .cardIcon {
   font-size: 1.5rem;
-  padding: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .cardHeader h2 {
   color: #1e293b;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cardContent {
@@ -185,12 +207,13 @@
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border-radius: 12px;
   margin-bottom: 16px;
+  border: 2px solid #bae6fd;
 }
 
 .doctorAvatar {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -198,27 +221,32 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+  border: 3px solid white;
+  flex-shrink: 0;
 }
 
 .doctorInfo h3 {
   color: #1e293b;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 4px 0;
 }
 
 .specialization {
   color: #3b82f6;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   margin: 0 0 2px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .institution {
   color: #64748b;
   font-size: 0.875rem;
   margin: 0;
+  font-weight: 500;
 }
 
 /* Info Grid */
@@ -232,61 +260,71 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 8px;
-  border-left: 4px solid #667eea;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  /* border-left removed */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .infoLabel {
   color: #64748b;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .infoValue {
   color: #1e293b;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   text-align: right;
+  max-width: 60%;
 }
 
 .onlineType {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   color: white !important;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
   font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
 }
 
 .physicalType {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
   color: white !important;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
   font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
 }
 
 /* Professional Time Remaining Section */
 .timeRemainingSection {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .timeRemainingBanner {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
 }
 
 .timeRemainingBanner.normal {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border-left: 4px solid #0ea5e9;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
 }
 
 .timeRemainingBanner.urgent {
-  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  border-color: #f59e0b;
   animation: subtleGlow 3s ease-in-out infinite alternate;
 }
 
@@ -299,8 +337,8 @@
 }
 
 .timeRemainingLabel {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -308,8 +346,8 @@
 }
 
 .timeRemainingValue {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 900;
   color: #1e293b;
 }
 
@@ -318,49 +356,20 @@
 }
 
 .timeRemainingBanner.urgent .timeRemainingValue {
-  color: #d97706;
+  color: #ea580c;
 }
 
 .timeRemainingBanner.normal .timeRemainingLabel {
-  color: #0369a1;
+  color: #1e40af;
 }
 
 .timeRemainingBanner.normal .timeRemainingValue {
-  color: #0284c7;
+  color: #1d4ed8;
 }
 
 @keyframes subtleGlow {
-  0% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-  100% { box-shadow: 0 8px 16px rgba(245, 158, 11, 0.2); }
-}
-
-/* Remove old time remaining styles */
-.timeRemainingCard {
-  display: none;
-}
-
-.timeRemaining {
-  display: none;
-}
-
-.timeRemainingIcon {
-  display: none;
-}
-
-.timeRemainingText {
-  display: none;
-}
-
-.timeRemainingDetail {
-  display: none;
-}
-
-.timeRemainingUrgent {
-  display: none;
-}
-
-.timeRemainingNormal {
-  display: none;
+  0% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1); }
+  100% { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3); }
 }
 
 /* Actions */
@@ -370,24 +379,79 @@
   gap: 12px;
 }
 
+/* Physical Appointment Instructions */
+.physicalInstructions {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #bae6fd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.instructionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.instructionIcon {
+  font-size: 1.5rem;
+  padding: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.instructionHeader h3 {
+  color: #1e293b;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.instructionList {
+  margin: 0;
+}
+
+.instructionList p {
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.instructionList p:last-child {
+  margin-bottom: 0;
+}
+
 /* Modern Professional Action Buttons */
 .actionBtn {
-  padding: 16px 28px;
+  padding: 16px 24px;
   border: none;
   border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-height: 52px;
 }
 
 .actionBtn:hover {
@@ -403,31 +467,45 @@
 .joinBtn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
 }
 
 .joinBtn:hover {
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5);
 }
 
 .cancelBtn {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
 }
 
 .cancelBtn:hover {
-  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
 }
 
 .backToListBtn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
 .backToListBtn:hover {
-  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
+}
+
+.cancelBtn:hover {
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
+}
+
+.backToListBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.backToListBtn:hover {
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
 }
 
 /* Button Spinner */
@@ -448,22 +526,27 @@
   justify-content: center;
   min-height: 60vh;
   text-align: center;
+  background: white;
+  border-radius: 20px;
+  margin: 32px;
+  padding: 60px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .loadingSpinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(102, 126, 234, 0.3);
-  border-top: 4px solid #667eea;
+  width: 64px;
+  height: 64px;
+  border: 6px solid #e2e8f0;
+  border-top: 6px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .loadingContainer p {
-  color: white;
-  font-size: 1.125rem;
-  font-weight: 500;
+  color: #64748b;
+  font-size: 1.25rem;
+  font-weight: 600;
   margin: 0;
 }
 
@@ -475,49 +558,51 @@
   justify-content: center;
   min-height: 60vh;
   text-align: center;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 40px;
-  margin: 24px;
+  background: white;
+  border-radius: 20px;
+  padding: 60px 40px;
+  margin: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .errorIcon {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: 5rem;
+  margin-bottom: 24px;
   opacity: 0.7;
 }
 
 .errorContainer h2 {
   color: #1e293b;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 12px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
 }
 
 .errorContainer p {
   color: #64748b;
-  font-size: 1rem;
-  margin: 0 0 24px 0;
+  font-size: 1.125rem;
+  margin: 0 0 32px 0;
   max-width: 500px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .retryBtn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .retryBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
 /* Animations */
@@ -545,7 +630,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .contentContainer {
-    padding: 16px;
+    padding: 20px 16px;
   }
   
   .detailsGrid {
@@ -554,75 +639,128 @@
   
   .headerContent {
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     align-items: flex-start;
+  }
+  
+  .headerContent h1 {
+    font-size: 1.75rem;
+  }
+  
+  .doctorProfile {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .doctorAvatar {
+    width: 72px;
+    height: 72px;
+    font-size: 1.75rem;
+  }
+  
+  .infoItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 24px 20px;
+  }
+  
+  .infoValue {
+    text-align: left;
+    max-width: 100%;
+    font-size: 1rem;
+  }
+  
+  .timeRemainingContent {
+    padding: 24px 20px;
+  }
+  
+  .timeRemainingValue {
+    font-size: 2rem;
+  }
+  
+  .timeRemainingLabel {
+    font-size: 1rem;
+  }
+  
+  .actionsGrid {
+    gap: 16px;
+  }
+  
+  .actionBtn {
+    padding: 18px 24px;
+    font-size: 1rem;
+    min-height: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentContainer {
+    padding: 16px 12px;
+  }
+  
+  .card {
+    padding: 24px 20px;
+  }
+  
+  .header {
+    padding: 24px 20px;
+  }
+  
+  .backBtn {
+    padding: 12px 20px;
+    font-size: 0.875rem;
   }
   
   .headerContent h1 {
     font-size: 1.5rem;
   }
   
-  .doctorProfile {
-    flex-direction: column;
-    text-align: center;
+  .cardHeader h2 {
+    font-size: 1.25rem;
   }
   
-  .infoItem {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .infoValue {
-    text-align: left;
-  }
-  
-  .timeRemainingContent {
-    padding: 16px 20px;
-  }
-  
-  .timeRemainingValue {
+  .cardIcon {
     font-size: 1.5rem;
-  }
-  
-  .timeRemainingLabel {
-    font-size: 0.8rem;
-  }
-  
-  .actionsGrid {
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .card {
-    padding: 16px;
-  }
-  
-  .header {
-    padding: 16px;
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
   }
   
   .doctorAvatar {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
+    font-size: 1.5rem;
+  }
+  
+  .doctorInfo h3 {
     font-size: 1.25rem;
   }
   
-  .timeRemainingCard {
-    padding: 16px;
-  }
-  
-  .timeRemainingContent {
-    padding: 12px 16px;
+  .specialization {
+    font-size: 1rem;
   }
   
   .timeRemainingValue {
-    font-size: 1.25rem;
+    font-size: 1.75rem;
   }
   
   .timeRemainingLabel {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .infoLabel {
+    font-size: 0.875rem;
+  }
+  
+  .infoValue {
+    font-size: 1rem;
+  }
+  
+  .actionBtn {
+    font-size: 0.875rem;
+    padding: 16px 20px;
   }
 }
 

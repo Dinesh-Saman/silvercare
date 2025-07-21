@@ -28,6 +28,7 @@ const caregiverRoutes = require('./routes/caregiverRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes'); // Add this line
 const paymentRoutes = require('./routes/paymentRoutes');
 const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
+const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
 
 app.use('/api/users', userRoutes); // Mount the full route
 app.use('/api/register', registerRoutes);
@@ -39,6 +40,7 @@ app.use('/api/caregivers', caregiverRoutes);
 app.use('/api/appointments', appointmentRoutes); // Add this line
 app.use('/api/payment', paymentRoutes);
 app.use('/api/healthprofessional', healthprofessionalRoutes);
+app.use('/api/care-assignments', careAssignmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

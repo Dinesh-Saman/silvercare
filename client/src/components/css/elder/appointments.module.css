@@ -6,7 +6,7 @@
 .contentContainer {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 54px;
 }
 
 /* Header */
@@ -127,7 +127,21 @@
 .filtersContent {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+}
+
+.statusFilterSection {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.searchFilterSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 20px;
+  align-items: end;
 }
 
 .filtersRow {
@@ -162,13 +176,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .statusFilters {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* Modern Professional Filter Buttons */
@@ -209,7 +224,7 @@
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 0.875rem;
-  min-width: 280px;
+  width: 100%;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -229,7 +244,7 @@
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 0.875rem;
-  min-width: 180px;
+  width: 100%;
   transition: all 0.3s ease;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -271,7 +286,6 @@
   padding: 16px 20px;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border-radius: 12px;
-  border-left: 4px solid #3b82f6;
 }
 
 .resultsInfo p {
@@ -882,6 +896,11 @@
     padding: 16px;
   }
   
+  .searchFilterSection {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
   .filtersHeader {
     flex-direction: column;
     gap: 16px;
@@ -905,14 +924,7 @@
   
   .statusFilters {
     justify-content: center;
-  }
-  
-  .searchInput {
-    min-width: 100%;
-  }
-  
-  .dateInput, .selectInput {
-    min-width: 100%;
+    flex-direction: column;
   }
   
   .appointmentsGrid {

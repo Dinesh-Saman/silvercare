@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import Navbar from "../../components/navbar";
 import { useAuth } from '../../context/AuthContext';
 import { 
   getElderDetailsByEmail, 
@@ -7,6 +8,7 @@ import {
   joinSession 
 } from '../../services/elderApi2';
 import styles from '../../components/css/elder/session-details.module.css';
+import ElderLayout from '../../components/ElderLayout';
 
 const SessionDetails = () => {
   const { currentUser } = useAuth();
@@ -158,12 +160,15 @@ const SessionDetails = () => {
   if (loading) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingSpinner}></div>
             <p>Loading session details...</p>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -171,6 +176,8 @@ const SessionDetails = () => {
   if (error) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>❌</div>
@@ -184,6 +191,7 @@ const SessionDetails = () => {
             </button>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -191,6 +199,8 @@ const SessionDetails = () => {
   if (!session) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>📅</div>
@@ -204,115 +214,171 @@ const SessionDetails = () => {
             </button>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
 
   return (
     <div className={styles.pageContainer}>
+      <Navbar />
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
-          <button 
-            className={styles.backBtn}
-            onClick={() => navigate('/elder/sessions')}
-          >
-            ← Back to Sessions
-          </button>
-          
           <div className={styles.headerContent}>
             <h1>Session Details</h1>
-            <div className={styles.statusBadge}>
-              <span className={getStatusBadgeClass(session.status, session.date_time)}>
-                {getStatusText(session.status, session.date_time)}
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className={styles.statusBadge}>
+                <span className={getStatusBadgeClass(session.status, session.date_time)}>
+                  {getStatusText(session.status, session.date_time)}
+                </span>
+              </div>
+              <button 
+                onClick={() => navigate('/elder/sessions')}
+                className={styles.backBtn}
+                style={{ marginBottom: 0 }}
+              >
+                ← Back to Sessions
+              </button>
             </div>
           </div>
         </div>
 
         {/* Details Grid */}
         <div className={styles.detailsGrid}>
-          {/* Counselor Information */}
+          {/* Key Session Information - Most Important First */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>👨‍⚕️</div>
-              <h2>Counselor Information</h2>
-            </div>
-            <div className={styles.cardContent}>
-              <div className={styles.counselorProfile}>
-                <div className={styles.counselorAvatar}>👨‍⚕️</div>
-                <div className={styles.counselorInfo}>
-                  <h3>{session.counselor_name}</h3>
-                  <p className={styles.specialization}>{session.specialization}</p>
-                  <p className={styles.institution}>{session.current_institution}</p>
-                  <p className={styles.experience}>{session.years_of_experience} years of experience</p>
-                  <p className={styles.district}>District: {session.counselor_district}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Session Information */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>📅</div>
-              <h2>Session Information</h2>
+              <div className={styles.cardIcon}>�</div>
+              <h2>Your Session Details</h2>
             </div>
             <div className={styles.cardContent}>
               <div className={styles.infoGrid}>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Date</span>
+                  <span className={styles.infoLabel}>Date & Day:</span>
                   <span className={styles.infoValue}>{formatDate(session.date_time)}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Time</span>
+                  <span className={styles.infoLabel}>Time:</span>
                   <span className={styles.infoValue}>{formatTime(session.date_time)}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Session Type</span>
+                  <span className={styles.infoLabel}>Session Type:</span>
                   <span className={`${styles.infoValue} ${
-                    session.session_type === 'online' ? styles.onlineType : styles.physicalType
+                    session.session_type === 'online' 
+                      ? styles.onlineType 
+                      : styles.physicalType
                   }`}>
-                    {session.session_type === 'online' ? '🖥️ Online Session' : '🏥 Physical Session'}
+                    {session.session_type === 'online' ? '💻 Video Call Session' : '🏥 In-Person Session'}
                   </span>
                 </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Session ID</span>
-                  <span className={styles.infoValue}>#{session.session_id}</span>
-                </div>
-                {session.session_notes && (
+                {session.session_type === 'physical' && (
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Notes</span>
-                    <span className={styles.infoValue}>{session.session_notes}</span>
+                    <span className={styles.infoLabel}>Location:</span>
+                    <span className={styles.infoValue}>
+                      {session.current_institution}
+                    </span>
                   </div>
                 )}
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Session Number:</span>
+                  <span className={styles.infoValue}>#{session.session_id}</span>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Time Remaining (if upcoming) */}
-          {isUpcomingSession(session) && (
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <div className={styles.cardIcon}>⏰</div>
-                <h2>Time Until Session</h2>
-              </div>
-              <div className={styles.cardContent}>
+              
+              {/* Time Remaining for Upcoming Sessions */}
+              {isUpcomingSession(session) && (
                 <div className={styles.timeRemainingSection}>
                   <div className={`${styles.timeRemainingBanner} ${
                     getTimeRemaining(session.date_time).urgent ? styles.urgent : styles.normal
                   }`}>
                     <div className={styles.timeRemainingContent}>
-                      <div className={styles.timeRemainingLabel}>Session starts in</div>
+                      <div className={styles.timeRemainingLabel}>Your session starts in</div>
                       <div className={styles.timeRemainingValue}>
                         {getTimeRemaining(session.date_time).text}
                       </div>
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Counselor Information Card */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>�‍⚕️</div>
+              <h2>Your Counselor</h2>
+            </div>
+            <div className={styles.cardContent}>
+              <div className={styles.counselorProfile}>
+                <div className={styles.counselorAvatar}>
+                  {session.counselor_name.charAt(0)}
+                </div>
+                <div className={styles.counselorInfo}>
+                  <h3>{session.counselor_name}</h3>
+                  <p className={styles.specialization}>{session.specialization}</p>
+                  <p className={styles.institution}>{session.current_institution}</p>
+                </div>
+              </div>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Experience:</span>
+                  <span className={styles.infoValue}>{session.years_of_experience || 'N/A'} years</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>District:</span>
+                  <span className={styles.infoValue}>{session.counselor_district || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>📝</div>
+              <h2>Additional Information</h2>
+            </div>
+            <div className={styles.cardContent}>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Session Notes:</span>
+                  <span className={styles.infoValue}>{session.session_notes || 'No special notes'}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Session Booked:</span>
+                  <span className={styles.infoValue}>
+                    {new Date(session.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Session Notes - Actions Card */}
+          {session.session_notes && (
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardIcon}>📋</div>
+                <h2>Session Notes</h2>
+              </div>
+              <div className={styles.cardContent}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoValue}>{session.session_notes}</span>
+                </div>
               </div>
             </div>
           )}
+
+          
 
           {/* Contact Information */}
           <div className={styles.card}>
@@ -364,6 +430,7 @@ const SessionDetails = () => {
           </button>
         </div>
       </div>
+      </ElderLayout>
     </div>
   );
 };

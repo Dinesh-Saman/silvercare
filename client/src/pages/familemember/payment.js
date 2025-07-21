@@ -537,15 +537,7 @@ const Payment = () => {
               </div>
 
               {/* Cancel Button */}
-              <div className={styles.cancelSection}>
-                <button
-                  className={styles.cancelButton}
-                  onClick={handleCancel}
-                  disabled={processing}
-                >
-                  Cancel Booking
-                </button>
-              </div>
+
             </div>
           </div>
         </FamilyMemberLayout>
