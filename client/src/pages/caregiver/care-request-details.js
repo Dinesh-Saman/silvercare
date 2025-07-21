@@ -175,17 +175,23 @@ const CareRequestDetails = () => {
                     <label>Duration:</label>
                     <span>{careRequest?.duration} days</span>
                   </div>
-                  {/* Show time left only for pending requests */}
-                  {careRequest?.status === 'pending' && (
-                    <div className={styles.infoItem}>
-                      <label>Time Left:</label>
-                      <span className={
-                        (new Date(careRequest.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
-                      }>
-                        {getTimeLeft(careRequest.start_date)}
-                      </span>
-                    </div>
-                  )}
+                     {/* Show time left for pending and approved requests */}
+                     {(careRequest?.status === 'pending' || careRequest?.status === 'approved') && (
+                       <div className={styles.infoItem}>
+                         <label>Time Left:</label>
+                         <span className={
+                           (() => {
+                             const now = new Date();
+                             const start = new Date(careRequest.start_date);
+                             const diffMs = start - now;
+                             const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                             return diffDays > 2 ? styles.greenText : styles.redText;
+                           })()
+                         }>
+                           {getTimeLeft(careRequest.start_date)}
+                         </span>
+                       </div>
+                     )}
                 </div>
               </div>
 

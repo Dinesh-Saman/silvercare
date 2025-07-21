@@ -12,21 +12,36 @@ const CaregiverDashboard = () => {
   const { user } = useAuth(); // <-- pulls from logged-in context
   const navigate = useNavigate();
   const [elders, setElders] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [careRequests, setCareRequests] = useState([]);
   const [carelog, setCarelogCount] = useState([]);
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Upcoming shifts fetched from backend
+  const [upcomingShifts, setUpcomingShifts] = useState([]);
+
+  // Helper to show time left in days/hours/minutes
+  const getTimeLeft = (startDate) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const diffMs = start - now;
+    if (diffMs <= 0) return 'Started';
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    let result = '';
+    if (diffDays > 0) result += `${diffDays} day${diffDays > 1 ? 's' : ''} `;
+    if (diffHours > 0) result += `${diffHours} hour${diffHours > 1 ? 's' : ''} `;
+    if (diffMinutes > 0 && diffDays === 0) result += `${diffMinutes} min${diffMinutes > 1 ? 's' : ''}`;
+    return result.trim();
+  };
 
 
   useEffect(() => {
     if (!user || !user.caregiver_id) return;
-
     const caregiverId = user.caregiver_id;
     setLoading(true);
     Promise.all([
       caregiverApi.fetchAssignedElders(caregiverId).then((data) => {
-        // Only show elders with status 'approved' or 'completed' in recent elders
         const transformed = data.map((elder) => ({
           name: elder.name,
           age: elder.age,
@@ -58,31 +73,44 @@ const CaregiverDashboard = () => {
         setCarelogCount(0);
       }),
       caregiverApi.fetchCareRequests(caregiverId).then((data) => {
-        const transformed = data
-          .filter(request => request.status === 'pending')
-          .map((request) => ({
-            requestId: request.request_id,
-            elderName: request.elder_name,
-            elderAge: request.elder_age,
-            elderAddress: request.elder_address,
-            elderContact: request.elder_contact,
-            medicalConditions: request.medical_conditions,
-            familyMemberName: request.family_member_name,
-            familyMemberPhone: request.family_member_phone,
-            familyMemberEmail: request.family_member_email,
-            startDate: request.start_date,
-            endDate: request.end_date,
-            status: request.status,
-            duration: request.duration,
-            requestDate: request.request_date
-          }));
+        // Get all family IDs from carerequest table for this caregiver, status approved or completed
+        const allFamilyIds = Array.isArray(data)
+          ? data.filter(request => request.status === 'approved' || request.status === 'completed')
+              .map(request => request.family_id)
+              .filter(Boolean)
+          : [];
+        // Get unique family IDs
+        const uniqueFamilyIdsFromRequests = Array.from(new Set(allFamilyIds));
+        setFamilies(uniqueFamilyIdsFromRequests);
+
+        // Keep your existing careRequests logic
+        const transformed = Array.isArray(data)
+          ? data.filter(request => request.status === 'pending')
+            .map((request) => ({
+              requestId: request.request_id,
+              elderName: request.elder_name,
+              elderAge: request.elder_age,
+              elderAddress: request.elder_address,
+              elderContact: request.elder_contact,
+              medicalConditions: request.medical_conditions,
+              familyMemberName: request.family_member_name,
+              familyMemberPhone: request.family_member_phone,
+              familyMemberEmail: request.family_member_email,
+              startDate: request.start_date,
+              endDate: request.end_date,
+              status: request.status,
+              duration: request.duration,
+              requestDate: request.request_date
+            }))
+          : [];
         setCareRequests(transformed);
+      }),
+      caregiverApi.fetchUpcomingShifts(caregiverId).then((data) => {
+        setUpcomingShifts(data);
+        console.log('Upcoming shifts:', data);
       })
+      
     ]).then(() => {
-      setMessages([
-        { sender: "Dr. Michael Chen", content: "Please update Margaret's blood pressure readings.", timeAgo: "2 hours ago" },
-        { sender: "Lisa Thompson (Family)", content: "Did Margaret take her evening medication?", timeAgo: "6 hours ago" }
-      ]);
       setLoading(false);
     });
   }, []);
@@ -107,6 +135,15 @@ const CaregiverDashboard = () => {
   const filteredElders = elders.filter(e => e.status === 'approved' || e.status === 'completed');
   // Get unique family IDs from filtered elders
   const uniqueFamilyIds = Array.from(new Set(filteredElders.map(e => e.family_id))).filter(Boolean);
+
+  // Filtered upcoming shifts for summary card
+  const filteredUpcomingShifts = upcomingShifts.filter(shift => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(shift.date);
+    start.setHours(0, 0, 0, 0);
+    return shift.status === 'approved' && start >= today;
+  });
 
   const dashboardContent = (
     <div className={styles.dashboard}>
@@ -133,14 +170,14 @@ const CaregiverDashboard = () => {
           </div>
         </div>
         <div className={styles.card}>
-          <div className={styles.cardIcon}>💬</div>
+          <div className={styles.cardIcon}>📅</div>
           <div className={styles.cardContent}>
-            <p className={styles.cardLabel}>Messages</p>
-            <span className={styles.cardNumber}>{messages.length}</span>
+            <p className={styles.cardLabel}>Upcoming Shifts</p>
+            <span className={styles.cardNumber}>{filteredUpcomingShifts.length}</span>
           </div>
         </div>
       </div>
-      
+
       <div className={styles.dashboardgrid}>
         <section className={styles.carerequest}>
           <h2>Care Requests</h2>
@@ -180,25 +217,21 @@ const CaregiverDashboard = () => {
                     </div>
                   </div>
                   <div className={styles.requestDetail}>
-                      <span className={styles.label}>Time Left:</span>
-                      {(() => {
-                        const now = new Date();
-                        const start = new Date(request.startDate);
-                        const diffMs = start - now;
-                        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-                        if (diffDays > 0) {
-                          return (
-                            <span className={diffDays <= 7 ? styles.timeLeftRed : styles.timeLeftGreen}>
-                              {diffDays} day{diffDays !== 1 ? 's' : ''} left
-                            </span>
-                          );
-                        } else if (diffDays === 0) {
-                          return <span className={styles.timeLeftRed}>Starts today</span>;
-                        } else {
-                          return <span className={styles.timeLeftRed}>Started</span>;
-                        }
-                      })()}
-                    </div>
+                    <span className={styles.label}>Time Left:</span>
+                    {(() => {
+                      const now = new Date();
+                      const start = new Date(request.startDate);
+                      const diffMs = start - now;
+                      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                      let colorClass = diffDays > 2 ? styles.timeLeftGreen : styles.timeLeftRed;
+                      if (diffMs <= 0) colorClass = styles.timeLeftRed;
+                      return (
+                        <span className={colorClass}>
+                          {getTimeLeft(request.startDate)}
+                        </span>
+                      );
+                    })()}
+                  </div>
                   <div className={styles.careRequestActions}>
                     <button 
                       className={styles.viewMoreButton}
@@ -212,8 +245,123 @@ const CaregiverDashboard = () => {
             )}
           </div>
         </section>
+        
+        <section className={styles.upcomingShifts}>
+          <h2>Upcoming Shifts</h2>
+          <div className={styles.shiftsList}>
+            {upcomingShifts.length === 0 ? (
+              <div className={styles.noShifts}>No upcoming shifts scheduled.</div>
+            ) : (
+              upcomingShifts
+                .filter(shift => {
+                  // Only show status 'approved' and start date >= today
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const start = new Date(shift.date);
+                  start.setHours(0, 0, 0, 0);
+                  
+                  console.log('Filtering shift:', {
+                    requestId: shift.requestId,
+                    status: shift.status,
+                    startDate: shift.date,
+                    startDateFormatted: start,
+                    today: today,
+                    statusMatch: shift.status === 'approved',
+                    dateMatch: start >= today,
+                    finalResult: shift.status === 'approved' && start >= today
+                  });
+                  
+                  return shift.status === 'approved' && start >= today;
+                })
+                .map((shift, i) => (
+                  <div className={styles.shiftCard} key={i}>
+                    <div className={styles.shiftHeader}>
+                      <span className={styles.shiftDate}>{new Date(shift.date).toLocaleDateString()}</span>
+                      <span className={styles.shiftTime}>{shift.duration || ''}</span>
+                    </div>
+                    {/* Optionally show elder name */}
+                    {shift.elderName && (
+                      <div className={styles.shiftDetails}>
+                        <span className={styles.label}>Elder:</span>
+                        <span className={styles.value}>{shift.elderName}</span>
+                      </div>
+                    )}
+                    <div className={styles.shiftDetails}>
+                      <span className={styles.label}>Location:</span>
+                      <span className={styles.value}>{shift.address}</span>
+                    </div>
+                    {/* Time Left indicator below, green if >2 days, red if <=2 days */}
+                    <div className={styles.shiftDetails} style={{ marginTop: 8 }}>
+                      <span className={styles.label}>Time Left:</span>
+                      {(() => {
+                        const now = new Date();
+                        const start = new Date(shift.date);
+                        const diffMs = start - now;
+                        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                        let colorClass = diffDays > 2 ? styles.timeLeftGreen : styles.timeLeftRed;
+                        if (diffMs <= 0) colorClass = styles.timeLeftRed;
+                        return (
+                          <span className={colorClass}>
+                            {getTimeLeft(shift.date)}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div className={styles.careRequestActions}>
+                      <button 
+                        className={styles.viewMoreButton}
+                        onClick={() => navigate(`/caregiver/care-request/${shift.requestId}`)}
+                      >
+                        View More Details
+                      </button>
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </section>
+
+        <section className={styles.performanceStats}>
+          <h2>Performance Stats</h2>
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Completed Shifts</span>
+              <span className={styles.statValue}>{user?.completedShifts || 0}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Care Requests Fulfilled</span>
+              <span className={styles.statValue}>{user?.fulfilledRequests || 0}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Average Rating</span>
+              <span className={styles.statValue}>{user?.averageRating ? user.averageRating.toFixed(1) : 'N/A'}</span>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.statLabel}>Total Hours Worked</span>
+              <span className={styles.statValue}>{user?.totalHours || 0}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.quickLinks}>
+          <h2>Quick Links / Actions</h2>
+          <div className={styles.linksGrid}>
+            <button className={styles.quickLinkBtn} onClick={() => navigate('/caregiver/request-time-off')}>
+              🕒 Request Time Off
+            </button>
+            <button className={styles.quickLinkBtn} onClick={() => navigate('/caregiver/update-profile')}>
+              👤 Update Profile
+            </button>
+            <button className={styles.quickLinkBtn} onClick={() => navigate('/caregiver/schedule')}>
+              📅 View Schedule
+            </button>
+            <button className={styles.quickLinkBtn} onClick={() => navigate('/caregiver/carelogs')}>
+              📝 View Carelogs
+            </button>
+          </div>
+        </section>
       </div>
-      
+
       <div className={styles.recentelders}>
         <h2>Recent Elders</h2>
         <div className={styles.elderlist}>
@@ -250,24 +398,6 @@ const CaregiverDashboard = () => {
             ))
           )}
         </div>
-      </div>
-      
-      <div className={styles.recentmessages}>
-        <h2>Recent Messages</h2>
-        <ul>
-          {messages.map((msg, i) => (
-            <li key={i}>
-              <div className={styles.messageAvatar}>
-                {msg.sender.split(' ').map(n => n[0]).join('').substring(0, 2)}
-              </div>
-              <div className={styles.messageContent}>
-                <div className={styles.messageSender}>{msg.sender}</div>
-                <p className={styles.messageText}>{msg.content}</p>
-              </div>
-              <span className={styles.messageTime}>{msg.timeAgo}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

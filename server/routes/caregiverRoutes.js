@@ -16,7 +16,8 @@ const {
   fetchSchedules,
   fetchCareRequests,
   updateCaregiverProfile,
-  updateCaregiverPassword
+  updateCaregiverPassword,
+  getUpcomingShifts
 } = require('../controllers/caregiverController');
 
 // Get all caregivers
@@ -60,6 +61,9 @@ router.get('/:id/caregiver-schedules', fetchSchedules);
 
 //Get care requests for caregiver(role caregiver)
 router.get('/:id/care-requests', fetchCareRequests);
+
+// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
+router.get('/:id/upcoming-shifts', getUpcomingShifts);
 
 // Update caregiver profile(role caregiver)
 router.put('/:caregiverId/profile', updateCaregiverProfile);

@@ -691,6 +691,39 @@ const fetchCareRequests = async (req, res) => {
   }
 };
 
+
+// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
+const getUpcomingShifts = async (req, res) => {
+  const caregiverId = req.params.id;
+  console.log('Fetching upcoming shifts for caregiverId:', caregiverId);
+  try {
+    // Only fetch care requests with status 'approved' and end_date >= today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await pool.query(`
+      SELECT cr.request_id, cr.start_date, cr.end_date, cr.duration, cr.status, e.address, cr.elder_id, e.name as elder_name
+      FROM carerequest cr
+      INNER JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1 AND cr.status = 'approved' AND cr.end_date >= $2
+      ORDER BY cr.start_date ASC
+    `, [caregiverId, today]);
+    const shifts = result.rows.map(row => ({
+      requestId: row.request_id,
+      date: row.start_date,
+      endDate: row.end_date,
+      duration: row.duration,
+      status: row.status,
+      address: row.address || '',
+      elderName: row.elder_name
+    }));
+    // Always return 200, even if no shifts found
+    res.status(200).json({ success: true, shifts });
+  } catch (err) {
+    console.error('Error fetching upcoming shifts:', err);
+    res.status(500).json({ success: false, error: 'Error fetching upcoming shifts' });
+  }
+};
+
 // Update caregiver profile(role caregiver)
 const updateCaregiverProfile = async (req, res) => {
   const { caregiverId } = req.params;
@@ -886,6 +919,7 @@ module.exports = {
   fetchSchedules,
   fetchCareRequests,
   updateCaregiverProfile,
-  updateCaregiverPassword
+  updateCaregiverPassword,
+  getUpcomingShifts,
 };
 
