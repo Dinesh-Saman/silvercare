@@ -59,10 +59,18 @@ const extractDateFromNIC = (nic) => {
 // Real-time validation functions
 const validateEmail = (email) => {
   if (!email) return '';
+  
+  // Check for capital letters first
+  if (/[A-Z]/.test(email)) {
+    return 'Email should not contain capital letters. Please use lowercase letters only.';
+  }
+  
+  // Then check email format
   const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
   if (!emailRegex.test(email)) {
-    return 'Please enter a valid email address';
+    return 'Please enter a valid email address with lowercase letters only';
   }
+  
   return '';
 };
 
@@ -176,12 +184,25 @@ const ElderSignup = () => {
     
     // Validate specific fields in real-time
     if (name === 'email') {
-      const emailError = validateEmail(value);
+      // Convert email to lowercase automatically
+      const lowercaseEmail = value.toLowerCase();
+      
+      // But first check if user typed capital letters to show warning
+      const emailError = validateEmail(value); // Validate original value to catch capitals
       if (emailError) {
         newErrors.email = emailError;
       } else {
         delete newErrors.email;
       }
+      
+      // Update form data with lowercase email
+      setFormData(prev => ({
+        ...prev,
+        [name]: lowercaseEmail
+      }));
+      
+      setErrors(newErrors);
+      return;
     }
     
     if (name === 'contactNumber') {
@@ -406,7 +427,7 @@ const ElderSignup = () => {
         <div className={styles.signupCard}>
           <div className={styles.header}>
             <h1 className={styles.title}>Access Denied</h1>
-            <p className={styles.subtitle}>Redirecting to login...</p>
+                        <p className={styles.subtitle}>Redirecting to login...</p>
           </div>
         </div>
       </div>
@@ -419,7 +440,7 @@ const ElderSignup = () => {
       <FamilyMemberLayout>
         <div className={styles.container}>
           <div className={styles.signupCard}>
-                        <div className={styles.header}>
+            <div className={styles.header}>
               <h1 className={styles.title}>Elder Registration</h1>
               <p className={styles.subtitle}>Create an account for elderly care services</p>
             </div>
@@ -477,11 +498,17 @@ const ElderSignup = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                    placeholder="Enter email address"
+                    placeholder="Enter email address (lowercase only)"
+                    style={{ textTransform: 'lowercase' }}
                   />
                   {errors.email && <span className={styles.error}>{errors.email}</span>}
                   {formData.email && !errors.email && formData.email.length > 0 && (
                     <span className={styles.success}>✓ Valid email format</span>
+                  )}
+                  {formData.email && formData.email.length > 0 && (
+                    <small className={styles.info}>
+                      Email will be automatically converted to lowercase
+                    </small>
                   )}
                 </div>
 

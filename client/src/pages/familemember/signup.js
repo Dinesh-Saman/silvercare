@@ -29,6 +29,11 @@ export const FamilyMemberReg = () => {
 
   // Custom email validation function
   const validateEmail = (email) => {
+    // Check for capital letters first
+    if (/[A-Z]/.test(email)) {
+      return 'Email should not contain capital letters. Please use lowercase letters only.';
+    }
+    
     const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     return emailRegex.test(email);
   };
@@ -47,45 +52,68 @@ export const FamilyMemberReg = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const { name, value } = e.target;
+  
+  // Handle email with lowercase conversion
+  if (name === 'email') {
+    const lowercaseEmail = value.toLowerCase();
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: lowercaseEmail
     }));
-
-    // Clear previous error when user starts typing
-    setErrors(prev => ({
-      ...prev,
-      [name]: ''
-    }));
-
-        if (name === 'email' && value) {
-      if (!validateEmail(value)) {
+    
+    // Check if user typed capital letters to show warning
+    if (/[A-Z]/.test(value)) {
+      setErrors(prev => ({
+        ...prev,
+        email: 'Email should not contain capital letters. Please use lowercase letters only.'
+      }));
+    } else {
+      // Clear capital letter error and check email format
+      if (!validateEmail(lowercaseEmail)) {
         setErrors(prev => ({
           ...prev,
           email: 'Please enter a valid email address (e.g., user@example.com)'
         }));
-      }
-    }
-
-    if (name === 'phone' && value) {
-      if (!validatePhone(value)) {
+      } else {
         setErrors(prev => ({
           ...prev,
-          phone: 'Phone number must be exactly 10 digits'
+          email: ''
         }));
       }
     }
+    return;
+  }
+  
+  setFormData(prev => ({
+    ...prev,
+    [name]: value
+  }));
 
-    if (name === 'fixedLine' && value) {
-      if (!validateFixedLine(value)) {
-        setErrors(prev => ({
-          ...prev,
-          fixedLine: 'Fixed line must be exactly 10 digits'
-        }));
-      }
+  // Clear previous error when user starts typing
+  setErrors(prev => ({
+    ...prev,
+    [name]: ''
+  }));
+
+  if (name === 'phone' && value) {
+    if (!validatePhone(value)) {
+      setErrors(prev => ({
+        ...prev,
+        phone: 'Phone number must be exactly 10 digits'
+      }));
     }
-  };
+  }
+
+  if (name === 'fixedLine' && value) {
+    if (!validateFixedLine(value)) {
+      setErrors(prev => ({
+        ...prev,
+        fixedLine: 'Fixed line must be exactly 10 digits'
+      }));
+    }
+  }
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -184,8 +212,9 @@ export const FamilyMemberReg = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      placeholder="Email address"
+                      placeholder="Email address (lowercase only)"
                       className={`${styles.formInput} ${errors.email ? styles.error : ''}`}
+                      style={{ textTransform: 'lowercase' }}
                       pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
                       title="Please enter a valid email address"
                       required
@@ -247,4 +276,3 @@ export const FamilyMemberReg = () => {
     </div>
   );
 };
-
