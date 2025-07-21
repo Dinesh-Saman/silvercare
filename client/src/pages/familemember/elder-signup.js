@@ -56,6 +56,61 @@ const extractDateFromNIC = (nic) => {
   }
 };
 
+// Real-time validation functions
+const validateEmail = (email) => {
+  if (!email) return '';
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  if (!emailRegex.test(email)) {
+    return 'Please enter a valid email address';
+  }
+  return '';
+};
+
+const validatePhone = (phone) => {
+  if (!phone) return '';
+  const phoneRegex = /^[0-9]{10}$/;
+  if (phone.length > 0 && phone.length < 10) {
+    return 'Phone number must be 10 digits';
+  }
+  if (phone.length === 10 && !phoneRegex.test(phone)) {
+    return 'Phone number must contain only digits';
+  }
+  if (phone.length > 10) {
+    return 'Phone number cannot exceed 10 digits';
+  }
+  return '';
+};
+
+const validateNIC = (nic) => {
+  if (!nic) return '';
+  const cleanNic = nic.replace(/[^0-9Vv]/g, '');
+  
+  if (cleanNic.length > 0 && cleanNic.length < 10) {
+    return 'NIC must be at least 10 characters';
+  }
+  
+  if (cleanNic.length === 10) {
+    // Old format validation
+    const lastChar = cleanNic.charAt(9).toLowerCase();
+    if (lastChar !== 'v') {
+      return 'Old NIC format must end with V';
+    }
+    const digits = cleanNic.substring(0, 9);
+    if (!/^\d{9}$/.test(digits)) {
+      return 'First 9 characters must be digits';
+    }
+  } else if (cleanNic.length === 12) {
+    // New format validation
+    if (!/^\d{12}$/.test(cleanNic)) {
+      return 'New NIC format must be 12 digits';
+    }
+  } else if (cleanNic.length > 12) {
+    return 'NIC cannot exceed 12 characters';
+  }
+  
+  return '';
+};
+
 const ElderSignup = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, loading } = useAuth();
@@ -68,7 +123,7 @@ const ElderSignup = () => {
     contactNumber: '',
     medicalConditions: '',
     address: '',
-    district: '', // Added district field
+    district: '',
     profilePhoto: null,
     password: '',
     confirmPassword: ''
@@ -116,54 +171,113 @@ const ElderSignup = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Auto-extract date of birth and gender from NIC
-    if (name === 'nicPassport' && value.length >= 10) {
-      const extractedInfo = extractDateFromNIC(value);
-      if (extractedInfo) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          dateOfBirth: extractedInfo.dateOfBirth,
-          gender: extractedInfo.gender
-        }));
-        setNicAutoFilled(true);
-        
-        // Clear any existing errors for related fields
-        setErrors(prev => ({
-          ...prev,
-          [name]: '',
-          dateOfBirth: '',
-          gender: ''
-        }));
-        return;
+    // Real-time validation
+    let newErrors = { ...errors };
+    
+    // Validate specific fields in real-time
+    if (name === 'email') {
+      const emailError = validateEmail(value);
+      if (emailError) {
+        newErrors.email = emailError;
+      } else {
+        delete newErrors.email;
       }
     }
     
-    // If NIC is cleared, reset auto-filled status
-    if (name === 'nicPassport' && value.length < 10) {
-      setNicAutoFilled(false);
-      if (formData.dateOfBirth || formData.gender) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          dateOfBirth: '',
-          gender: ''
-        }));
-        return;
+    if (name === 'contactNumber') {
+      // Only allow digits and limit to 10 characters
+      const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+      
+      const phoneError = validatePhone(numericValue);
+      if (phoneError) {
+        newErrors.contactNumber = phoneError;
+      } else {
+        delete newErrors.contactNumber;
+      }
+      
+      setErrors(newErrors);
+      return;
+    }
+    
+    if (name === 'nicPassport') {
+      const nicError = validateNIC(value);
+      if (nicError) {
+        newErrors.nicPassport = nicError;
+      } else {
+        delete newErrors.nicPassport;
+      }
+      
+      // Auto-extract date of birth and gender from NIC
+      if (value.length >= 10) {
+        const extractedInfo = extractDateFromNIC(value);
+        if (extractedInfo) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: value,
+            dateOfBirth: extractedInfo.dateOfBirth,
+            gender: extractedInfo.gender
+          }));
+          setNicAutoFilled(true);
+          
+          // Clear any existing errors for related fields
+          delete newErrors.dateOfBirth;
+          delete newErrors.gender;
+          
+          setErrors(newErrors);
+          return;
+        }
+      }
+      
+      // If NIC is cleared, reset auto-filled status
+      if (value.length < 10) {
+        setNicAutoFilled(false);
+        if (formData.dateOfBirth || formData.gender) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: value,
+            dateOfBirth: '',
+            gender: ''
+          }));
+          setErrors(newErrors);
+          return;
+        }
       }
     }
     
+    if (name === 'confirmPassword') {
+      if (value && formData.password && value !== formData.password) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      } else {
+        delete newErrors.confirmPassword;
+      }
+    }
+    
+    if (name === 'password') {
+      if (value && value.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters long';
+      } else {
+        delete newErrors.password;
+      }
+      
+      // Also check confirm password if it exists
+      if (formData.confirmPassword && value !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      } else if (formData.confirmPassword && value === formData.confirmPassword) {
+        delete newErrors.confirmPassword;
+      }
+    }
+    
+    // Update form data and errors
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
     
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setErrors(newErrors);
   };
 
   const handleFileChange = (e) => {
@@ -178,25 +292,33 @@ const ElderSignup = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else {
+      const emailError = validateEmail(formData.email);
+      if (emailError) newErrors.email = emailError;
     }
     
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
-    if (!formData.nicPassport.trim()) newErrors.nicPassport = 'NIC/Passport is required';
-    if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required';
     
-    const phoneRegex = /^[0-9]{10}$/;
-    if (formData.contactNumber && !phoneRegex.test(formData.contactNumber)) {
-      newErrors.contactNumber = 'Contact number must be exactly 10 digits';
+    if (!formData.nicPassport.trim()) {
+      newErrors.nicPassport = 'NIC/Passport is required';
+    } else {
+      const nicError = validateNIC(formData.nicPassport);
+      if (nicError) newErrors.nicPassport = nicError;
+    }
+    
+    if (!formData.contactNumber.trim()) {
+      newErrors.contactNumber = 'Contact number is required';
+    } else {
+      const phoneError = validatePhone(formData.contactNumber);
+      if (phoneError) newErrors.contactNumber = phoneError;
     }
     
     if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.district) newErrors.district = 'District is required'; // Added district validation
+    if (!formData.district) newErrors.district = 'District is required';
     if (!formData.password) newErrors.password = 'Password is required';
     if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
@@ -233,7 +355,7 @@ const ElderSignup = () => {
       submitData.append('contactNumber', formData.contactNumber);
       submitData.append('medicalConditions', formData.medicalConditions);
       submitData.append('address', formData.address);
-      submitData.append('district', formData.district); // Added district to form data
+      submitData.append('district', formData.district);
       submitData.append('password', formData.password);
       submitData.append('confirmPassword', formData.confirmPassword);
       submitData.append('familyMemberId', familyMemberId);
@@ -292,279 +414,294 @@ const ElderSignup = () => {
   }
 
   return (
-    
     <div className={styles.pageWrapper}>
       <Navbar />
       <FamilyMemberLayout>
-      
-      <div className={styles.container}>
-        <div className={styles.signupCard}>
-          <div className={styles.header}>
-            <h1 className={styles.title}>Elder Registration</h1>
-            <p className={styles.subtitle}>Create an account for elderly care services</p>
-          </div>
+        <div className={styles.container}>
+          <div className={styles.signupCard}>
+                        <div className={styles.header}>
+              <h1 className={styles.title}>Elder Registration</h1>
+              <p className={styles.subtitle}>Create an account for elderly care services</p>
+            </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {/* Profile Photo Upload */}
-            <div className={styles.photoSection}>
-              <div className={styles.photoUpload}>
-                <input
-                  type="file"
-                  id="profilePhoto"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className={styles.fileInput}
-                />
-                <label htmlFor="profilePhoto" className={styles.photoLabel}>
-                  {formData.profilePhoto ? (
-                    <img
-                      src={URL.createObjectURL(formData.profilePhoto)}
-                      alt="Profile"
-                      className={styles.profilePreview}
+            <form onSubmit={handleSubmit} className={styles.form}>
+              {/* Profile Photo Upload */}
+              <div className={styles.photoSection}>
+                <div className={styles.photoUpload}>
+                  <input
+                    type="file"
+                    id="profilePhoto"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className={styles.fileInput}
+                  />
+                  <label htmlFor="profilePhoto" className={styles.photoLabel}>
+                    {formData.profilePhoto ? (
+                      <img
+                        src={URL.createObjectURL(formData.profilePhoto)}
+                        alt="Profile"
+                        className={styles.profilePreview}
+                      />
+                    ) : (
+                      <div className={styles.photoPlaceholder}>
+                        <span className={styles.photoIcon}>📷</span>
+                        <span>Upload Photo</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>Personal Information</h3>
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Full Name *</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${errors.fullName ? styles.inputError : ''}`}
+                    placeholder="Enter full name"
+                  />
+                  {errors.fullName && <span className={styles.error}>{errors.fullName}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Email Address *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                    placeholder="Enter email address"
+                  />
+                  {errors.email && <span className={styles.error}>{errors.email}</span>}
+                  {formData.email && !errors.email && formData.email.length > 0 && (
+                    <span className={styles.success}>✓ Valid email format</span>
+                  )}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>NIC/Passport Number *</label>
+                  <input
+                    type="text"
+                    name="nicPassport"
+                    value={formData.nicPassport}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${errors.nicPassport ? styles.inputError : ''}`}
+                    placeholder="Enter NIC (Date of birth and gender will be auto-filled)"
+                    maxLength="12"
+                  />
+                  {errors.nicPassport && <span className={styles.error}>{errors.nicPassport}</span>}
+                  {nicAutoFilled && (
+                    <small className={styles.autoFillNote}>
+                      ✓ Date of birth and gender auto-filled from NIC
+                    </small>
+                  )}
+                </div>
+
+                <div className={styles.row}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Date of Birth *</label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      className={`${styles.input} ${errors.dateOfBirth ? styles.inputError : ''} ${
+                        nicAutoFilled ? styles.autoFilled : ''
+                      }`}
+                      readOnly={nicAutoFilled}
+                      title={nicAutoFilled ? "Auto-filled from NIC" : ""}
                     />
-                  ) : (
-                    <div className={styles.photoPlaceholder}>
-                      <span className={styles.photoIcon}>📷</span>
-                      <span>Upload Photo</span>
-                    </div>
-                  )}
-                </label>
-              </div>
-            </div>
+                    {errors.dateOfBirth && <span className={styles.error}>{errors.dateOfBirth}</span>}
+                    {nicAutoFilled && (
+                      <small className={styles.autoFillNote}>
+                        Auto-filled from NIC. Clear NIC to edit manually.
+                      </small>
+                    )}
+                  </div>
 
-            {/* Personal Information */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Personal Information</h3>
-              
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Full Name *</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${errors.fullName ? styles.inputError : ''}`}
-                  placeholder="Enter full name"
-                />
-                {errors.fullName && <span className={styles.error}>{errors.fullName}</span>}
-              </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Gender *</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className={`${styles.input} ${styles.select} ${errors.gender ? styles.inputError : ''} ${
+                        nicAutoFilled ? styles.autoFilled : ''
+                      }`}
+                      disabled={nicAutoFilled}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    {errors.gender && <span className={styles.error}>{errors.gender}</span>}
+                    {nicAutoFilled && (
+                      <small className={styles.autoFillNote}>
+                        Auto-detected from NIC. Clear NIC to edit manually.
+                      </small>
+                    )}
+                  </div>
+                </div>
 
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Email Address *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-                  placeholder="Enter email address"
-                />
-                {errors.email && <span className={styles.error}>{errors.email}</span>}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>NIC/Passport Number *</label>
-                <input
-                  type="text"
-                  name="nicPassport"
-                  value={formData.nicPassport}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${errors.nicPassport ? styles.inputError : ''}`}
-                  placeholder="Enter NIC (Date of birth and gender will be auto-filled)"
-                  maxLength="12"
-                />
-                {errors.nicPassport && <span className={styles.error}>{errors.nicPassport}</span>}
-                {nicAutoFilled && (
-                  <small className={styles.autoFillNote}>
-                    ✓ Date of birth and gender auto-filled from NIC
-                  </small>
-                )}
-              </div>
-
-              <div className={styles.row}>
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>Date of Birth *</label>
+                  <label className={styles.label}>Contact Number *</label>
                   <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
+                    type="tel"
+                    name="contactNumber"
+                    value={formData.contactNumber}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${errors.dateOfBirth ? styles.inputError : ''} ${
-                      nicAutoFilled ? styles.autoFilled : ''
-                    }`}
-                    readOnly={nicAutoFilled}
-                    title={nicAutoFilled ? "Auto-filled from NIC" : ""}
+                    className={`${styles.input} ${errors.contactNumber ? styles.inputError : ''}`}
+                    placeholder="Enter contact number (10 digits)"
+                    maxLength="10"
                   />
-                  {errors.dateOfBirth && <span className={styles.error}>{errors.dateOfBirth}</span>}
-                  {nicAutoFilled && (
-                    <small className={styles.autoFillNote}>
-                      Auto-filled from NIC. Clear NIC to edit manually.
+                  {errors.contactNumber && <span className={styles.error}>{errors.contactNumber}</span>}
+                  {formData.contactNumber && !errors.contactNumber && formData.contactNumber.length === 10 && (
+                    <span className={styles.success}>✓ Valid phone number</span>
+                  )}
+                  {formData.contactNumber && formData.contactNumber.length > 0 && formData.contactNumber.length < 10 && (
+                    <small className={styles.info}>
+                      {10 - formData.contactNumber.length} more digits needed
                     </small>
                   )}
                 </div>
 
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>Gender *</label>
-                                    <select
-                    name="gender"
-                    value={formData.gender}
+                  <label className={styles.label}>Address *</label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${styles.select} ${errors.gender ? styles.inputError : ''} ${
-                      nicAutoFilled ? styles.autoFilled : ''
-                    }`}
-                    disabled={nicAutoFilled}
+                    className={`${styles.input} ${styles.textarea} ${errors.address ? styles.inputError : ''}`}
+                    placeholder="Enter full address"
+                    rows="3"
+                  />
+                  {errors.address && <span className={styles.error}>{errors.address}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>District *</label>
+                  <select
+                    name="district"
+                    value={formData.district}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${styles.select} ${errors.district ? styles.inputError : ''}`}
                   >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">Select District</option>
+                    <option value="Colombo">Colombo</option>
+                    <option value="Gampaha">Gampaha</option>
+                    <option value="Kalutara">Kalutara</option>
+                    <option value="Kandy">Kandy</option>
+                    <option value="Matale">Matale</option>
+                    <option value="Nuwara Eliya">Nuwara Eliya</option>
+                    <option value="Galle">Galle</option>
+                    <option value="Matara">Matara</option>
+                    <option value="Hambantota">Hambantota</option>
+                    <option value="Jaffna">Jaffna</option>
+                    <option value="Kilinochchi">Kilinochchi</option>
+                    <option value="Mannar">Mannar</option>
+                    <option value="Mullaitivu">Mullaitivu</option>
+                    <option value="Vavuniya">Vavuniya</option>
+                    <option value="Puttalam">Puttalam</option>
+                    <option value="Kurunegala">Kurunegala</option>
+                    <option value="Anuradhapura">Anuradhapura</option>
+                    <option value="Polonnaruwa">Polonnaruwa</option>
+                    <option value="Badulla">Badulla</option>
+                    <option value="Moneragala">Moneragala</option>
+                    <option value="Ratnapura">Ratnapura</option>
+                    <option value="Kegalle">Kegalle</option>
+                    <option value="Ampara">Ampara</option>
+                    <option value="Batticaloa">Batticaloa</option>
+                    <option value="Trincomalee">Trincomalee</option>
                   </select>
-                  {errors.gender && <span className={styles.error}>{errors.gender}</span>}
-                  {nicAutoFilled && (
-                    <small className={styles.autoFillNote}>
-                      Auto-detected from NIC. Clear NIC to edit manually.
-                    </small>
+                  {errors.district && <span className={styles.error}>{errors.district}</span>}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Medical Conditions</label>
+                  <textarea
+                    name="medicalConditions"
+                    value={formData.medicalConditions}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${styles.textarea}`}
+                    placeholder="Enter any medical conditions or leave blank if none"
+                    rows="3"
+                  />
+                </div>
+              </div>
+
+              {/* Account Security */}
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>Account Security</h3>
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Password *</label>
+                  <div className={styles.passwordContainer}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                      placeholder="Enter password (minimum 6 characters)"
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.password && <span className={styles.error}>{errors.password}</span>}
+                  {formData.password && !errors.password && formData.password.length >= 6 && (
+                    <span className={styles.success}>✓ Password meets requirements</span>
+                  )}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Confirm Password *</label>
+                  <div className={styles.passwordContainer}>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
+                      placeholder="Confirm your password"
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <span className={styles.error}>{errors.confirmPassword}</span>}
+                  {formData.confirmPassword && !errors.confirmPassword && formData.password === formData.confirmPassword && (
+                    <span className={styles.success}>✓ Passwords match</span>
                   )}
                 </div>
               </div>
 
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Contact Number *</label>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  value={formData.contactNumber}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${errors.contactNumber ? styles.inputError : ''}`}
-                  placeholder="Enter contact number (10 digits)"
-                />
-                {errors.contactNumber && <span className={styles.error}>{errors.contactNumber}</span>}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Address *</label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${styles.textarea} ${errors.address ? styles.inputError : ''}`}
-                  placeholder="Enter full address"
-                  rows="3"
-                />
-                {errors.address && <span className={styles.error}>{errors.address}</span>}
-              </div>
-
-              {/* Added District Field */}
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>District *</label>
-                <select
-                  name="district"
-                  value={formData.district}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${styles.select} ${errors.district ? styles.inputError : ''}`}
-                >
-                  <option value="">Select District</option>
-                  <option value="Colombo">Colombo</option>
-                  <option value="Gampaha">Gampaha</option>
-                  <option value="Kalutara">Kalutara</option>
-                  <option value="Kandy">Kandy</option>
-                  <option value="Matale">Matale</option>
-                  <option value="Nuwara Eliya">Nuwara Eliya</option>
-                  <option value="Galle">Galle</option>
-                  <option value="Matara">Matara</option>
-                  <option value="Hambantota">Hambantota</option>
-                  <option value="Jaffna">Jaffna</option>
-                  <option value="Kilinochchi">Kilinochchi</option>
-                  <option value="Mannar">Mannar</option>
-                  <option value="Mullaitivu">Mullaitivu</option>
-                  <option value="Vavuniya">Vavuniya</option>
-                  <option value="Puttalam">Puttalam</option>
-                  <option value="Kurunegala">Kurunegala</option>
-                  <option value="Anuradhapura">Anuradhapura</option>
-                  <option value="Polonnaruwa">Polonnaruwa</option>
-                  <option value="Badulla">Badulla</option>
-                  <option value="Moneragala">Moneragala</option>
-                  <option value="Ratnapura">Ratnapura</option>
-                  <option value="Kegalle">Kegalle</option>
-                  <option value="Ampara">Ampara</option>
-                  <option value="Batticaloa">Batticaloa</option>
-                  <option value="Trincomalee">Trincomalee</option>
-                </select>
-                {errors.district && <span className={styles.error}>{errors.district}</span>}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Medical Conditions</label>
-                <textarea
-                  name="medicalConditions"
-                  value={formData.medicalConditions}
-                  onChange={handleInputChange}
-                  className={`${styles.input} ${styles.textarea}`}
-                  placeholder="Enter any medical conditions or leave blank if none"
-                  rows="3"
-                />
-              </div>
-            </div>
-
-            {/* Account Security */}
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Account Security</h3>
-              
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Password *</label>
-                <div className={styles.passwordContainer}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                    placeholder="Enter password (minimum 6 characters)"
-                  />
-                  <button
-                    type="button"
-                    className={styles.passwordToggle}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {errors.password && <span className={styles.error}>{errors.password}</span>}
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Confirm Password *</label>
-                <div className={styles.passwordContainer}>
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
-                    placeholder="Confirm your password"
-                  />
-                  <button
-                    type="button"
-                    className={styles.passwordToggle}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {errors.confirmPassword && <span className={styles.error}>{errors.confirmPassword}</span>}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className={`${styles.submitButton} ${isSubmitting ? styles.submitting : ''}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Registering...' : 'Register Elder'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                className={`${styles.submitButton} ${isSubmitting ? styles.submitting : ''}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Registering...' : 'Register Elder'}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
       </FamilyMemberLayout>
     </div>
   );

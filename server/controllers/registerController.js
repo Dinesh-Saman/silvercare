@@ -111,7 +111,6 @@ const validatePasswordStrength = (password) => {
 
 // CREATE an elder registration
 // CREATE an elder registration
-// CREATE an elder registration
 const createElderRegistration = async (req, res) => {
   // Handle file upload first
   upload.single('profilePhoto')(req, res, async function (err) {
@@ -132,7 +131,8 @@ const createElderRegistration = async (req, res) => {
       nicPassport, 
       contactNumber, 
       medicalConditions, 
-      address, 
+      address,
+      district, // Added district field
       password, 
       confirmPassword,
       familyMemberId, // This will be the user_id from the family member
@@ -148,18 +148,32 @@ const createElderRegistration = async (req, res) => {
         nicPassport,
         contactNumber,
         address,
+        district, // Added district to logging
         familyMemberId,
         role
       });
 
-      // Validate required fields
-      if (!fullName || !email || !nicPassport || !contactNumber || !address || !password || !confirmPassword) {
+      // Validate required fields - including district
+      if (!fullName || !email || !nicPassport || !contactNumber || !address || !district || !password || !confirmPassword) {
         return res.status(400).json({ error: 'All required fields must be filled' });
       }
 
       // Validate familyMemberId is provided
       if (!familyMemberId) {
         return res.status(400).json({ error: 'Family member ID is required' });
+      }
+
+      // Validate district (ensure it's one of the valid Sri Lankan districts)
+      const validDistricts = [
+        'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+        'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+        'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura',
+        'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle',
+        'Ampara', 'Batticaloa', 'Trincomalee'
+      ];
+      
+      if (!validDistricts.includes(district)) {
+        return res.status(400).json({ error: 'Please select a valid district' });
       }
 
       // Get the family_id from the familymember table using the user_id
@@ -310,12 +324,12 @@ const createElderRegistration = async (req, res) => {
         const elderUserId = userResult.rows[0].user_id;
         console.log('Created user with ID:', elderUserId);
         
-        // Insert into elder table with family relationship
+        // Insert into elder table with family relationship and district
         const elderResult = await client.query(
           `INSERT INTO elder (
-            family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, created_at
-          ) VALUES ($1, $2, $3, $4, $5::gender_type, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP) 
-          RETURNING elder_id, family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, created_at`,
+            family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, district, created_at
+          ) VALUES ($1, $2, $3, $4, $5::gender_type, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP) 
+          RETURNING elder_id, family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, district, created_at`,
           [
             familyId,
             fullName,
@@ -326,7 +340,8 @@ const createElderRegistration = async (req, res) => {
             address,
             nicPassport,
             medicalConditions || null,
-            profilePhotoPath
+            profilePhotoPath,
+            district                 // Added district parameter
           ]
         );
         
@@ -401,6 +416,7 @@ const createElderRegistration = async (req, res) => {
     }
   });
 };
+
 
 
 
