@@ -236,6 +236,17 @@ export const caregiverApi = {
     }
   },
 
+  // Get upcoming shifts for caregiver(role caregiver)
+  fetchUpcomingShifts: async (caregiverId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/${caregiverId}/upcoming-shifts`);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching upcoming shifts:', error);
+      return [];
+    }
+  },
+
   // Get care request details by ID(role caregiver)
   getCareRequestDetails: async (requestId) => {
     try {
@@ -279,27 +290,6 @@ export const caregiverApi = {
     } catch (error) {
       console.error('API: Error updating care request status:', error);
       throw error;
-    }
-  },
-
-    // Get upcoming shifts for caregiver (status 'approved')(role caregiver)
-  fetchUpcomingShifts: async (caregiverId) => {
-    try {
-      const response = await axios.get(`${API_BASE}/${caregiverId}/upcoming-shifts`);
-      console.log('API: Upcoming shifts response:', response);
-      if (response.data && response.data.success) {
-        return response.data.shifts || [];
-      } else {
-        console.warn('API: Unexpected upcoming shifts response:', response.data);
-        return [];
-      }
-    } catch (error) {
-      if (error.response) {
-        console.error('API: Error fetching upcoming shifts:', error.response.status, error.response.data);
-      } else {
-        console.error('API: Error fetching upcoming shifts:', error);
-      }
-      return [];
     }
   },
 

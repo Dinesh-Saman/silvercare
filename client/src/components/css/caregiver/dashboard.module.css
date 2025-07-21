@@ -124,26 +124,22 @@ section {
 }
 
 /* Care Requests Styles */
-.carerequest,
-.upcomingShifts {
+.carerequest {
   background: white;
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   width: 100%;
-  margin-bottom: 40px;
 }
 
-.careRequestsList,
-.shiftsList {
+.careRequestsList {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   margin-top: 18px;
 }
 
-.careRequestCard,
-.shiftCard {
+.careRequestCard {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -154,8 +150,7 @@ section {
   min-width: 220px;
 }
 
-.careRequestCard::before,
-.shiftCard::before {
+.careRequestCard::before {
   content: '';
   position: absolute;
   top: 0;
@@ -165,8 +160,7 @@ section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.careRequestCard:hover,
-.shiftCard:hover {
+.careRequestCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -283,12 +277,27 @@ section {
   padding: 40px 20px;
 }
 
+.upcomingShifts {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.07);
+  margin-bottom: 30px;
+}
+
 .upcomingShifts h2 {
   font-size: 20px;
   color: #2b4c7e;
   margin-bottom: 15px;
   padding-bottom: 15px;
   border-bottom: 2px solid #e0e6ed;
+}
+
+.shiftsList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 18px;
 }
 
 .performanceStats {
@@ -421,57 +430,76 @@ section {
 
 
 .shiftCard {
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
-  padding: 18px 16px;
+  border-radius: 12px;
+  padding: 18px;
+  transition: all 0.3s ease;
   position: relative;
-  transition: transform 0.18s, box-shadow 0.18s;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  overflow: hidden;
+  min-width: 220px;
+}
+
+.shiftCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .shiftCard:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
-  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .shiftHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
 .shiftDate {
-  font-size: 16px;
-  font-weight: 700;
-  color: #764ba2;
-  background: #f3f0fa;
-  padding: 4px 12px;
-  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
 }
 
 .shiftTime {
-  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
   font-weight: 600;
-  color: #667eea;
-  background: #e9e6f7;
-  padding: 4px 10px;
-  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .shiftDetails {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #2d3748;
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.shiftDetails .label {
+  color: #4a5568;
+  font-weight: 500;
+  flex: 0 0 auto;
+  margin-right: 10px;
+}
+
+.shiftDetails .value {
+  color: #2d3748;
+  font-weight: 400;
+  text-align: right;
+  flex: 1;
 }
 
 .noShifts {
