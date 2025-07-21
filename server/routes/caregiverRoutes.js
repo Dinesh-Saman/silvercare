@@ -62,7 +62,7 @@ router.get('/:id/caregiver-schedules', fetchSchedules);
 //Get care requests for caregiver(role caregiver)
 router.get('/:id/care-requests', fetchCareRequests);
 
-// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
+//Get upcoming shifts for caregiver(role caregiver)
 router.get('/:id/upcoming-shifts', getUpcomingShifts);
 
 // Update caregiver profile(role caregiver)
