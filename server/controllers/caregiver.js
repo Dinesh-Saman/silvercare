@@ -1,0 +1,459 @@
+const pool = require('../db');
+
+// Get care request details by ID(role caregiver)
+const getCareRequestById = async (req, res) => {
+  const { requestId } = req.params;
+  
+  try {
+    console.log('Fetching care request details for ID:', requestId);
+    
+    const result = await pool.query(`
+      SELECT 
+        cr.request_id,
+        cr.family_id,
+        cr.caregiver_id,
+        cr.elder_id,
+        cr.start_date,
+        cr.end_date,
+        cr.status,
+        cr.duration,
+        cr.request_date,
+        e.name as elder_name,
+        e.age as elder_age,
+        e.gender as elder_gender,
+        e.contact as elder_contact,
+        e.address as elder_address,
+        e.medical_conditions,
+        e.profile_photo as elder_photo,
+        e.email as elder_email,
+        e.district as elder_district,
+        fm.name as family_member_name,
+        fm.email as family_member_email,
+        fm.phone as family_member_phone,
+        c.certifications as caregiver_certifications,
+        c.availability as caregiver_availability,
+        cu.name as caregiver_name
+      FROM carerequest cr
+      INNER JOIN elder e ON cr.elder_id = e.elder_id
+      INNER JOIN "User" fm ON cr.family_id = fm.user_id
+      INNER JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
+      INNER JOIN "User" cu ON c.user_id = cu.user_id
+      WHERE cr.request_id = $1
+    `, [requestId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Care request not found'
+      });
+    }
+    
+    const careRequest = result.rows[0];
+    console.log('Care request details fetched successfully');
+    
+    res.json({
+      success: true,
+      careRequest: careRequest
+    });
+    
+  } catch (err) {
+    console.error('Error fetching care request details:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching care request details' 
+    });
+  }
+};
+
+
+//get assigned elders(role caregiver)
+const getAssignedElders = async (req, res) => {
+  const caregiverId = req.params.id;
+
+  try {
+
+     const query = `SELECT 
+        e.name,
+        e.age,
+        cr.duration,
+        cr.status,
+        cr.caregiver_id,
+        u.user_id
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      JOIN caregiver cg ON cr.caregiver_id = cg.caregiver_id
+      JOIN "User" u ON cg.user_id = u.user_id
+      WHERE cg.caregiver_id = $1`;
+
+    const result = await pool.query(query, [caregiverId]);
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching assigned elders:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+//get assigner families count (role caregiver)
+const getAssignedFamiliesCount = async (req, res) => {
+    const caregiverId = req.params.id;
+
+  try {
+    const query = `
+      SELECT COUNT(DISTINCT cr.family_id) AS count
+      FROM carerequest cr
+      JOIN caregiver cg ON cr.caregiver_id = cg.caregiver_id
+      JOIN "User" u ON cg.user_id = u.user_id
+      WHERE cr.caregiver_id = $1;
+    `;
+    const result = await pool.query(query, [caregiverId]);
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching assigned families count:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+//Get carelog count(role caregiver)
+const getcarelogsCount = async (req, res) => {
+    const caregiverId = req.params.id;
+
+  try {
+    const query = `
+      SELECT COUNT (cl.log_id) AS count
+      FROM carelog cl
+      JOIN caregiver cg ON cl.caregiver_id = cg.caregiver_id
+      JOIN "User" u ON cg.user_id = u.user_id
+      WHERE cl.caregiver_id = $1;
+    `;
+    const result = await pool.query(query, [caregiverId]);
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching carelogs count:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+//fetch caregiver schedules (role caregiver)
+const fetchSchedules = async (req, res) => {
+  const caregiverId = req.params.id;
+
+  try {
+
+     const query = `
+      SELECT 
+        e.name,
+        e.address ,
+        cr.start_date,
+        cr.end_date
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1
+      AND LOWER(cr.status) IN ('upcoming', 'ongoing');
+    `;
+
+    const result = await pool.query(query, [caregiverId]);
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching assigned elders:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+//fetch care requests for caregiver (role caregiver)
+const fetchCareRequests = async (req, res) => {
+  const caregiverId = req.params.id;
+
+  try {
+    // First, auto-update any approved requests that have passed their end date
+    const updateQuery = `
+      UPDATE carerequest 
+      SET status = 'completed'
+      WHERE caregiver_id = $1 
+      AND status = 'approved' 
+      AND end_date < CURRENT_DATE;
+    `;
+    await pool.query(updateQuery, [caregiverId]);
+
+    const query = `
+      SELECT 
+        cr.request_id,
+        cr.family_id,
+        cr.elder_id,
+        cr.start_date,
+        cr.end_date,
+        cr.status,
+        cr.duration,
+        cr.request_date,
+        e.name as elder_name,
+        e.age as elder_age,
+        e.address as elder_address,
+        e.medical_conditions,
+        e.contact as elder_contact,
+        fm.user_id as family_member_user_id,
+        u.name as family_member_name,
+        u.phone as family_member_phone,
+        u.email as family_member_email
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      JOIN familymember fm ON cr.family_id = fm.family_id
+      JOIN "User" u ON fm.user_id = u.user_id
+      WHERE cr.caregiver_id = $1
+      ORDER BY cr.request_date DESC, cr.start_date ASC;
+    `;
+
+    const result = await pool.query(query, [caregiverId]);
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching care requests:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update caregiver profile(role caregiver)
+const updateCaregiverProfile = async (req, res) => {
+  const { caregiverId } = req.params;
+  const {
+    name,
+    email,
+    phone,
+    availability,
+    certifications,
+    fixed_line,
+    district
+  } = req.body;
+  
+  try {
+    console.log('Updating caregiver profile:', caregiverId, req.body);
+    
+    // Validate required fields
+    if (!name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name, email, and phone are required'
+      });
+    }
+    
+    // Start transaction
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Get current caregiver data
+      const caregiverResult = await client.query(
+        'SELECT user_id FROM caregiver WHERE caregiver_id = $1',
+        [caregiverId]
+      );
+      
+      if (caregiverResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: 'Caregiver not found'
+        });
+      }
+      
+      const userId = caregiverResult.rows[0].user_id;
+      
+      // Update User table
+      await client.query(
+        'UPDATE "User" SET name = $1, email = $2, phone = $3 WHERE user_id = $4',
+        [name, email, phone, userId]
+      );
+      
+      // Update caregiver table
+      await client.query(
+        'UPDATE caregiver SET availability = $1, certifications = $2, fixed_line = $3, district = $4 WHERE caregiver_id = $5',
+        [availability, certifications, fixed_line, district, caregiverId]
+      );
+      
+      await client.query('COMMIT');
+      
+      // Fetch updated profile
+      const updatedResult = await client.query(`
+        SELECT 
+          c.caregiver_id,
+          c.user_id,
+          c.availability,
+          c.certifications,
+          c.fixed_line,
+          c.district,
+          u.name as caregiver_name,
+          u.email as caregiver_email,
+          u.phone as caregiver_phone,
+          u.role,
+          u.created_at
+        FROM caregiver c
+        INNER JOIN "User" u ON c.user_id = u.user_id
+        WHERE c.caregiver_id = $1
+      `, [caregiverId]);
+      
+      console.log('Caregiver profile updated successfully');
+      
+      res.json({
+        success: true,
+        message: 'Profile updated successfully',
+        caregiver: updatedResult.rows[0]
+      });
+      
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+    
+  } catch (err) {
+    console.error('Error updating caregiver profile:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error updating profile' 
+    });
+  }
+};
+
+// Update caregiver password
+const updateCaregiverPassword = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { currentPassword, newPassword } = req.body;
+  
+  try {
+    console.log('Updating caregiver password for ID:', caregiverId);
+    
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required'
+      });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 6 characters long'
+      });
+    }
+    
+    // Get caregiver's user data
+    const caregiverResult = await pool.query(`
+      SELECT u.user_id, u.password
+      FROM caregiver c
+      INNER JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.caregiver_id = $1
+    `, [caregiverId]);
+    
+    if (caregiverResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caregiver not found'
+      });
+    }
+    
+    const user = caregiverResult.rows[0];
+    
+    // Verify current password
+    const bcrypt = require('bcrypt');
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is incorrect'
+      });
+    }
+    
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password
+    await pool.query(
+      'UPDATE "User" SET password = $1 WHERE user_id = $2',
+      [hashedNewPassword, user.user_id]
+    );
+    
+    console.log('Password updated successfully');
+    
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error updating password' 
+    });
+  }
+};
+
+// Get upcoming shifts for caregiver (approved and future)
+const getUpcomingShifts = async (req, res) => {
+  const caregiverId = req.params.id;
+  try {
+    // Only fetch shifts with status 'approved' and start_date >= today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const query = `
+      SELECT 
+        cr.request_id,
+        cr.elder_id,
+        cr.start_date,
+        cr.end_date,
+        cr.status,
+        cr.duration,
+        e.name as elder_name,
+        e.address as location
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1
+        AND cr.status = 'approved'
+        AND cr.start_date >= $2
+      ORDER BY cr.start_date ASC;
+    `;
+    
+    const result = await pool.query(query, [caregiverId, today]);
+    console.log('Raw upcoming shifts from DB:', result.rows);
+    
+    // Format for frontend: return all fields needed for dashboard
+    const shifts = result.rows.map(row => {
+      // Format duration properly
+      
+      // Include request_id for frontend navigation
+      return {
+        request_id: row.request_id,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        status: row.status,
+        duration: row.duration,
+        location: row.location,
+        elderName: row.elder_name
+      };
+    });
+    
+    console.log('Formatted upcoming shifts for frontend:', shifts);
+    res.status(200).json(shifts);
+  } catch (error) {
+    console.error('Error fetching upcoming shifts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = {
+  getCareRequestById,
+  getAssignedElders,
+  getAssignedFamiliesCount,
+  getcarelogsCount,
+  fetchSchedules,
+  fetchCareRequests,
+  updateCaregiverProfile,
+  updateCaregiverPassword,
+  getUpcomingShifts
+};
+

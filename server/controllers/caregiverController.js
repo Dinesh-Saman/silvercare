@@ -478,6 +478,7 @@ const updateCareRequestStatus = async (req, res) => {
 };
 
 // Get care request details by ID(role caregiver)
+{/*
 const getCareRequestById = async (req, res) => {
   const { requestId } = req.params;
   
@@ -879,6 +880,8 @@ const getUpcomingShifts = async (req, res) => {
     today.setHours(0, 0, 0, 0);
     const query = `
       SELECT 
+        cr.request_id,
+        cr.elder_id,
         cr.start_date,
         cr.end_date,
         cr.status,
@@ -899,27 +902,14 @@ const getUpcomingShifts = async (req, res) => {
     // Format for frontend: return all fields needed for dashboard
     const shifts = result.rows.map(row => {
       // Format duration properly
-      let formattedDuration = row.duration;
-      if (row.duration) {
-        if (typeof row.duration === 'string') {
-          // Handle PostgreSQL interval format
-          if (row.duration.includes('days') || row.duration.includes('day')) {
-            const days = parseInt(row.duration);
-            formattedDuration = `${days} day${days !== 1 ? 's' : ''}`;
-          } else if (row.duration.includes('weeks') || row.duration.includes('week')) {
-            const weeks = parseInt(row.duration);
-            formattedDuration = `${weeks} week${weeks !== 1 ? 's' : ''}`;
-          }
-        } else if (typeof row.duration === 'number') {
-          formattedDuration = `${row.duration} day${row.duration !== 1 ? 's' : ''}`;
-        }
-      }
       
+      // Include request_id for frontend navigation
       return {
+        request_id: row.request_id,
         start_date: row.start_date,
         end_date: row.end_date,
         status: row.status,
-        duration: formattedDuration,
+        duration: row.duration,
         location: row.location,
         elderName: row.elder_name
       };
@@ -931,7 +921,7 @@ const getUpcomingShifts = async (req, res) => {
     console.error('Error fetching upcoming shifts:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+};*/}
 
 module.exports = {
   getAllCaregivers,
@@ -941,15 +931,15 @@ module.exports = {
   createCareRequest,
   getCareRequestsByFamily,
   searchCaregivers,
-  updateCareRequestStatus,
-  getCareRequestById,
-  getAssignedElders,
-  getAssignedFamiliesCount,
-  getcarelogsCount,
-  fetchSchedules,
-  fetchCareRequests,
-  updateCaregiverProfile,
-  updateCaregiverPassword,
-  getUpcomingShifts
+  updateCareRequestStatus
+  //getCareRequestById,
+  //getAssignedElders,
+  //getAssignedFamiliesCount,
+  //getcarelogsCount,
+  //fetchSchedules,
+  //fetchCareRequests,
+  //updateCaregiverProfile,
+  //updateCaregiverPassword,
+  //getUpcomingShifts
 };
 
