@@ -187,6 +187,29 @@ export const caregiverApi = {
     }
   },
 
+
+    // Get carelogs for caregiver
+  getCarelogs: async (caregiverId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/${caregiverId}/carelogs`);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching carelogs:', error);
+      return { carelogs: [] };
+    }
+  },
+
+  // Add a new carelog for caregiver
+  addCarelog: async (caregiverId, carelogData) => {
+    try {
+      const response = await axios.post(`${API_BASE}/${caregiverId}/carelogs`, carelogData);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error adding carelog:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default caregiverApi;

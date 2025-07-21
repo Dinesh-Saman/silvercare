@@ -458,7 +458,7 @@ const CaregiverDashboard = () => {
           <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)', color: '#fff', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(67,206,162,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/care-requests')}>
             <span style={{fontSize: '1.5rem'}}>📅</span> View Requests
           </button>
-          <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #ffb347 0%, #ffcc33 100%)', color: '#2d3748', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(255,179,71,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/carelogs')}>
+          <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #ffb347 0%, #ffcc33 100%)', color: '#2d3748', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(255,179,71,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/carelog')}>
             <span style={{fontSize: '1.5rem'}}>📝</span> View Carelogs
           </button>
         </div>

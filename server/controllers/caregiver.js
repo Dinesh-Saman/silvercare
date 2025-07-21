@@ -445,6 +445,43 @@ const getUpcomingShifts = async (req, res) => {
   }
 };
 
+// Get all carelogs for a caregiver
+const getCarelogs = async (req, res) => {
+  const caregiverId = req.params.id;
+  try {
+    const query = `
+      SELECT cl.log_id as carelog_id, cl.elder_id, cl.caregiver_id, cl.notes, cl.mood, cl.date, e.name as elder_name
+      FROM carelog cl
+      JOIN elder e ON cl.elder_id = e.elder_id
+      WHERE cl.caregiver_id = $1
+      ORDER BY cl.date DESC;
+    `;
+    const result = await pool.query(query, [caregiverId]);
+    res.status(200).json({ carelogs: result.rows });
+  } catch (error) {
+    console.error('Error fetching carelogs:', error);
+    res.status(500).json({ carelogs: [] });
+  }
+};
+
+// Add a new carelog for a caregiver
+const addCarelog = async (req, res) => {
+  const caregiverId = req.params.id;
+  const { elder_id, notes, mood } = req.body;
+  try {
+    const query = `
+      INSERT INTO carelog (elder_id, caregiver_id, notes, mood, date)
+      VALUES ($1, $2, $3, $4, NOW())
+      RETURNING log_id as carelog_id, elder_id, caregiver_id, notes, mood, date;
+    `;
+    const result = await pool.query(query, [elder_id, caregiverId, notes, mood]);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding carelog:', error);
+    res.status(500).json({ error: 'Failed to add carelog' });
+  }
+};
+
 module.exports = {
   getCareRequestById,
   getAssignedElders,
@@ -454,6 +491,8 @@ module.exports = {
   fetchCareRequests,
   updateCaregiverProfile,
   updateCaregiverPassword,
-  getUpcomingShifts
+  getUpcomingShifts,
+  getCarelogs,
+  addCarelog
 };
 

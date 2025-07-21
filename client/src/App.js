@@ -15,6 +15,7 @@ import Profile from "./pages/caregiver/profile";
 import CaregiverDashboard from "./pages/caregiver/dashboard";
 import CareRequestDetails from "./pages/caregiver/care-request-details";
 import CareRequests from "./pages/caregiver/care-requests";
+import Carelogs from './pages/caregiver/carelog';
 import AdminDashboard from "./pages/admin/dashboard";
 import { DoctorReg } from "./pages/doctor/signup";
 import { MentalHealthProfessionalReg } from "./pages/healthproffesional/signup";
@@ -312,6 +313,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/carelog"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <Carelogs />
               </ProtectedRoute>
             }
           />

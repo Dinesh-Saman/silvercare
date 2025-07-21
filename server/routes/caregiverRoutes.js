@@ -20,7 +20,9 @@ const {
   fetchCareRequests,
   updateCaregiverProfile,
   updateCaregiverPassword,
-  getUpcomingShifts
+  getUpcomingShifts,
+  getCarelogs,
+  addCarelog
 } = require('../controllers/caregiver');
 
 // Get all caregivers
@@ -73,5 +75,9 @@ router.put('/:caregiverId/profile', updateCaregiverProfile);
 
 // Update caregiver password(role caregiver)
 router.put('/:caregiverId/password', updateCaregiverPassword);
+
+// Carelogs for caregiver
+router.get('/:id/carelogs', getCarelogs);
+router.post('/:id/carelogs', addCarelog);
 
 module.exports = router;
