@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import { getElderDetailsByEmail, updateElderProfile } from '../../services/elderApi2';
 import styles from '../../components/css/elder/profile.module.css';
+import ElderLayout from '../../components/ElderLayout';
 
 const ElderProfile = () => {
   const { currentUser, logout } = useAuth();
@@ -198,10 +199,12 @@ const ElderProfile = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading your profile...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -210,6 +213,7 @@ const ElderProfile = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Oops! Something went wrong</h2>
@@ -221,6 +225,7 @@ const ElderProfile = () => {
             Try Again
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -228,7 +233,7 @@ const ElderProfile = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Success Message */}
         {successMessage && (
@@ -605,6 +610,7 @@ const ElderProfile = () => {
           </div>
         )}
       </div>
+      </ElderLayout>
     </div>
   );
 };

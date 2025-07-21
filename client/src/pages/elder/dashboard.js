@@ -15,6 +15,7 @@ import {
   getDayCareAssignments,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/dashboard.module.css";
+import ElderLayout from "../../components/ElderLayout";
 
 const ElderDashboard = () => {
   const { currentUser } = useAuth();
@@ -50,7 +51,7 @@ const ElderDashboard = () => {
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     // Initialize current week start
     const today = new Date();
     const weekStart = new Date(today);
@@ -154,8 +155,11 @@ const ElderDashboard = () => {
     try {
       setCareAssignmentsLoading(true);
       const startDate = weekStart || currentWeekStart;
-      const response = await getCareAssignmentsByWeek(elderId, startDate.toISOString().split('T')[0]);
-      
+      const response = await getCareAssignmentsByWeek(
+        elderId,
+        startDate.toISOString().split("T")[0]
+      );
+
       if (response.data.success) {
         setCareAssignments(response.data.dailyAssignments);
       }
@@ -168,10 +172,13 @@ const ElderDashboard = () => {
 
   const handleJoinAppointment = async (appointmentId) => {
     try {
-      const response = await joinAppointment(elderDetails.elder_id, appointmentId);
+      const response = await joinAppointment(
+        elderDetails.elder_id,
+        appointmentId
+      );
       if (response.data.success) {
         // Open meeting link in new tab
-        window.open(response.data.meetingLink, '_blank');
+        window.open(response.data.meetingLink, "_blank");
       }
     } catch (error) {
       console.error("Error joining appointment:", error);
@@ -184,7 +191,7 @@ const ElderDashboard = () => {
       const response = await joinSession(elderDetails.elder_id, sessionId);
       if (response.data.success) {
         // Open meeting link in new tab
-        window.open(response.data.meetingUrl, '_blank');
+        window.open(response.data.meetingUrl, "_blank");
       }
     } catch (error) {
       console.error("Error joining session:", error);
@@ -209,9 +216,11 @@ const ElderDashboard = () => {
   // Care assignment helper functions
   const handleWeekChange = (direction) => {
     const newWeekStart = new Date(currentWeekStart);
-    newWeekStart.setDate(currentWeekStart.getDate() + (direction === 'next' ? 7 : -7));
+    newWeekStart.setDate(
+      currentWeekStart.getDate() + (direction === "next" ? 7 : -7)
+    );
     setCurrentWeekStart(newWeekStart);
-    
+
     if (elderDetails?.elder_id) {
       fetchCareAssignments(elderDetails.elder_id, newWeekStart);
     }
@@ -219,14 +228,16 @@ const ElderDashboard = () => {
 
   const handleDayClick = async (date, assignments) => {
     if (assignments.length === 0) return;
-    
+
     try {
       const response = await getDayCareAssignments(elderDetails.elder_id, date);
       if (response.data.success) {
         setSelectedDayAssignments({
           date,
           assignments: response.data.assignments,
-          dayName: new Date(date).toLocaleDateString('en-US', { weekday: 'long' })
+          dayName: new Date(date).toLocaleDateString("en-US", {
+            weekday: "long",
+          }),
         });
         setShowAssignmentDetails(true);
       }
@@ -238,10 +249,16 @@ const ElderDashboard = () => {
   const formatWeekRange = (weekStart) => {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-    
-    const startMonth = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const endMonth = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
+
+    const startMonth = weekStart.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const endMonth = weekEnd.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+
     return `${startMonth} - ${endMonth}`;
   };
 
@@ -250,7 +267,7 @@ const ElderDashboard = () => {
     const thisWeekStart = new Date(today);
     thisWeekStart.setDate(today.getDate() - today.getDay());
     thisWeekStart.setHours(0, 0, 0, 0);
-    
+
     return currentWeekStart.getTime() === thisWeekStart.getTime();
   };
 
@@ -283,20 +300,46 @@ const ElderDashboard = () => {
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
-    if (diffDays > 7) return { text: `${diffDays} days`, urgent: false, detail: "More than a week away" };
-    if (diffDays > 1) return { text: `${diffDays} days`, urgent: false, detail: `${diffHours} hours remaining` };
-    if (diffHours > 2) return { text: `${diffHours} hours`, urgent: true, detail: "Today" };
-    if (diffHours > 0) return { text: `${diffHours}h ${diffMinutes % 60}m`, urgent: true, detail: "Very soon!" };
-    if (diffMinutes > 0) return { text: `${diffMinutes} minutes`, urgent: true, detail: "Starting soon!" };
+    if (diffDays > 7)
+      return {
+        text: `${diffDays} days`,
+        urgent: false,
+        detail: "More than a week away",
+      };
+    if (diffDays > 1)
+      return {
+        text: `${diffDays} days`,
+        urgent: false,
+        detail: `${diffHours} hours remaining`,
+      };
+    if (diffHours > 2)
+      return { text: `${diffHours} hours`, urgent: true, detail: "Today" };
+    if (diffHours > 0)
+      return {
+        text: `${diffHours}h ${diffMinutes % 60}m`,
+        urgent: true,
+        detail: "Very soon!",
+      };
+    if (diffMinutes > 0)
+      return {
+        text: `${diffMinutes} minutes`,
+        urgent: true,
+        detail: "Starting soon!",
+      };
     return { text: "Now", urgent: true, detail: "Time to join!" };
   };
 
   const isUpcomingAppointment = (appointment) => {
-    return new Date(appointment.date_time) > new Date() && appointment.status !== "cancelled";
+    return (
+      new Date(appointment.date_time) > new Date() &&
+      appointment.status !== "cancelled"
+    );
   };
 
   const isUpcomingSession = (session) => {
-    return new Date(session.date_time) > new Date() && session.status !== "cancelled";
+    return (
+      new Date(session.date_time) > new Date() && session.status !== "cancelled"
+    );
   };
 
   const getAge = (dob) => {
@@ -329,19 +372,26 @@ const ElderDashboard = () => {
           <div className={styles.doctorAvatar}>👨‍⚕️</div>
           <div className={styles.doctorDetails}>
             <h3>Dr. {appointment.doctor_name}</h3>
-            <p className={styles.specialization}>{appointment.specialization}</p>
-            <p className={styles.institution}>{appointment.current_institution}</p>
+            <p className={styles.specialization}>
+              {appointment.specialization}
+            </p>
+            <p className={styles.institution}>
+              {appointment.current_institution}
+            </p>
           </div>
         </div>
         <div className={styles.statusContainer}>
-          <span className={
-            appointment.status === "cancelled"
-              ? styles.statusCompleted
-              : appointment.status === "completed"
-              ? styles.statusCompleted
-              : styles.statusUpcoming
-          }>
-            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+          <span
+            className={
+              appointment.status === "cancelled"
+                ? styles.statusCompleted
+                : appointment.status === "completed"
+                ? styles.statusCompleted
+                : styles.statusUpcoming
+            }
+          >
+            {appointment.status.charAt(0).toUpperCase() +
+              appointment.status.slice(1)}
           </span>
         </div>
       </div>
@@ -350,28 +400,40 @@ const ElderDashboard = () => {
         <div className={styles.appointmentMeta}>
           <div className={styles.dateTimeGroup}>
             <div className={styles.dateInfo}>
-              <span className={styles.dateText}>{formatDate(appointment.date_time)}</span>
+              <span className={styles.dateText}>
+                {formatDate(appointment.date_time)}
+              </span>
             </div>
             <div className={styles.timeInfo}>
-              <span className={styles.timeText}>{formatTime(appointment.date_time)}</span>
+              <span className={styles.timeText}>
+                {formatTime(appointment.date_time)}
+              </span>
             </div>
           </div>
           <div className={styles.typeIndicator}>
-            <span className={`${styles.typeChip} ${
-              appointment.appointment_type === 'online' 
-                ? styles.onlineChip 
-                : styles.physicalChip
-            }`}>
-              {appointment.appointment_type === 'online' ? 'Online' : 'Physical'}
+            <span
+              className={`${styles.typeChip} ${
+                appointment.appointment_type === "online"
+                  ? styles.onlineChip
+                  : styles.physicalChip
+              }`}
+            >
+              {appointment.appointment_type === "online"
+                ? "Online"
+                : "Physical"}
             </span>
           </div>
         </div>
-        
+
         {isUpcomingAppointment(appointment) && (
           <div className={styles.timeRemainingBanner}>
-            <div className={`${styles.timeRemainingContent} ${
-              getTimeRemaining(appointment.date_time).urgent ? styles.urgent : styles.normal
-            }`}>
+            <div
+              className={`${styles.timeRemainingContent} ${
+                getTimeRemaining(appointment.date_time).urgent
+                  ? styles.urgent
+                  : styles.normal
+              }`}
+            >
               <div className={styles.timeRemainingLabel}>Starts in</div>
               <div className={styles.timeRemainingValue}>
                 {getTimeRemaining(appointment.date_time).text}
@@ -382,16 +444,19 @@ const ElderDashboard = () => {
       </div>
 
       <div className={styles.cardActions}>
-        {appointment.appointment_type === 'online' && isUpcomingAppointment(appointment) && (
-          <button
-            className={styles.joinBtn}
-            onClick={() => handleJoinAppointment(appointment.appointment_id)}
-          >
-            🎥 Join Meeting
-          </button>
-        )}
-        <button 
-          onClick={() => navigate(`/elder/appointment/${appointment.appointment_id}`)}
+        {appointment.appointment_type === "online" &&
+          isUpcomingAppointment(appointment) && (
+            <button
+              className={styles.joinBtn}
+              onClick={() => handleJoinAppointment(appointment.appointment_id)}
+            >
+              🎥 Join Meeting
+            </button>
+          )}
+        <button
+          onClick={() =>
+            navigate(`/elder/appointment/${appointment.appointment_id}`)
+          }
           className={styles.detailsBtn}
         >
           📋 View Details
@@ -412,15 +477,17 @@ const ElderDashboard = () => {
           </div>
         </div>
         <div className={styles.statusContainer}>
-          <span className={
-            session.status === "cancelled"
-              ? styles.statusCancelled
-              : session.status === "completed"
-              ? styles.statusCompleted
-              : session.status === "confirmed"
-              ? styles.statusConfirmed
-              : styles.statusUpcoming
-          }>
+          <span
+            className={
+              session.status === "cancelled"
+                ? styles.statusCancelled
+                : session.status === "completed"
+                ? styles.statusCompleted
+                : session.status === "confirmed"
+                ? styles.statusConfirmed
+                : styles.statusUpcoming
+            }
+          >
             {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
           </span>
         </div>
@@ -430,28 +497,38 @@ const ElderDashboard = () => {
         <div className={styles.appointmentMeta}>
           <div className={styles.dateTimeGroup}>
             <div className={styles.dateInfo}>
-              <span className={styles.dateText}>{formatDate(session.date_time)}</span>
+              <span className={styles.dateText}>
+                {formatDate(session.date_time)}
+              </span>
             </div>
             <div className={styles.timeInfo}>
-              <span className={styles.timeText}>{formatTime(session.date_time)}</span>
+              <span className={styles.timeText}>
+                {formatTime(session.date_time)}
+              </span>
             </div>
           </div>
           <div className={styles.typeIndicator}>
-            <span className={`${styles.typeChip} ${
-              session.session_type === 'online' 
-                ? styles.onlineChip 
-                : styles.physicalChip
-            }`}>
-              {session.session_type === 'online' ? 'Online' : 'Physical'}
+            <span
+              className={`${styles.typeChip} ${
+                session.session_type === "online"
+                  ? styles.onlineChip
+                  : styles.physicalChip
+              }`}
+            >
+              {session.session_type === "online" ? "Online" : "Physical"}
             </span>
           </div>
         </div>
-        
+
         {isUpcomingSession(session) && (
           <div className={styles.timeRemainingBanner}>
-            <div className={`${styles.timeRemainingContent} ${
-              getTimeRemaining(session.date_time).urgent ? styles.urgent : styles.normal
-            }`}>
+            <div
+              className={`${styles.timeRemainingContent} ${
+                getTimeRemaining(session.date_time).urgent
+                  ? styles.urgent
+                  : styles.normal
+              }`}
+            >
               <div className={styles.timeRemainingLabel}>Starts in</div>
               <div className={styles.timeRemainingValue}>
                 {getTimeRemaining(session.date_time).text}
@@ -462,7 +539,7 @@ const ElderDashboard = () => {
       </div>
 
       <div className={styles.cardActions}>
-        {session.session_type === 'online' && isUpcomingSession(session) && (
+        {session.session_type === "online" && isUpcomingSession(session) && (
           <button
             className={styles.joinBtn}
             onClick={() => handleJoinSession(session.session_id)}
@@ -470,7 +547,7 @@ const ElderDashboard = () => {
             🎥 Join Session
           </button>
         )}
-        <button 
+        <button
           onClick={() => navigate(`/elder/session/${session.session_id}`)}
           className={styles.detailsBtn}
         >
@@ -484,10 +561,12 @@ const ElderDashboard = () => {
     return (
       <div className={styles.dashboardContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading your dashboard...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -496,17 +575,19 @@ const ElderDashboard = () => {
     return (
       <div className={styles.dashboardContainer}>
         <Navbar />
-        <div className={styles.errorContainer}>
-          <div className={styles.errorIcon}>⚠️</div>
-          <h2>Oops! Something went wrong</h2>
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className={styles.retryBtn}
-          >
-            Try Again
-          </button>
-        </div>
+        <ElderLayout>
+          <div className={styles.errorContainer}>
+            <div className={styles.errorIcon}>⚠️</div>
+            <h2>Oops! Something went wrong</h2>
+            <p>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className={styles.retryBtn}
+            >
+              Try Again
+            </button>
+          </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -514,413 +595,461 @@ const ElderDashboard = () => {
   return (
     <div className={styles.dashboardContainer}>
       <Navbar />
+      <ElderLayout>
+        <div className={styles.dashboardContent}>
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statsCard}>
+              <div className={styles.statsIcon}>🩺</div>
+              <div className={styles.statsContent}>
+                <h3>Upcoming Appointments</h3>
+                <p className={styles.statsNumber}>
+                  {statsLoading ? "..." : statsData.upcomingAppointments}
+                </p>
+              </div>
+            </div>
 
-      <div className={styles.dashboardContent}>
-        {/* Stats Cards */}
-        <div className={styles.statsGrid}>
-          <div className={styles.statsCard}>
-            <div className={styles.statsIcon}>🩺</div>
-            <div className={styles.statsContent}>
-              <h3>Upcoming Appointments</h3>
-              <p className={styles.statsNumber}>
-                {statsLoading ? "..." : statsData.upcomingAppointments}
-              </p>
+            <div className={styles.statsCard}>
+              <div className={styles.statsIcon}>🧠</div>
+              <div className={styles.statsContent}>
+                <h3>Upcoming Sessions</h3>
+                <p className={styles.statsNumber}>
+                  {statsLoading ? "..." : statsData.upcomingSessions}
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.statsCard}>
+              <div className={styles.statsIcon}>📢</div>
+              <div className={styles.statsContent}>
+                <h3>Upcoming Activities</h3>
+                <p className={styles.statsNumber}>
+                  {statsLoading ? "..." : statsData.upcomingCampaigns}
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.statsCard}>
+              <div className={styles.statsIcon}>🧑‍🤝‍🧑</div>
+              <div className={styles.statsContent}>
+                <h3>Caregiver Visits</h3>
+                <p className={styles.statsNumber}>
+                  {statsLoading ? "..." : statsData.assignedCaregivers}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className={styles.statsCard}>
-            <div className={styles.statsIcon}>🧠</div>
-            <div className={styles.statsContent}>
-              <h3>Upcoming Sessions</h3>
-              <p className={styles.statsNumber}>
-                {statsLoading ? "..." : statsData.upcomingSessions}
-              </p>
-            </div>
-          </div>
+          {/* Profile and Family Cards Container */}
+          <div className={styles.profileFamilyContainer}>
+            {/* Profile Summary Card */}
+            <div className={styles.profileSummaryCard}>
+              <div className={styles.profileSummaryContent}>
+                <div className={styles.profileImageSection}>
+                  {elderDetails?.profile_photo ? (
+                    <img
+                      src={`http://localhost:5000/uploads/profiles/${elderDetails.profile_photo}`}
+                      alt="Profile"
+                      className={styles.profileImage}
+                    />
+                  ) : (
+                    <div className={styles.profilePlaceholder}>
+                      <span>{elderDetails?.name?.charAt(0) || "E"}</span>
+                    </div>
+                  )}
+                  <div className={styles.statusIndicator}></div>
+                </div>
 
-          <div className={styles.statsCard}>
-            <div className={styles.statsIcon}>📢</div>
-            <div className={styles.statsContent}>
-              <h3>Upcoming Activities</h3>
-              <p className={styles.statsNumber}>
-                {statsLoading ? "..." : statsData.upcomingCampaigns}
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.statsCard}>
-            <div className={styles.statsIcon}>🧑‍🤝‍🧑</div>
-            <div className={styles.statsContent}>
-              <h3>Caregiver Visits</h3>
-              <p className={styles.statsNumber}>
-                {statsLoading ? "..." : statsData.assignedCaregivers}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Profile and Family Cards Container */}
-        <div className={styles.profileFamilyContainer}>
-          {/* Profile Summary Card */}
-          <div className={styles.profileSummaryCard}>
-            <div className={styles.profileSummaryContent}>
-              <div className={styles.profileImageSection}>
-                {elderDetails?.profile_photo ? (
-                  <img
-                    src={`http://localhost:5000/uploads/profiles/${elderDetails.profile_photo}`}
-                    alt="Profile"
-                    className={styles.profileImage}
-                  />
-                ) : (
-                  <div className={styles.profilePlaceholder}>
-                    <span>{elderDetails?.name?.charAt(0) || "E"}</span>
+                <div className={styles.profileInfo}>
+                  <h2>Welcome {elderDetails?.name}</h2>
+                  <div className={styles.profileMeta}>
+                    <span className={styles.age}>
+                      Age: {getAge(elderDetails?.dob)}
+                    </span>
+                    <span className={styles.gender}>
+                      {elderDetails?.gender}
+                    </span>
                   </div>
-                )}
-                <div className={styles.statusIndicator}></div>
+                  <div className={styles.memberSince}>
+                    Member since {formatMemberSince(elderDetails?.created_at)}
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div className={styles.profileInfo}>
-                <h2>Welcome {elderDetails?.name}</h2>
-                <div className={styles.profileMeta}>
-                  <span className={styles.age}>
-                    Age: {getAge(elderDetails?.dob)}
-                  </span>
-                  <span className={styles.gender}>{elderDetails?.gender}</span>
+            {/* Family Member Card */}
+            {elderDetails?.family_member && (
+              <div className={styles.familyMemberCard}>
+                <div className={styles.familyMemberHeader}>
+                  <div className={styles.familyIcon}>👨‍👩‍👧‍👦</div>
+                  <div>
+                    <h3>Your Family Contact</h3>
+                    <p>Always here to help you</p>
+                  </div>
                 </div>
-                <div className={styles.memberSince}>
-                  Member since {formatMemberSince(elderDetails?.created_at)}
+                <div className={styles.familyMemberInfo}>
+                  <div className={styles.familyDetail}>
+                    <strong>{elderDetails.family_member.name}</strong>
+                  </div>
+                  <div className={styles.familyActions}>
+                    <button className={styles.callBtn}>📞</button>
+                    <button className={styles.messageBtn}>💬</button>
+                  </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Appointments Section */}
+          <div className={styles.appointmentsSection}>
+            <div className={styles.appointmentsHeader}>
+              <h2>Your Appointments</h2>
+              <div className={styles.appointmentTabs}>
+                <button
+                  className={`${styles.tabBtn} ${
+                    activeTab === "upcoming" ? styles.activeTab : ""
+                  }`}
+                  onClick={() => setActiveTab("upcoming")}
+                >
+                  Upcoming
+                </button>
+                <button
+                  className={`${styles.tabBtn} ${
+                    activeTab === "past" ? styles.activeTab : ""
+                  }`}
+                  onClick={() => setActiveTab("past")}
+                >
+                  Past
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.appointmentsContent}>
+              {appointmentsLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading appointments...</p>
+                </div>
+              ) : (
+                <div className={styles.appointmentsGrid}>
+                  {activeTab === "upcoming" ? (
+                    upcomingAppointments.length > 0 ? (
+                      upcomingAppointments.map(renderAppointmentCard)
+                    ) : (
+                      <div className={styles.noAppointments}>
+                        <div className={styles.noAppointmentsIcon}>📅</div>
+                        <h3>No Upcoming Appointments</h3>
+                        <p>
+                          You don't have any upcoming appointments scheduled.
+                          Book a new appointment to get started.
+                        </p>
+                      </div>
+                    )
+                  ) : pastAppointments.length > 0 ? (
+                    pastAppointments.map(renderAppointmentCard)
+                  ) : (
+                    <div className={styles.noAppointments}>
+                      <div className={styles.noAppointmentsIcon}>📋</div>
+                      <h3>No Past Appointments</h3>
+                      <p>
+                        You haven't had any appointments yet. Your appointment
+                        history will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show All Button */}
+              <div className={styles.showAllContainer}>
+                <button
+                  className={styles.showAllBtn}
+                  onClick={handleShowAllAppointments}
+                >
+                  Show All Appointments
+                </button>
               </div>
             </div>
           </div>
 
-                    {/* Family Member Card */}
-          {elderDetails?.family_member && (
-            <div className={styles.familyMemberCard}>
-              <div className={styles.familyMemberHeader}>
-                <div className={styles.familyIcon}>👨‍👩‍👧‍👦</div>
-                <div>
-                  <h3>Your Family Contact</h3>
-                  <p>Always here to help you</p>
+          {/* Care Assignments Section */}
+          <div className={styles.appointmentsSection}>
+            <div className={styles.appointmentsHeader}>
+              <h2>Your Care Assignments</h2>
+              <div className={styles.weekNavigation}>
+                <button
+                  className={styles.weekNavBtn}
+                  onClick={() => handleWeekChange("prev")}
+                >
+                  &#8249; Previous Week
+                </button>
+                <div className={styles.weekRange}>
+                  <span>{formatWeekRange(currentWeekStart)}</span>
+                  {!isCurrentWeek() && (
+                    <button
+                      className={styles.currentWeekBtn}
+                      onClick={() => {
+                        const today = new Date();
+                        const thisWeekStart = new Date(today);
+                        thisWeekStart.setDate(today.getDate() - today.getDay());
+                        thisWeekStart.setHours(0, 0, 0, 0);
+                        setCurrentWeekStart(thisWeekStart);
+                        if (elderDetails?.elder_id) {
+                          fetchCareAssignments(
+                            elderDetails.elder_id,
+                            thisWeekStart
+                          );
+                        }
+                      }}
+                    >
+                      This Week
+                    </button>
+                  )}
                 </div>
+                <button
+                  className={styles.weekNavBtn}
+                  onClick={() => handleWeekChange("next")}
+                >
+                  Next Week &#8250;
+                </button>
               </div>
-              <div className={styles.familyMemberInfo}>
-                <div className={styles.familyDetail}>
-                  <strong>{elderDetails.family_member.name}</strong>
+            </div>
+
+            <div className={styles.careAssignmentContent}>
+              {careAssignmentsLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading care assignments...</p>
                 </div>
-                <div className={styles.familyActions}>
-                  <button className={styles.callBtn}>📞</button>
-                  <button className={styles.messageBtn}>💬</button>
+              ) : (
+                <div className={styles.weekGrid}>
+                  {careAssignments.map((day, index) => (
+                    <div
+                      key={day.date}
+                      className={`${styles.dayCard} ${
+                        day.isToday ? styles.todayCard : ""
+                      } ${
+                        day.assignments.length > 0 ? styles.hasAssignment : ""
+                      }`}
+                      onClick={() => handleDayClick(day.date, day.assignments)}
+                    >
+                      <div className={styles.dayHeader}>
+                        <div className={styles.dayName}>{day.dayName}</div>
+                        <div className={styles.dayDate}>
+                          {new Date(day.date).getDate()}
+                        </div>
+                      </div>
+                      <div className={styles.dayContent}>
+                        {day.assignments.length > 0 ? (
+                          <div className={styles.assignmentsList}>
+                            {day.assignments.map((assignment, idx) => (
+                              <div key={idx} className={styles.assignmentItem}>
+                                <div className={styles.caregiverName}>
+                                  {assignment.caregiver_name}
+                                </div>
+                                {/* Removed duration field from day card */}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className={styles.noAssignment}>
+                            <span>No caregiver</span>
+                          </div>
+                        )}
+                      </div>
+                      {day.isToday && (
+                        <div className={styles.todayIndicator}>Today</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sessions Section */}
+          <div className={styles.appointmentsSection}>
+            <div className={styles.appointmentsHeader}>
+              <h2>Your Counselling Sessions</h2>
+              <div className={styles.appointmentTabs}>
+                <button
+                  className={`${styles.tabBtn} ${
+                    activeSessionTab === "upcoming" ? styles.activeTab : ""
+                  }`}
+                  onClick={() => setActiveSessionTab("upcoming")}
+                >
+                  Upcoming
+                </button>
+                <button
+                  className={`${styles.tabBtn} ${
+                    activeSessionTab === "past" ? styles.activeTab : ""
+                  }`}
+                  onClick={() => setActiveSessionTab("past")}
+                >
+                  Past
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.appointmentsContent}>
+              {sessionsLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading sessions...</p>
+                </div>
+              ) : (
+                <div className={styles.appointmentsGrid}>
+                  {activeSessionTab === "upcoming" ? (
+                    upcomingSessions.length > 0 ? (
+                      upcomingSessions.map(renderSessionCard)
+                    ) : (
+                      <div className={styles.noAppointments}>
+                        <div className={styles.noAppointmentsIcon}>🧠</div>
+                        <h3>No Upcoming Sessions</h3>
+                        <p>
+                          You don't have any upcoming counselling sessions
+                          scheduled. Book a new session to get started.
+                        </p>
+                      </div>
+                    )
+                  ) : pastSessions.length > 0 ? (
+                    pastSessions.map(renderSessionCard)
+                  ) : (
+                    <div className={styles.noAppointments}>
+                      <div className={styles.noAppointmentsIcon}>📋</div>
+                      <h3>No Past Sessions</h3>
+                      <p>
+                        You haven't had any counselling sessions yet. Your
+                        session history will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show All Button */}
+              <div className={styles.showAllContainer}>
+                <button
+                  className={styles.showAllBtn}
+                  onClick={handleShowAllSessions}
+                >
+                  Show All Sessions
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Care Assignment Details Modal */}
+          {showAssignmentDetails && selectedDayAssignments && (
+            <div
+              className={styles.modal}
+              onClick={() => setShowAssignmentDetails(false)}
+            >
+              <div
+                className={styles.modalContent}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={styles.modalHeader}>
+                  <h3>
+                    Care Assignments for {selectedDayAssignments.dayName}
+                    <span className={styles.modalDate}>
+                      {new Date(
+                        selectedDayAssignments.date
+                      ).toLocaleDateString()}
+                    </span>
+                  </h3>
+                  <button
+                    className={styles.closeBtn}
+                    onClick={() => setShowAssignmentDetails(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className={styles.modalBody}>
+                  {selectedDayAssignments.assignments.map(
+                    (assignment, index) => (
+                      <div key={index} className={styles.assignmentDetail}>
+                        <div className={styles.caregiverHeader}>
+                          <div className={styles.caregiverAvatar}>👨‍⚕️</div>
+                          <div className={styles.caregiverInfo}>
+                            <h4>{assignment.caregiver_name}</h4>
+                            <p className={styles.caregiverDistrict}>
+                              {assignment.caregiver_district}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={styles.assignmentInfo}>
+                          {/* Removed duration field from modal */}
+                          <div className={styles.infoItem}>
+                            <span className={styles.infoLabel}>
+                              Care Period:
+                            </span>
+                            <span className={styles.infoValue}>
+                              {new Date(
+                                assignment.start_date
+                              ).toLocaleDateString()}{" "}
+                              -{" "}
+                              {new Date(
+                                assignment.end_date
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <span className={styles.infoLabel}>Status:</span>
+                            <span
+                              className={`${styles.infoValue} ${
+                                styles.statusBadge
+                              } ${
+                                styles[
+                                  `status${
+                                    assignment.status.charAt(0).toUpperCase() +
+                                    assignment.status.slice(1)
+                                  }`
+                                ]
+                              }`}
+                            >
+                              {assignment.status.charAt(0).toUpperCase() +
+                                assignment.status.slice(1)}
+                            </span>
+                          </div>
+                          <div className={styles.infoItem}>
+                            <span className={styles.infoLabel}>Phone:</span>
+                            <span className={styles.infoValue}>
+                              {assignment.caregiver_phone}
+                            </span>
+                          </div>
+                          {assignment.caregiver_fixed_line && (
+                            <div className={styles.infoItem}>
+                              <span className={styles.infoLabel}>
+                                Fixed Line:
+                              </span>
+                              <span className={styles.infoValue}>
+                                {assignment.caregiver_fixed_line}
+                              </span>
+                            </div>
+                          )}
+                          {assignment.certifications && (
+                            <div className={styles.infoItem}>
+                              <span className={styles.infoLabel}>
+                                Certifications:
+                              </span>
+                              <span className={styles.infoValue}>
+                                {assignment.certifications}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* Appointments Section */}
-        <div className={styles.appointmentsSection}>
-          <div className={styles.appointmentsHeader}>
-            <h2>Your Appointments</h2>
-            <div className={styles.appointmentTabs}>
-              <button
-                className={`${styles.tabBtn} ${
-                  activeTab === "upcoming" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveTab("upcoming")}
-              >
-                Upcoming
-              </button>
-              <button
-                className={`${styles.tabBtn} ${
-                  activeTab === "past" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveTab("past")}
-              >
-                Past
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.appointmentsContent}>
-            {appointmentsLoading ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading appointments...</p>
-              </div>
-            ) : (
-              <div className={styles.appointmentsGrid}>
-                {activeTab === "upcoming" ? (
-                  upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.map(renderAppointmentCard)
-                  ) : (
-                    <div className={styles.noAppointments}>
-                      <div className={styles.noAppointmentsIcon}>📅</div>
-                      <h3>No Upcoming Appointments</h3>
-                      <p>
-                        You don't have any upcoming appointments scheduled. Book
-                        a new appointment to get started.
-                      </p>
-                    </div>
-                  )
-                ) : pastAppointments.length > 0 ? (
-                  pastAppointments.map(renderAppointmentCard)
-                ) : (
-                  <div className={styles.noAppointments}>
-                    <div className={styles.noAppointmentsIcon}>📋</div>
-                    <h3>No Past Appointments</h3>
-                    <p>
-                      You haven't had any appointments yet. Your appointment
-                      history will appear here.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Show All Button */}
-            <div className={styles.showAllContainer}>
-              <button 
-                className={styles.showAllBtn}
-                onClick={handleShowAllAppointments}
-              >
-                Show All Appointments
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Care Assignments Section */}
-        <div className={styles.appointmentsSection}>
-          <div className={styles.appointmentsHeader}>
-            <h2>Your Care Assignments</h2>
-            <div className={styles.weekNavigation}>
-              <button 
-                className={styles.weekNavBtn}
-                onClick={() => handleWeekChange('prev')}
-              >
-                &#8249; Previous Week
-              </button>
-              <div className={styles.weekRange}>
-                <span>{formatWeekRange(currentWeekStart)}</span>
-                {!isCurrentWeek() && (
-                  <button 
-                    className={styles.currentWeekBtn}
-                    onClick={() => {
-                      const today = new Date();
-                      const thisWeekStart = new Date(today);
-                      thisWeekStart.setDate(today.getDate() - today.getDay());
-                      thisWeekStart.setHours(0, 0, 0, 0);
-                      setCurrentWeekStart(thisWeekStart);
-                      if (elderDetails?.elder_id) {
-                        fetchCareAssignments(elderDetails.elder_id, thisWeekStart);
-                      }
-                    }}
-                  >
-                    This Week
-                  </button>
-                )}
-              </div>
-              <button 
-                className={styles.weekNavBtn}
-                onClick={() => handleWeekChange('next')}
-              >
-                Next Week &#8250;
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.careAssignmentContent}>
-            {careAssignmentsLoading ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading care assignments...</p>
-              </div>
-            ) : (
-              <div className={styles.weekGrid}>
-                {careAssignments.map((day, index) => (
-                  <div 
-                    key={day.date} 
-                    className={`${styles.dayCard} ${day.isToday ? styles.todayCard : ''} ${day.assignments.length > 0 ? styles.hasAssignment : ''}`}
-                    onClick={() => handleDayClick(day.date, day.assignments)}
-                  >
-                    <div className={styles.dayHeader}>
-                      <div className={styles.dayName}>{day.dayName}</div>
-                      <div className={styles.dayDate}>
-                        {new Date(day.date).getDate()}
-                      </div>
-                    </div>
-                    <div className={styles.dayContent}>
-                      {day.assignments.length > 0 ? (
-                        <div className={styles.assignmentsList}>
-                          {day.assignments.map((assignment, idx) => (
-                            <div key={idx} className={styles.assignmentItem}>
-                              <div className={styles.caregiverName}>
-                                {assignment.caregiver_name}
-                              </div>
-                              {/* Removed duration field from day card */}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className={styles.noAssignment}>
-                          <span>No caregiver</span>
-                        </div>
-                      )}
-                    </div>
-                    {day.isToday && (
-                      <div className={styles.todayIndicator}>Today</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sessions Section */}
-        <div className={styles.appointmentsSection}>
-          <div className={styles.appointmentsHeader}>
-            <h2>Your Counselling Sessions</h2>
-            <div className={styles.appointmentTabs}>
-              <button
-                className={`${styles.tabBtn} ${
-                  activeSessionTab === "upcoming" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveSessionTab("upcoming")}
-              >
-                Upcoming
-              </button>
-              <button
-                className={`${styles.tabBtn} ${
-                  activeSessionTab === "past" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveSessionTab("past")}
-              >
-                Past
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.appointmentsContent}>
-            {sessionsLoading ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading sessions...</p>
-              </div>
-            ) : (
-              <div className={styles.appointmentsGrid}>
-                {activeSessionTab === "upcoming" ? (
-                  upcomingSessions.length > 0 ? (
-                    upcomingSessions.map(renderSessionCard)
-                  ) : (
-                    <div className={styles.noAppointments}>
-                      <div className={styles.noAppointmentsIcon}>🧠</div>
-                      <h3>No Upcoming Sessions</h3>
-                      <p>
-                        You don't have any upcoming counselling sessions scheduled. Book
-                        a new session to get started.
-                      </p>
-                    </div>
-                  )
-                ) : pastSessions.length > 0 ? (
-                  pastSessions.map(renderSessionCard)
-                ) : (
-                  <div className={styles.noAppointments}>
-                    <div className={styles.noAppointmentsIcon}>📋</div>
-                    <h3>No Past Sessions</h3>
-                    <p>
-                      You haven't had any counselling sessions yet. Your session
-                      history will appear here.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Show All Button */}
-            <div className={styles.showAllContainer}>
-              <button 
-                className={styles.showAllBtn}
-                onClick={handleShowAllSessions}
-              >
-                Show All Sessions
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Care Assignment Details Modal */}
-        {showAssignmentDetails && selectedDayAssignments && (
-          <div className={styles.modal} onClick={() => setShowAssignmentDetails(false)}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <h3>
-                  Care Assignments for {selectedDayAssignments.dayName}
-                  <span className={styles.modalDate}>
-                    {new Date(selectedDayAssignments.date).toLocaleDateString()}
-                  </span>
-                </h3>
-                <button 
-                  className={styles.closeBtn}
-                  onClick={() => setShowAssignmentDetails(false)}
-                >
-                  ✕
-                </button>
-              </div>
-              <div className={styles.modalBody}>
-                {selectedDayAssignments.assignments.map((assignment, index) => (
-                  <div key={index} className={styles.assignmentDetail}>
-                    <div className={styles.caregiverHeader}>
-                      <div className={styles.caregiverAvatar}>👨‍⚕️</div>
-                      <div className={styles.caregiverInfo}>
-                        <h4>{assignment.caregiver_name}</h4>
-                        <p className={styles.caregiverDistrict}>
-                          {assignment.caregiver_district}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={styles.assignmentInfo}>
-                      {/* Removed duration field from modal */}
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Care Period:</span>
-                        <span className={styles.infoValue}>
-                          {new Date(assignment.start_date).toLocaleDateString()} - {new Date(assignment.end_date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Status:</span>
-                        <span className={`${styles.infoValue} ${styles.statusBadge} ${styles[`status${assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}`]}`}>
-                          {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                        </span>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Phone:</span>
-                        <span className={styles.infoValue}>{assignment.caregiver_phone}</span>
-                      </div>
-                      {assignment.caregiver_fixed_line && (
-                        <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>Fixed Line:</span>
-                          <span className={styles.infoValue}>{assignment.caregiver_fixed_line}</span>
-                        </div>
-                      )}
-                      {assignment.certifications && (
-                        <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>Certifications:</span>
-                          <span className={styles.infoValue}>{assignment.certifications}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-      </div>
+      </ElderLayout>
     </div>
   );
 };
 
 export default ElderDashboard;
-

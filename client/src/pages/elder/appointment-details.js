@@ -8,6 +8,7 @@ import {
   joinAppointment,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/appointment-details.module.css";
+import ElderLayout from "../../components/ElderLayout";
 
 const AppointmentDetails = () => {
   const { currentUser } = useAuth();
@@ -130,10 +131,12 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading appointment details...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -142,6 +145,7 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Error Loading Appointment</h2>
@@ -150,6 +154,7 @@ const AppointmentDetails = () => {
             Back to Appointments
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -158,6 +163,7 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>📅</div>
           <h2>Appointment Not Found</h2>
@@ -166,6 +172,7 @@ const AppointmentDetails = () => {
             Back to Appointments
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -173,7 +180,7 @@ const AppointmentDetails = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
@@ -347,6 +354,7 @@ const AppointmentDetails = () => {
           </div>
         </div>
       </div>
+      </ElderLayout>
     </div>
   );
 };

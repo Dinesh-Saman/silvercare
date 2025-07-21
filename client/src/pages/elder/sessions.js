@@ -8,6 +8,7 @@ import {
   joinSession 
 } from '../../services/elderApi2';
 import styles from '../../components/css/elder/sessions.module.css';
+import ElderLayout from '../../components/ElderLayout';
 
 const AllSessions = () => {
   const { currentUser } = useAuth();
@@ -236,12 +237,14 @@ const AllSessions = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingSpinner}></div>
             <p>Loading sessions...</p>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -250,6 +253,7 @@ const AllSessions = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>❌</div>
@@ -263,6 +267,7 @@ const AllSessions = () => {
             </button>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -270,6 +275,7 @@ const AllSessions = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
@@ -491,6 +497,7 @@ const AllSessions = () => {
           </div>
         )}
       </div>
+      </ElderLayout>
     </div>
   );
 };

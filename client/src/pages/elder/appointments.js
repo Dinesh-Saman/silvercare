@@ -8,6 +8,7 @@ import {
   joinAppointment,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/appointments.module.css";
+import ElderLayout from "../../components/ElderLayout";
 
 const AllAppointments = () => {
   const { currentUser } = useAuth();
@@ -196,10 +197,12 @@ const AllAppointments = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading your appointments...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -208,6 +211,7 @@ const AllAppointments = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Error Loading Appointments</h2>
@@ -216,6 +220,7 @@ const AllAppointments = () => {
             Try Again
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -223,7 +228,7 @@ const AllAppointments = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Filters and Search */}
         <div className={styles.filtersContainer}>
@@ -461,6 +466,7 @@ const AllAppointments = () => {
           </div>
         )}
       </div>
+      </ElderLayout>
     </div>
   );
 };

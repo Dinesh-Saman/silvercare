@@ -8,6 +8,7 @@ import {
   joinSession 
 } from '../../services/elderApi2';
 import styles from '../../components/css/elder/session-details.module.css';
+import ElderLayout from '../../components/ElderLayout';
 
 const SessionDetails = () => {
   const { currentUser } = useAuth();
@@ -160,12 +161,14 @@ const SessionDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingSpinner}></div>
             <p>Loading session details...</p>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -174,6 +177,7 @@ const SessionDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>❌</div>
@@ -187,6 +191,7 @@ const SessionDetails = () => {
             </button>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -195,6 +200,7 @@ const SessionDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>📅</div>
@@ -208,6 +214,7 @@ const SessionDetails = () => {
             </button>
           </div>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -215,6 +222,7 @@ const SessionDetails = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
@@ -369,6 +377,7 @@ const SessionDetails = () => {
           </button>
         </div>
       </div>
+      </ElderLayout>
     </div>
   );
 };
