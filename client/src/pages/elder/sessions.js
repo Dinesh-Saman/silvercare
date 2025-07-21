@@ -277,65 +277,52 @@ const AllSessions = () => {
       <Navbar />
       <ElderLayout>
       <div className={styles.contentContainer}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
+        {/* Filters */}
+        <div className={styles.filtersContainer}>
+          <div className={styles.filtersHeader}>
+            <h2>My Sessions</h2>
             <button 
               className={styles.backBtn}
               onClick={() => navigate('/elder/dashboard')}
             >
               ← Back to Dashboard
             </button>
-            <div className={styles.headerInfo}>
-              <h1>My Sessions</h1>
-              <p>Manage and view all your counseling sessions</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className={styles.filtersContainer}>
-          <div className={styles.filtersHeader}>
-            <h2>Filter Sessions</h2>
-            <button className={styles.clearBtn} onClick={clearFilters}>
-              Clear All Filters
-            </button>
           </div>
           
           <div className={styles.filtersContent}>
-            {/* Status Filters */}
-            <div className={styles.filtersRow}>
-              <div className={styles.filterGroup}>
-                <label>Status</label>
-                <div className={styles.statusFilters}>
-                  {["all", "upcoming", "past", "confirmed", "completed", "cancelled"].map((filter) => (
-                    <button
-                      key={filter}
-                      className={`${styles.filterBtn} ${
-                        activeFilter === filter ? styles.activeFilter : ""
-                      }`}
-                      onClick={() => setActiveFilter(filter)}
-                    >
-                      {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                    </button>
-                  ))}
-                </div>
+            {/* Status Filter Row */}
+            <div className={styles.statusFilterSection}>
+              <div className={styles.statusFilters}>
+                {[
+                  { key: "all", label: "All", count: sessions.length },
+                  { key: "upcoming", label: "Upcoming", count: sessions.filter(session => new Date(session.date_time) > new Date() && session.status !== "cancelled").length },
+                  { key: "past", label: "Past", count: sessions.filter(session => new Date(session.date_time) < new Date() || session.status === "completed").length },
+                  { key: "completed", label: "Completed", count: sessions.filter(session => session.status === "completed").length },
+                  { key: "cancelled", label: "Cancelled", count: sessions.filter(session => session.status === "cancelled").length }
+                ].map((filter) => (
+                  <button
+                    key={filter.key}
+                    className={`${styles.filterBtn} ${activeFilter === filter.key ? styles.activeFilter : ""}`}
+                    onClick={() => setActiveFilter(filter.key)}
+                  >
+                    {filter.label} ({filter.count})
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Search and Date Filters */}
-            <div className={styles.filtersRow}>
+            {/* Search and Filters Row */}
+            <div className={styles.searchFilterSection}>
               <div className={styles.filterGroup}>
-                <label>Search by Counselor or Specialization</label>
+                <label>Search Sessions</label>
                 <input
                   type="text"
-                  placeholder="Search sessions..."
+                  placeholder="Counselor name or specialization..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.searchInput}
                 />
               </div>
-              
               <div className={styles.filterGroup}>
                 <label>Date</label>
                 <input
@@ -345,9 +332,8 @@ const AllSessions = () => {
                   className={styles.dateInput}
                 />
               </div>
-              
               <div className={styles.filterGroup}>
-                <label>Session Type</label>
+                <label>Type</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
@@ -357,6 +343,12 @@ const AllSessions = () => {
                   <option value="online">Online</option>
                   <option value="physical">Physical</option>
                 </select>
+              </div>
+              <div className={styles.filterGroup}>
+                <label>&nbsp;</label>
+                <button onClick={clearFilters} className={styles.clearBtn}>
+                  Clear Filters
+                </button>
               </div>
             </div>
           </div>

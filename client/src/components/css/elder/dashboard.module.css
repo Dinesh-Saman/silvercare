@@ -1,13 +1,14 @@
 .dashboardContainer {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  /*background-color: #EDEDFC;*/
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
 }
 
 .dashboardContent {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 20px 24px;
 }
 
 /* Stats Cards */
@@ -337,6 +338,20 @@
   transform: translateY(-1px);
 }
 
+.countBadge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  min-width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Modern Appointments Grid */
 .appointmentsGrid {
   display: grid;
@@ -524,9 +539,9 @@
 }
 
 .physicalChip {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
-  border-color: #ef4444;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+  border-color: #3b82f6;
 }
 
 /* Professional Time Remaining Banner */
@@ -1015,15 +1030,13 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 8px;
-.weekNavBtn:hover {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  color: #475569;
-  transform: translateY(-1px);
 }
 
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  color: #475569;
+.weekNavBtn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .weekRange {

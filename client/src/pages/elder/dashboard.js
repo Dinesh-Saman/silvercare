@@ -712,6 +712,11 @@ const ElderDashboard = () => {
                   onClick={() => setActiveTab("upcoming")}
                 >
                   Upcoming
+                  {statsData.upcomingAppointments > 0 && (
+                    <span className={styles.countBadge}>
+                      {statsData.upcomingAppointments}
+                    </span>
+                  )}
                 </button>
                 <button
                   className={`${styles.tabBtn} ${

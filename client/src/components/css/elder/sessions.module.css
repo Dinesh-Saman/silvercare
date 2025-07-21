@@ -7,23 +7,7 @@
 .contentContainer {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
-}
-
-/* Header */
-.header {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-}
-
-.headerContent {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  padding: 32px;
 }
 
 /* Modern Professional Back Button */
@@ -89,9 +73,13 @@
 
 .filtersHeader h2 {
   color: #1e293b;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
   margin: 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .filtersContent {
@@ -100,58 +88,64 @@
   gap: 24px;
 }
 
-.filtersRow {
+.statusFilterSection {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.searchFilterSection {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 2fr 1fr 1fr auto;
   gap: 20px;
-}
-
-.filtersRow:first-child {
-  grid-template-columns: 1fr;
-}
-
-.filtersRow:last-child {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: end;
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .filterGroup label {
-  font-weight: 600;
-  color: #374151;
+  color: #64748b;
   font-size: 0.875rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 .statusFilters {
   display: flex;
+  gap: 12px;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
 }
 
 /* Modern Professional Filter Buttons */
 .filterBtn {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #64748b;
-  border: 2px solid transparent;
-  padding: 10px 16px;
-  border-radius: 20px;
+  border: 2px solid #e2e8f0;
+  padding: 12px 24px;
+  border-radius: 12px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: capitalize;
+  white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .filterBtn:hover {
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  color: #475569;
+  border-color: #94a3b8;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -159,8 +153,9 @@
 .activeFilter {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
   color: white !important;
-  border-color: #1e40af;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+  transform: translateY(-1px);
 }
 
 /* Modern Professional Search Input */
