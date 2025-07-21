@@ -7,6 +7,7 @@ export const caregiverApi = {
   fetchAssignedElders: async (caregiverId) => {
     try {
       const response = await axios.get(`${API_BASE}/${caregiverId}/assigned-elders`);
+      console.log('fetchAssignedElders API response:', response.data);
       return response.data;
     } catch (error) {
       console.error('API: Error fetching assigned elders:', error);
@@ -206,6 +207,45 @@ export const caregiverApi = {
       return response.data;
     } catch (error) {
       console.error('API: Error adding carelog:', error);
+      throw error;
+    }
+  },
+
+  // Get elder details with family information
+  getElderDetails: async (elderId) => {
+    try {
+      console.log('API: Fetching elder details for elderId:', elderId);
+      const url = `${API_BASE}/elder/${elderId}/details`;
+      console.log('API: Making request to:', url);
+      const response = await axios.get(url);
+      console.log('API: Elder details response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching elder details:', error);
+      console.error('API: Error response:', error.response?.data);
+      console.error('API: Error status:', error.response?.status);
+      throw error;
+    }
+  },
+
+  // Get carelogs for specific elder
+  getElderCarelogs: async (caregiverId, elderId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/${caregiverId}/elder/${elderId}/carelogs`);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching elder carelogs:', error);
+      return { carelogs: [] };
+    }
+  },
+
+  // Add detailed elder report
+  addElderReport: async (caregiverId, elderId, reportData) => {
+    try {
+      const response = await axios.post(`${API_BASE}/${caregiverId}/elder/${elderId}/report`, reportData);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error adding elder report:', error);
       throw error;
     }
   },
