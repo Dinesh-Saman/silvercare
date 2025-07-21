@@ -5,7 +5,6 @@ import Navbar from "../../components/navbar";
 import {
   getElderDetailsByEmail,
   getAllAppointments,
-  cancelAppointment,
   joinAppointment,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/appointments.module.css";
@@ -118,25 +117,6 @@ const AllAppointments = () => {
   );
   const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
 
-  const handleCancelAppointment = async (appointmentId) => {
-    if (!window.confirm("Are you sure you want to cancel this appointment?")) {
-      return;
-    }
-
-    try {
-      await cancelAppointment(elderDetails.elder_id, appointmentId);
-      
-      // Refresh appointments
-      const appointmentsResponse = await getAllAppointments(elderDetails.elder_id);
-      setAppointments(appointmentsResponse.data.appointments || []);
-      
-      alert("Appointment cancelled successfully");
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      alert("Failed to cancel appointment");
-    }
-  };
-
   const handleJoinAppointment = async (appointmentId) => {
     try {
       const response = await joinAppointment(elderDetails.elder_id, appointmentId);
@@ -175,6 +155,7 @@ const AllAppointments = () => {
   const getStatusBadgeClass = (status, dateTime) => {
     if (status === "cancelled") return styles.statusCancelled;
     if (status === "completed") return styles.statusCompleted;
+    if (status === "confirmed") return styles.statusConfirmed;
     if (new Date(dateTime) < new Date()) return styles.statusPast;
     return styles.statusUpcoming;
   };
@@ -182,13 +163,9 @@ const AllAppointments = () => {
   const getStatusText = (status, dateTime) => {
     if (status === "cancelled") return "Cancelled";
     if (status === "completed") return "Completed";
+    if (status === "confirmed") return "Confirmed";
     if (new Date(dateTime) < new Date()) return "Past";
-    return "Upcoming";
-  };
-
-  const canCancelAppointment = (appointment) => {
-    if (appointment.status === "cancelled" || appointment.status === "completed") return false;
-    return new Date(appointment.date_time) > new Date();
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const getTimeRemaining = (dateString) => {
@@ -405,14 +382,6 @@ const AllAppointments = () => {
                       className={styles.joinBtn}
                     >
                       🎥 Join Meeting
-                    </button>
-                  )}
-                  {canCancelAppointment(appointment) && (
-                    <button
-                      onClick={() => handleCancelAppointment(appointment.appointment_id)}
-                      className={styles.cancelBtn}
-                    >
-                      ❌ Cancel
                     </button>
                   )}
                   <button 

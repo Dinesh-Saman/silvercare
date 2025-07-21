@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { adminApi } from '../../services/adminApi';
 import Navbar from '../../components/navbar';
 import styles from '../../components/css/admin/dashboard.module.css';
-
+import AdminNavbar from '../../components/AdminNavbar';
 const AdminDashboard = () => {
   const { currentUser, logout, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -270,7 +270,7 @@ const AdminDashboard = () => {
 
   return (
     <div className={styles.dashboardContainer}>
-      <Navbar />
+      <AdminNavbar />
       
       {/* Header Section */}
       <div className={styles.headerSection}>

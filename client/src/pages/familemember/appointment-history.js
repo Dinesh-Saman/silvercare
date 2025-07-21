@@ -1,0 +1,308 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { appointmentApi } from '../../services/appointmentApi';
+import Navbar from '../../components/navbar';
+import FamilyMemberLayout from '../../components/FamilyMemberLayout';
+import styles from '../../components/css/familymember/appointment-history.module.css';
+
+
+const AppointmentHistory = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all'); // 'all', 'completed', 'cancelled'
+
+  useEffect(() => {
+    fetchAppointmentHistory();
+  }, [currentUser, filter]);
+
+  const fetchAppointmentHistory = async () => {
+    if (!currentUser?.user_id) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch appointments with completed or cancelled status
+      const response = await appointmentApi.getAppointmentHistory(currentUser.user_id, {
+        status: filter === 'all' ? undefined : filter
+      });
+
+      if (response.success) {
+        console.log('Fetched appointments:', response.appointments);
+        setAppointments(response.appointments || []);
+      }
+    } catch (err) {
+      console.error('Error fetching appointment history:', err);
+      setError('Failed to load appointment history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'Invalid Date';
+    }
+  };
+
+  const getAppointmentTypeIcon = (type) => {
+    if (!type) return '🩺';
+    return type === 'online' ? '💻' : '🏥';
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return '#95a5a6';
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return '#27ae60'; // Green
+      case 'cancelled':
+        return '#e74c3c'; // Red
+      default:
+        return '#95a5a6'; // Gray
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    if (!status) return '📅';
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return '✅';
+      case 'cancelled':
+        return '❌';
+      default:
+        return '📅';
+    }
+  };
+
+  // Safe string operations with null checks
+  const safeCapitalize = (str) => {
+    if (!str || typeof str !== 'string') return 'N/A';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  const safeString = (str, defaultValue = 'N/A') => {
+    return str && typeof str === 'string' ? str : defaultValue;
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <Navbar />
+        <FamilyMemberLayout>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <h2>Loading appointment history...</h2>
+          </div>
+        </FamilyMemberLayout>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <Navbar />
+      <FamilyMemberLayout>
+        <div className={styles.appointmentsContainer}>
+          <div className={styles.appointmentsHeader}>
+            <h1 className={styles.appointmentsTitle}>Appointment History</h1>
+            <p className={styles.appointmentsSubtitle}>
+              View your past appointments - completed and cancelled
+            </p>
+          </div>
+
+          {/* Filter Buttons */}
+          <div className={styles.filterContainer}>
+            <button
+              className={`${styles.filterButton} ${filter === 'all' ? styles.active : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              All History
+            </button>
+            <button
+              className={`${styles.filterButton} ${filter === 'completed' ? styles.active : ''}`}
+              onClick={() => setFilter('completed')}
+            >
+              Completed
+            </button>
+            <button
+              className={`${styles.filterButton} ${filter === 'cancelled' ? styles.active : ''}`}
+              onClick={() => setFilter('cancelled')}
+            >
+              Cancelled
+            </button>
+          </div>
+
+          {error && (
+            <div className={styles.errorMessage}>
+              <p>⚠️ {error}</p>
+            </div>
+          )}
+
+          {appointments.length === 0 ? (
+            <div className={styles.noAppointments}>
+              <div className={styles.noAppointmentsIcon}>📋</div>
+              <h2>No Appointment History</h2>
+              <p>
+                {filter === 'all' 
+                  ? "You don't have any completed or cancelled appointments yet."
+                  : `You don't have any ${filter} appointments yet.`
+                }
+              </p>
+              <button 
+                className={styles.backButton}
+                onClick={() => navigate('/family-member/appointments')}
+              >
+                View Current Appointments
+              </button>
+            </div>
+          ) : (
+            <div className={styles.appointmentsList}>
+              {appointments.map((appointment) => (
+                <div key={appointment.appointment_id} className={styles.appointmentCard}>
+                  <div className={styles.appointmentHeader}>
+                    <div className={styles.appointmentType}>
+                      <span className={styles.typeIcon}>
+                        {getAppointmentTypeIcon(appointment.appointment_type)}
+                      </span>
+                      <span className={styles.typeText}>
+                        {safeCapitalize(appointment.appointment_type)} Appointment
+                      </span>
+                    </div>
+                    <div className={styles.appointmentStatus}>
+                      <span 
+                        className={styles.statusBadge}
+                        style={{ backgroundColor: getStatusColor(appointment.status) }}
+                      >
+                        {getStatusIcon(appointment.status)} {safeCapitalize(appointment.status)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.appointmentContent}>
+                    <div className={styles.appointmentDetails}>
+                      <h3 className={styles.doctorName}>
+                        Dr. {safeString(appointment.doctor_name)}
+                      </h3>
+                      <p className={styles.specialization}>
+                        {safeString(appointment.specialization)}
+                      </p>
+                      
+                      <div className={styles.detailsGrid}>
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailLabel}>👤 Elder:</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.elder_name)}
+                          </span>
+                        </div>
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailLabel}>📅 Date & Time:</span>
+                          <span className={styles.detailValue}>
+                            {formatDate(appointment.date_time)}
+                          </span>
+                        </div>
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailLabel}>🏥 Institution:</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.current_institution)}
+                          </span>
+                        </div>
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailLabel}>📍 District:</span>
+                          <span className={styles.detailValue}>
+                            {safeString(appointment.doctor_district)}
+                          </span>
+                        </div>
+                        {appointment.payment_amount && (
+                          <div className={styles.detailItem}>
+                            <span className={styles.detailLabel}>💰 Amount:</span>
+                            <span className={styles.detailValue}>
+                              Rs. {appointment.payment_amount}
+                            </span>
+                          </div>
+                        )}
+                        <div className={styles.detailItem}>
+                          <span className={styles.detailLabel}>📅 Booked on:</span>
+                          <span className={styles.detailValue}>
+                            {formatDate(appointment.created_at)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {appointment.notes && (
+                        <div className={styles.appointmentNotes}>
+                          <strong>Notes:</strong> {appointment.notes}
+                        </div>
+                      )}
+
+                      {appointment.status === 'cancelled' && appointment.notes && (
+                        <div className={styles.cancellationReason}>
+                          <strong>Cancellation Reason:</strong> 
+                          {appointment.notes.includes('Cancellation reason:') 
+                            ? appointment.notes.split('Cancellation reason:')[1]?.split('|')[0]?.trim() || 'No reason provided'
+                            : 'No reason provided'
+                          }
+                        </div>
+                      )}
+
+                      {appointment.refund_amount && appointment.refund_amount > 0 && (
+                        <div className={styles.refundInfo}>
+                          <strong>Refund:</strong> Rs. {appointment.refund_amount} 
+                          {appointment.refund_status && (
+                            <span className={styles.refundStatus}>
+                              ({safeCapitalize(appointment.refund_status)})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Summary Statistics */}
+          {appointments.length > 0 && (
+            <div className={styles.summaryStats}>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>
+                  {appointments.filter(apt => apt.status === 'completed').length}
+                </span>
+                <span className={styles.statLabel}>Completed</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>
+                  {appointments.filter(apt => apt.status === 'cancelled').length}
+                </span>
+                <span className={styles.statLabel}>Cancelled</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNumber}>{appointments.length}</span>
+                <span className={styles.statLabel}>Total History</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </FamilyMemberLayout>
+    </div>
+  );
+};
+
+export default AppointmentHistory;

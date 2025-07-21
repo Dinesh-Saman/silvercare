@@ -381,7 +381,8 @@ section {
   margin-top: 18px;
 }
 
-.statCard {
+
+.caregiverStatCard {
   background: linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%);
   border-radius: 12px;
   border: 1px solid #e2e8f0;
@@ -393,13 +394,13 @@ section {
   transition: transform 0.18s, box-shadow 0.18s;
 }
 
-.statCard:hover {
+.caregiverStatCard:hover {
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
   border-color: #667eea;
 }
 
-.statLabel {
+.caregiverStatLabel {
   font-size: 15px;
   color: #764ba2;
   font-weight: 600;
@@ -407,7 +408,7 @@ section {
   text-align: center;
 }
 
-.statValue {
+.caregiverStatValue {
   font-size: 2rem;
   font-weight: 700;
   color: #2d3748;
@@ -424,7 +425,7 @@ section {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  .statValue {
+  .caregiverStatValue {
     font-size: 1.5rem;
   }
 }

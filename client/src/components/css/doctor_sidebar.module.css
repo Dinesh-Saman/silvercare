@@ -5,7 +5,7 @@
   top: 0;
   height: 100vh;
   width: 280px;
-  background: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+  background: #4C4DDC;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
@@ -98,7 +98,7 @@
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,9 +176,9 @@
 }
 
 .menuLink.active {
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  box-shadow: 0 2px 15px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 2px 15px rgba(76, 77, 220, 0.3);
 }
 
 .menuIcon {
@@ -264,7 +264,7 @@
 }
 
 .submenuLink.active {
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
@@ -402,6 +402,269 @@
 
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Appointments Preview Styles */
+.appointmentsPreview {
+  margin: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.previewTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ecf0f1;
+}
+
+.appointmentsBadge {
+  background: #e74c3c;
+  color: white;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.appointmentsList {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.appointmentItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.appointmentItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.appointmentItem:last-child {
+  border-bottom: none;
+}
+
+.appointmentTime {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3498db;
+  min-width: 50px;
+  margin-right: 10px;
+}
+
+.appointmentDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patientName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ecf0f1;
+}
+
+.appointmentType {
+  font-size: 11px;
+  color: #bdc3c7;
+}
+
+.appointmentStatus {
+  display: flex;
+  align-items: center;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #95a5a6;
+}
+
+.statusDot.confirmed {
+  background: #27ae60;
+}
+
+.statusDot.pending {
+  background: #f39c12;
+}
+
+.statusDot.cancelled {
+  background: #e74c3c;
+}
+
+.statusDot.completed {
+  background: #3498db;
+}
+
+.noAppointments {
+  padding: 20px 15px;
+  text-align: center;
+  color: #bdc3c7;
+  font-size: 13px;
+}
+
+.previewFooter {
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.viewAllButton {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ecf0f1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Weekly Schedule Calendar Styles */
+.weeklySchedule {
+  margin: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.scheduleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scheduleTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ecf0f1;
+}
+
+.scheduleViewButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ecf0f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scheduleViewButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.weeklyCalendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  padding: 10px;
+}
+
+.calendarDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 45px;
+}
+
+.calendarDay:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.calendarDay.today {
+  background: rgba(52, 152, 219, 0.3);
+  border: 1px solid #3498db;
+}
+
+.calendarDay.hasAppointments {
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid #2ecc71;
+}
+
+.calendarDay.today.hasAppointments {
+  background: rgba(52, 152, 219, 0.4);
+  border: 1px solid #3498db;
+}
+
+.dayName {
+  font-size: 10px;
+  font-weight: 600;
+  color: #bdc3c7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dayNumber {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ecf0f1;
+  margin-top: 2px;
+}
+
+.appointmentCount {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #e74c3c;
+  color: white;
+  font-size: 9px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  font-weight: 600;
+  min-width: 14px;
+  text-align: center;
+  line-height: 1;
+}
+
+.calendarDay.today .appointmentCount {
+  background: #f39c12;
+}
+
+.calendarDay.hasAppointments .appointmentCount {
+  background: #27ae60;
 }
 
 /* Animation for menu items */
