@@ -689,6 +689,94 @@ const ElderDashboard = () => {
           </div>
         </div>
 
+        {/* Care Assignments Section */}
+        <div className={styles.appointmentsSection}>
+          <div className={styles.appointmentsHeader}>
+            <h2>Your Care Assignments</h2>
+            <div className={styles.weekNavigation}>
+              <button 
+                className={styles.weekNavBtn}
+                onClick={() => handleWeekChange('prev')}
+              >
+                &#8249; Previous Week
+              </button>
+              <div className={styles.weekRange}>
+                <span>{formatWeekRange(currentWeekStart)}</span>
+                {!isCurrentWeek() && (
+                  <button 
+                    className={styles.currentWeekBtn}
+                    onClick={() => {
+                      const today = new Date();
+                      const thisWeekStart = new Date(today);
+                      thisWeekStart.setDate(today.getDate() - today.getDay());
+                      thisWeekStart.setHours(0, 0, 0, 0);
+                      setCurrentWeekStart(thisWeekStart);
+                      if (elderDetails?.elder_id) {
+                        fetchCareAssignments(elderDetails.elder_id, thisWeekStart);
+                      }
+                    }}
+                  >
+                    This Week
+                  </button>
+                )}
+              </div>
+              <button 
+                className={styles.weekNavBtn}
+                onClick={() => handleWeekChange('next')}
+              >
+                Next Week &#8250;
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.careAssignmentContent}>
+            {careAssignmentsLoading ? (
+              <div className={styles.loadingContainer}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading care assignments...</p>
+              </div>
+            ) : (
+              <div className={styles.weekGrid}>
+                {careAssignments.map((day, index) => (
+                  <div 
+                    key={day.date} 
+                    className={`${styles.dayCard} ${day.isToday ? styles.todayCard : ''} ${day.assignments.length > 0 ? styles.hasAssignment : ''}`}
+                    onClick={() => handleDayClick(day.date, day.assignments)}
+                  >
+                    <div className={styles.dayHeader}>
+                      <div className={styles.dayName}>{day.dayName}</div>
+                      <div className={styles.dayDate}>
+                        {new Date(day.date).getDate()}
+                      </div>
+                    </div>
+                    <div className={styles.dayContent}>
+                      {day.assignments.length > 0 ? (
+                        <div className={styles.assignmentsList}>
+                          {day.assignments.map((assignment, idx) => (
+                            <div key={idx} className={styles.assignmentItem}>
+                              <div className={styles.caregiverName}>
+                                {assignment.caregiver_name}
+                              </div>
+                              {/* Removed duration field from day card */}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className={styles.noAssignment}>
+                          <span>No caregiver</span>
+                        </div>
+                      )}
+                    </div>
+                    {day.isToday && (
+                      <div className={styles.todayIndicator}>Today</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Sessions Section */}
         <div className={styles.appointmentsSection}>
           <div className={styles.appointmentsHeader}>
@@ -761,96 +849,6 @@ const ElderDashboard = () => {
           </div>
         </div>
 
-        {/* Care Assignments Section */}
-        <div className={styles.appointmentsSection}>
-          <div className={styles.appointmentsHeader}>
-            <h2>Your Care Assignments</h2>
-            <div className={styles.weekNavigation}>
-              <button 
-                className={styles.weekNavBtn}
-                onClick={() => handleWeekChange('prev')}
-              >
-                &#8249; Previous Week
-              </button>
-              <div className={styles.weekRange}>
-                <span>{formatWeekRange(currentWeekStart)}</span>
-                {!isCurrentWeek() && (
-                  <button 
-                    className={styles.currentWeekBtn}
-                    onClick={() => {
-                      const today = new Date();
-                      const thisWeekStart = new Date(today);
-                      thisWeekStart.setDate(today.getDate() - today.getDay());
-                      thisWeekStart.setHours(0, 0, 0, 0);
-                      setCurrentWeekStart(thisWeekStart);
-                      if (elderDetails?.elder_id) {
-                        fetchCareAssignments(elderDetails.elder_id, thisWeekStart);
-                      }
-                    }}
-                  >
-                    This Week
-                  </button>
-                )}
-              </div>
-              <button 
-                className={styles.weekNavBtn}
-                onClick={() => handleWeekChange('next')}
-              >
-                Next Week &#8250;
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.careAssignmentContent}>
-            {careAssignmentsLoading ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading care assignments...</p>
-              </div>
-            ) : (
-              <div className={styles.weekGrid}>
-                {careAssignments.map((day, index) => (
-                  <div 
-                    key={day.date} 
-                    className={`${styles.dayCard} ${day.isToday ? styles.todayCard : ''} ${day.assignments.length > 0 ? styles.hasAssignment : ''}`}
-                    onClick={() => handleDayClick(day.date, day.assignments)}
-                  >
-                    <div className={styles.dayHeader}>
-                      <div className={styles.dayName}>{day.dayName}</div>
-                      <div className={styles.dayDate}>
-                        {new Date(day.date).getDate()}
-                      </div>
-                    </div>
-                    <div className={styles.dayContent}>
-                      {day.assignments.length > 0 ? (
-                        <div className={styles.assignmentsList}>
-                          {day.assignments.map((assignment, idx) => (
-                            <div key={idx} className={styles.assignmentItem}>
-                              <div className={styles.caregiverName}>
-                                {assignment.caregiver_name}
-                              </div>
-                              <div className={styles.assignmentTime}>
-                                {assignment.duration} hours
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className={styles.noAssignment}>
-                          <span>No caregiver</span>
-                        </div>
-                      )}
-                    </div>
-                    {day.isToday && (
-                      <div className={styles.todayIndicator}>Today</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Care Assignment Details Modal */}
         {showAssignmentDetails && selectedDayAssignments && (
           <div className={styles.modal} onClick={() => setShowAssignmentDetails(false)}>
@@ -882,10 +880,7 @@ const ElderDashboard = () => {
                       </div>
                     </div>
                     <div className={styles.assignmentInfo}>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Duration:</span>
-                        <span className={styles.infoValue}>{assignment.duration} hours</span>
-                      </div>
+                      {/* Removed duration field from modal */}
                       <div className={styles.infoItem}>
                         <span className={styles.infoLabel}>Care Period:</span>
                         <span className={styles.infoValue}>

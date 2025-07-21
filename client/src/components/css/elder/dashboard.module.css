@@ -1128,7 +1128,8 @@
   background: rgba(255, 255, 255, 0.8);
   border-radius: 6px;
   padding: 8px;
-  border-left: 3px solid #3b82f6;
+    /* Removed left border indicator */
+    border-left: none;
 }
 
 .caregiverName {
