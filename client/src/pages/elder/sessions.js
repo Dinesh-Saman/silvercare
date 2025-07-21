@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from "../../components/navbar";
 import { useAuth } from '../../context/AuthContext';
 import { 
   getElderDetailsByEmail, 
@@ -234,6 +235,7 @@ const AllSessions = () => {
   if (loading) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
         <div className={styles.contentContainer}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingSpinner}></div>

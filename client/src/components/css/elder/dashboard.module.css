@@ -1003,20 +1003,26 @@
 }
 
 .weekNavBtn {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  border: 1px solid #cbd5e1;
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
   border-radius: 8px;
-  padding: 8px 16px;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #475569;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 8px;
 .weekNavBtn:hover {
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-  border-color: #94a3b8;
+  color: #475569;
+  transform: translateY(-1px);
+}
+
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #475569;
   transform: translateY(-1px);
 }
 
