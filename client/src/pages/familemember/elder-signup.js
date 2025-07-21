@@ -6,6 +6,56 @@ import styles from '../../components/css/familymember/elder-signup.module.css';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 
+// Function to extract date of birth from NIC
+const extractDateFromNIC = (nic) => {
+  try {
+    let year, dayOfYear;
+    
+    // Remove any spaces or special characters except V
+    const cleanNic = nic.replace(/[^0-9Vv]/g, '');
+    
+    if (cleanNic.length === 10) {
+      // Old NIC format (9 digits + V)
+      year = parseInt(cleanNic.substring(0, 2));
+      dayOfYear = parseInt(cleanNic.substring(2, 5));
+      
+      // Determine century
+      year = year < 50 ? 2000 + year : 1900 + year;
+    } else if (cleanNic.length === 12) {
+      // New NIC format (12 digits)
+      year = parseInt(cleanNic.substring(0, 4));
+      dayOfYear = parseInt(cleanNic.substring(4, 7));
+    } else {
+      return null;
+    }
+    
+    // For females, subtract 500 from day of year
+    let gender = 'male';
+    if (dayOfYear > 500) {
+      dayOfYear -= 500;
+      gender = 'female';
+    }
+    
+    // Validate day of year
+    if (dayOfYear < 1 || dayOfYear > 366) {
+      return null;
+    }
+    
+    // Calculate the actual date
+    const startOfYear = new Date(year, 0, 1);
+    const dateOfBirth = new Date(startOfYear.getTime() + (dayOfYear - 1) * 24 * 60 * 60 * 1000);
+    
+    // Format as YYYY-MM-DD for input field
+    return {
+      dateOfBirth: dateOfBirth.toISOString().split('T')[0],
+      gender: gender.charAt(0).toUpperCase() + gender.slice(1)
+    };
+  } catch (error) {
+    console.error('Error extracting date from NIC:', error);
+    return null;
+  }
+};
+
 const ElderSignup = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, loading } = useAuth();
@@ -30,6 +80,7 @@ const ElderSignup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [familyMemberId, setFamilyMemberId] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [nicAutoFilled, setNicAutoFilled] = useState(false);
 
   // Get family member ID from AuthContext when component mounts
   useEffect(() => {
@@ -64,6 +115,44 @@ const ElderSignup = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Auto-extract date of birth and gender from NIC
+    if (name === 'nicPassport' && value.length >= 10) {
+      const extractedInfo = extractDateFromNIC(value);
+      if (extractedInfo) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          dateOfBirth: extractedInfo.dateOfBirth,
+          gender: extractedInfo.gender
+        }));
+        setNicAutoFilled(true);
+        
+        // Clear any existing errors for related fields
+        setErrors(prev => ({
+          ...prev,
+          [name]: '',
+          dateOfBirth: '',
+          gender: ''
+        }));
+        return;
+      }
+    }
+    
+    // If NIC is cleared, reset auto-filled status
+    if (name === 'nicPassport' && value.length < 10) {
+      setNicAutoFilled(false);
+      if (formData.dateOfBirth || formData.gender) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          dateOfBirth: '',
+          gender: ''
+        }));
+        return;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -273,36 +362,6 @@ const ElderSignup = () => {
                 {errors.email && <span className={styles.error}>{errors.email}</span>}
               </div>
 
-              <div className={styles.row}>
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>Date of Birth *</label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    className={`${styles.input} ${errors.dateOfBirth ? styles.inputError : ''}`}
-                  />
-                  {errors.dateOfBirth && <span className={styles.error}>{errors.dateOfBirth}</span>}
-                </div>
-
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>Gender *</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className={`${styles.input} ${styles.select} ${errors.gender ? styles.inputError : ''}`}
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  {errors.gender && <span className={styles.error}>{errors.gender}</span>}
-                </div>
-              </div>
-
               <div className={styles.inputGroup}>
                 <label className={styles.label}>NIC/Passport Number *</label>
                 <input
@@ -311,9 +370,62 @@ const ElderSignup = () => {
                   value={formData.nicPassport}
                   onChange={handleInputChange}
                   className={`${styles.input} ${errors.nicPassport ? styles.inputError : ''}`}
-                  placeholder="Enter NIC or Passport number"
+                  placeholder="Enter NIC (Date of birth and gender will be auto-filled)"
+                  maxLength="12"
                 />
                 {errors.nicPassport && <span className={styles.error}>{errors.nicPassport}</span>}
+                {nicAutoFilled && (
+                  <small className={styles.autoFillNote}>
+                    ✓ Date of birth and gender auto-filled from NIC
+                  </small>
+                )}
+              </div>
+
+              <div className={styles.row}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Date of Birth *</label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${errors.dateOfBirth ? styles.inputError : ''} ${
+                      nicAutoFilled ? styles.autoFilled : ''
+                    }`}
+                    readOnly={nicAutoFilled}
+                    title={nicAutoFilled ? "Auto-filled from NIC" : ""}
+                  />
+                  {errors.dateOfBirth && <span className={styles.error}>{errors.dateOfBirth}</span>}
+                  {nicAutoFilled && (
+                    <small className={styles.autoFillNote}>
+                      Auto-filled from NIC. Clear NIC to edit manually.
+                    </small>
+                  )}
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Gender *</label>
+                                    <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className={`${styles.input} ${styles.select} ${errors.gender ? styles.inputError : ''} ${
+                      nicAutoFilled ? styles.autoFilled : ''
+                    }`}
+                    disabled={nicAutoFilled}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.gender && <span className={styles.error}>{errors.gender}</span>}
+                  {nicAutoFilled && (
+                    <small className={styles.autoFillNote}>
+                      Auto-detected from NIC. Clear NIC to edit manually.
+                    </small>
+                  )}
+                </div>
               </div>
 
               <div className={styles.inputGroup}>
@@ -377,7 +489,7 @@ const ElderSignup = () => {
                   <option value="Ampara">Ampara</option>
                   <option value="Batticaloa">Batticaloa</option>
                   <option value="Trincomalee">Trincomalee</option>
-                                  </select>
+                </select>
                 {errors.district && <span className={styles.error}>{errors.district}</span>}
               </div>
 

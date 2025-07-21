@@ -245,6 +245,29 @@
   margin-bottom: 15px;
 }
 
+.autoFillNote {
+  color: #28a745;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  display: block;
+  font-style: italic;
+}
+
+.autoFilled {
+  background-color: #f8f9fa;
+  border-color: #28a745;
+  cursor: not-allowed;
+}
+
+.autoFilled:focus {
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.autoFilled:disabled {
+  opacity: 0.8;
+}
+
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
