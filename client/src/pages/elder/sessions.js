@@ -249,6 +249,7 @@ const AllSessions = () => {
   if (error) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>❌</div>
@@ -268,6 +269,7 @@ const AllSessions = () => {
 
   return (
     <div className={styles.pageContainer}>
+      <Navbar />
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>

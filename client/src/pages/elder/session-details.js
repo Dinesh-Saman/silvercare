@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import Navbar from "../../components/navbar";
 import { useAuth } from '../../context/AuthContext';
 import { 
   getElderDetailsByEmail, 
@@ -158,6 +159,7 @@ const SessionDetails = () => {
   if (loading) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
         <div className={styles.contentContainer}>
           <div className={styles.loadingContainer}>
             <div className={styles.loadingSpinner}></div>
@@ -171,6 +173,7 @@ const SessionDetails = () => {
   if (error) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>❌</div>
@@ -191,6 +194,7 @@ const SessionDetails = () => {
   if (!session) {
     return (
       <div className={styles.pageContainer}>
+        <Navbar />
         <div className={styles.contentContainer}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>📅</div>
@@ -210,6 +214,7 @@ const SessionDetails = () => {
 
   return (
     <div className={styles.pageContainer}>
+      <Navbar />
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
