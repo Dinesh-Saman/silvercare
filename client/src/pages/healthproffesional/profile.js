@@ -1,122 +1,293 @@
-import React from 'react';
-import Navbar from '../../components/navbar';
-import styles from "../../components/css/navbar.module.css";
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import Navbar from '../../components/navbar';
+import HealthProfessionalSidebar from '../../components/HealthProfessionalSidebar';
+import styles from '../../components/css/doctor/profile.module.css';
+
+const initialProfile = {
+  name: 'Jane Doe',
+  email: 'janedoe@silvercare.com',
+  phone: '0712345678',
+  alternative_number: '0771234567',
+  specialization: 'Mental Health',
+  license_number: 'HP-98765',
+  current_institution: 'SilverCare Clinic',
+  years_experience: 4,
+  status: 'approved',
+  district: 'Colombo',
+  created_at: '2022-01-15T10:00:00Z',
+};
+
+const getStatusBadge = (status) => {
+  const statusConfig = {
+    'approved': { color: '#27ae60', bg: '#d5f4e6', text: 'Approved' },
+    'pending': { color: '#f39c12', bg: '#fef9e7', text: 'Pending' },
+    'rejected': { color: '#e74c3c', bg: '#fdf2f2', text: 'Rejected' }
+  };
+  const config = statusConfig[status] || statusConfig['pending'];
+  return (
+    <span 
+      className={styles.statusBadge}
+      style={{ 
+        color: config.color, 
+        backgroundColor: config.bg,
+        border: `1px solid ${config.color}30`
+      }}
+    >
+      {config.text}
+    </span>
+  );
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString();
+};
 
 const HealthProfessionalProfile = () => {
-    const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState({
+    ...initialProfile,
+    name: currentUser?.name || initialProfile.name,
+    email: currentUser?.email || initialProfile.email,
+  });
+  const [editForm, setEditForm] = useState(profile);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    setProfile(editForm);
+    setIsEditing(false);
+    setSuccessMessage('Profile updated successfully!');
+    setTimeout(() => setSuccessMessage(''), 2000);
+  };
+
+  const handleCancel = () => {
+    setEditForm(profile);
+    setIsEditing(false);
+  };
+
   return (
-    <div>
-      <Navbar />
-          <div>
-      <h1>Welcome, {currentUser.name}!</h1>
-      <p>Email: {currentUser.email}</p>
-      <p>Role: {currentUser.role}</p>
-      {/* Caregiver-specific content */}
-      <button onClick={logout}>Logout</button>
-    </div>
-      <div style={{
-        padding: '40px',
-        fontFamily: 'Arial, sans-serif',
-        backgroundColor: '#f8f9fa',
-        minHeight: '100vh',
-        paddingTop: '120px' // Added extra padding to account for fixed navbar
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '40px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h1 style={{
-            color: '#2c3e50',
-            fontSize: '2.5rem',
-            marginBottom: '16px',
-            textAlign: 'center'
-          }}>
-            Welcome to Your Caregiver Dashboard
-          </h1>
-          
-          <p style={{
-            color: '#7f8c8d',
-            fontSize: '1.2rem',
-            textAlign: 'center',
-            marginBottom: '40px'
-          }}>
-            Manage your caregiving services and connect with families in need
-          </p>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
-            marginTop: '40px'
-          }}>
-            <div style={{
-              backgroundColor: '#e8f5e8',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #c3e6c3'
-            }}>
-              <h3 style={{ color: '#27ae60', marginBottom: '12px' }}>My Profile</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Manage your professional profile and credentials
-              </p>
+    <div className={styles.profileContainer}>
+      <HealthProfessionalSidebar onToggleCollapse={setSidebarCollapsed} />
+      <div className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
+        <Navbar />
+        {/* Profile Header */}
+        <div className={styles.profileHeader}>
+          <div className={styles.headerContent}>
+            <div className={styles.avatarSection}>
+              <div className={styles.avatar}>
+                <span className={styles.avatarIcon}>🧑‍⚕️</span>
+              </div>
+              <div className={styles.avatarInfo}>
+                <h1 className={styles.doctorName}>{profile.name}</h1>
+                <p className={styles.specialization}>{profile.specialization}</p>
+                <p className={styles.institution}>{profile.current_institution}</p>
+                {getStatusBadge(profile.status)}
+              </div>
             </div>
-
-            <div style={{
-              backgroundColor: '#e8f4fd',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #b3d9f7'
-            }}>
-              <h3 style={{ color: '#3498db', marginBottom: '12px' }}>Available Jobs</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Browse and apply for caregiving opportunities
-              </p>
-            </div>
-
-            <div style={{
-              backgroundColor: '#fff3cd',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #ffeaa7'
-            }}>
-              <h3 style={{ color: '#f39c12', marginBottom: '12px' }}>My Clients</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                View and manage your current client relationships
-              </p>
-            </div>
-
-            <div style={{
-              backgroundColor: '#fde8e8',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #fab1a0'
-            }}>
-              <h3 style={{ color: '#e74c3c', marginBottom: '12px' }}>Schedule</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Manage your appointments and availability
-              </p>
+            <div className={styles.headerActions}>
+              {!isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className={styles.editBtn}
+                >
+                  ✏️ Edit Profile
+                </button>
+              ) : (
+                <div className={styles.editActions}>
+                  <button 
+                    onClick={handleSave}
+                    className={styles.saveBtn}
+                  >
+                    💾 Save Changes
+                  </button>
+                  <button 
+                    onClick={handleCancel}
+                    className={styles.cancelBtn}
+                  >
+                    ❌ Cancel
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-
-          <div style={{
-            marginTop: '40px',
-            padding: '24px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ color: '#2c3e50', marginBottom: '12px' }}>
-              🎉 Registration Successful!
-            </h3>
-            <p style={{ color: '#7f8c8d' }}>
-              Your caregiver account has been created successfully. 
-              Start exploring the platform and connect with families who need your care.
-            </p>
+        </div>
+        {/* Success Message */}
+        {successMessage && (
+          <div className={styles.successMessage}>
+            <span className={styles.successIcon}>✅</span>
+            {successMessage}
+          </div>
+        )}
+        {/* Profile Content */}
+        <div className={styles.profileContent}>
+          {/* Personal Information */}
+          <div className={styles.profileSection}>
+            <h2 className={styles.sectionTitle}>👤 Personal Information</h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Full Name</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.name}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Email</label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={editForm.email}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.email}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Phone</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editForm.phone}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.phone}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Alternative Phone</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    name="alternative_number"
+                    value={editForm.alternative_number}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.alternative_number}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Professional Information */}
+          <div className={styles.profileSection}>
+            <h2 className={styles.sectionTitle}>🩺 Professional Information</h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Specialization</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="specialization"
+                    value={editForm.specialization}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.specialization}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>License Number</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="license_number"
+                    value={editForm.license_number}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.license_number}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Current Institution</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="current_institution"
+                    value={editForm.current_institution}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.current_institution}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Years of Experience</label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    name="years_experience"
+                    value={editForm.years_experience}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                    min="0"
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.years_experience} years</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>District</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="district"
+                    value={editForm.district}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                  />
+                ) : (
+                  <span className={styles.infoValue}>{profile.district}</span>
+                )}
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Account Status</label>
+                {getStatusBadge(profile.status)}
+              </div>
+            </div>
+          </div>
+          {/* Account Information */}
+          <div className={styles.profileSection}>
+            <h2 className={styles.sectionTitle}>🔐 Account Information</h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Registration Date</label>
+                <span className={styles.infoValue}>{formatDate(profile.created_at)}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>Account Type</label>
+                <span className={styles.infoValue}>Health Professional</span>
+              </div>
+              <div className={styles.infoItem}>
+                <label className={styles.infoLabel}>User ID</label>
+                <span className={styles.infoValue}>{currentUser?.user_id}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
