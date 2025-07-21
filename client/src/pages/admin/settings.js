@@ -420,24 +420,6 @@ const AdminSettings = () => {
           />
         </div>
         <div className={styles.settingItem}>
-          <label>Working Hours Start</label>
-          <input
-            type="time"
-            value={settings.appointments.workingHoursStart}
-            onChange={(e) => handleSettingsUpdate('appointments', 'workingHoursStart', e.target.value)}
-            className={styles.settingInput}
-          />
-        </div>
-        <div className={styles.settingItem}>
-          <label>Working Hours End</label>
-          <input
-            type="time"
-            value={settings.appointments.workingHoursEnd}
-            onChange={(e) => handleSettingsUpdate('appointments', 'workingHoursEnd', e.target.value)}
-            className={styles.settingInput}
-          />
-        </div>
-        <div className={styles.settingItem}>
           <label className={styles.toggleLabel}>
             <input
               type="checkbox"
