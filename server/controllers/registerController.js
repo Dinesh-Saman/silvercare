@@ -4,6 +4,58 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Add this function at the top of the file after the imports
+const validateNICAndExtractInfo = (nic) => {
+  try {
+    let year, dayOfYear, gender;
+    
+    // Remove any spaces or special characters
+    nic = nic.replace(/[^0-9Vv]/g, '');
+    
+    if (nic.length === 10) {
+      // Old NIC format (9 digits + V)
+      const digits = nic.substring(0, 9);
+      year = parseInt(digits.substring(0, 2));
+      dayOfYear = parseInt(digits.substring(2, 5));
+      
+      // Determine century
+      year = year < 50 ? 2000 + year : 1900 + year;
+    } else if (nic.length === 12) {
+      // New NIC format (12 digits)
+      year = parseInt(nic.substring(0, 4));
+      dayOfYear = parseInt(nic.substring(4, 7));
+    } else {
+      return { isValid: false, message: 'NIC must be 10 or 12 characters' };
+    }
+    
+    // Determine gender and adjust day of year
+    if (dayOfYear > 500) {
+      gender = 'female';
+      dayOfYear -= 500;
+    } else {
+      gender = 'male';
+    }
+    
+    // Validate day of year (1-366)
+    if (dayOfYear < 1 || dayOfYear > 366) {
+      return { isValid: false, message: 'Invalid NIC format' };
+    }
+    
+    // Calculate the actual date
+    const startOfYear = new Date(year, 0, 1);
+    const dateOfBirth = new Date(startOfYear.getTime() + (dayOfYear - 1) * 24 * 60 * 60 * 1000);
+    
+    return {
+      isValid: true,
+      dateOfBirth: dateOfBirth.toISOString().split('T')[0],
+      gender: gender,
+      year: year
+    };
+  } catch (error) {
+    return { isValid: false, message: 'Invalid NIC format' };
+  }
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -79,7 +131,8 @@ const createElderRegistration = async (req, res) => {
       nicPassport, 
       contactNumber, 
       medicalConditions, 
-      address, 
+      address,
+      district, // Added district field
       password, 
       confirmPassword,
       familyMemberId, // This will be the user_id from the family member
@@ -95,18 +148,32 @@ const createElderRegistration = async (req, res) => {
         nicPassport,
         contactNumber,
         address,
+        district, // Added district to logging
         familyMemberId,
         role
       });
 
-      // Validate required fields
-      if (!fullName || !email || !dateOfBirth || !gender || !nicPassport || !contactNumber || !address || !password || !confirmPassword) {
+      // Validate required fields - including district
+      if (!fullName || !email || !nicPassport || !contactNumber || !address || !district || !password || !confirmPassword) {
         return res.status(400).json({ error: 'All required fields must be filled' });
       }
 
       // Validate familyMemberId is provided
       if (!familyMemberId) {
         return res.status(400).json({ error: 'Family member ID is required' });
+      }
+
+      // Validate district (ensure it's one of the valid Sri Lankan districts)
+      const validDistricts = [
+        'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+        'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+        'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura',
+        'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle',
+        'Ampara', 'Batticaloa', 'Trincomalee'
+      ];
+      
+      if (!validDistricts.includes(district)) {
+        return res.status(400).json({ error: 'Please select a valid district' });
       }
 
       // Get the family_id from the familymember table using the user_id
@@ -121,6 +188,38 @@ const createElderRegistration = async (req, res) => {
 
       const familyId = familyMemberCheck.rows[0].family_id;
       console.log('Found family_id:', familyId);
+
+      // Validate and extract info from NIC
+      const nicValidation = validateNICAndExtractInfo(nicPassport);
+      if (!nicValidation.isValid) {
+        return res.status(400).json({ error: nicValidation.message });
+      }
+
+      // Auto-extract date of birth if not provided or validate if provided
+      let finalDateOfBirth = dateOfBirth;
+      if (!dateOfBirth) {
+        finalDateOfBirth = nicValidation.dateOfBirth;
+        console.log('Auto-extracted date of birth from NIC:', finalDateOfBirth);
+      } else {
+        // Validate provided date matches NIC
+        if (dateOfBirth !== nicValidation.dateOfBirth) {
+          return res.status(400).json({ 
+            error: `Date of birth doesn't match NIC. Expected: ${nicValidation.dateOfBirth}` 
+          });
+        }
+      }
+
+      // Auto-detect gender from NIC if not provided or validate if provided
+      let finalGender = gender;
+      if (!gender) {
+        finalGender = nicValidation.gender;
+        console.log('Auto-detected gender from NIC:', finalGender);
+      } else {
+        const normalizedInputGender = gender.toLowerCase();
+        if (normalizedInputGender !== nicValidation.gender) {
+          console.log(`Warning: Gender mismatch. NIC suggests: ${nicValidation.gender}, provided: ${normalizedInputGender}`);
+        }
+      }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -149,7 +248,7 @@ const createElderRegistration = async (req, res) => {
         'other': 'other'
       };
       
-      const normalizedGender = validGenders[gender];
+      const normalizedGender = validGenders[finalGender];
       if (!normalizedGender) {
         return res.status(400).json({ error: 'Invalid gender selection. Must be Male, Female, or Other' });
       }
@@ -157,7 +256,7 @@ const createElderRegistration = async (req, res) => {
       console.log('Normalized gender:', normalizedGender);
 
       // Validate date of birth (should be in the past and reasonable age)
-      const birthDate = new Date(dateOfBirth);
+      const birthDate = new Date(finalDateOfBirth);
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
       
@@ -225,23 +324,24 @@ const createElderRegistration = async (req, res) => {
         const elderUserId = userResult.rows[0].user_id;
         console.log('Created user with ID:', elderUserId);
         
-        // Insert into elder table with family relationship - ADDED EMAIL HERE
+        // Insert into elder table with family relationship and district
         const elderResult = await client.query(
           `INSERT INTO elder (
-            family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, created_at
-          ) VALUES ($1, $2, $3, $4, $5::gender_type, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP) 
-          RETURNING elder_id, family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, created_at`,
+            family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, district, created_at
+          ) VALUES ($1, $2, $3, $4, $5::gender_type, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP) 
+          RETURNING elder_id, family_id, name, email, dob, gender, contact, address, nic, medical_conditions, profile_photo, district, created_at`,
           [
             familyId,
             fullName,
-            email,              // ADDED EMAIL PARAMETER
-            dateOfBirth,
-            normalizedGender,   // Use normalized gender
+            email,
+            finalDateOfBirth,        // Use extracted/validated date
+            normalizedGender,        // Use normalized gender
             contactNumber,
             address,
             nicPassport,
             medicalConditions || null,
-            profilePhotoPath
+            profilePhotoPath,
+            district                 // Added district parameter
           ]
         );
         
@@ -258,6 +358,11 @@ const createElderRegistration = async (req, res) => {
             family_id: familyId,
             name: familyMemberCheck.rows[0].name,
             email: familyMemberCheck.rows[0].email
+          },
+          nicValidation: {
+            autoExtracted: !dateOfBirth || !gender,
+            extractedDate: nicValidation.dateOfBirth,
+            extractedGender: nicValidation.gender
           }
         };
         
@@ -311,6 +416,8 @@ const createElderRegistration = async (req, res) => {
     }
   });
 };
+
+
 
 
 // CREATE a health professional registration
