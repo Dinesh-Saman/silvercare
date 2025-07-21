@@ -249,17 +249,22 @@ useEffect(() => {
 
                       </div>
                     </div>
-{/* Show time left only in pending tab */}
-                      {request.status === 'pending' && (
+                      {/* Show time left only in pending tab */}
+                      {(request?.status === 'pending' || request?.status === 'approved') && (
                         <div className={styles.timeLeftRow}>
-                            <span className={styles.label}>Time Left:</span>
-                            <span className={
-                            (new Date(request.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
-                            }>
+                          <span className={styles.label}>Time Left:</span>
+                          <span className={(() => {
+                            const timeLeft = getTimeLeft(request.start_date);
+                            if (request.status === 'approved' && timeLeft === 'Started') {
+                              return styles.greenText;
+                            }
+                            // Existing color logic for other cases
+                            return (new Date(request.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText);
+                          })()}>
                             {getTimeLeft(request.start_date)}
-                            </span>
+                          </span>
                         </div>
-                        )}
+                      )}
                     <div className={styles.requestActions}>
                       
                       <button 

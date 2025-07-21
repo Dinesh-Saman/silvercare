@@ -6,13 +6,15 @@ import { useAuth } from '../../context/AuthContext';
 import { caregiverApi } from '../../services/caregiverApi';
 import styles from "../../components/css/caregiver/profile.module.css";
 
-const Caregiverprofile = () => {
+const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
@@ -21,6 +23,11 @@ const Caregiverprofile = () => {
     certifications: '',
     fixed_line: '',
     district: ''
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   useEffect(() => {
@@ -81,23 +88,100 @@ const Caregiverprofile = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // In a real app, you'd have an update API endpoint
-      // For now, we'll just update the local state
-      setProfileData(prev => ({
-        ...prev,
-        caregiver_name: editForm.name,
-        caregiver_email: editForm.email,
-        caregiver_phone: editForm.phone,
+      setError(null);
+      setSuccess(null);
+      
+      const updateData = {
+        name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone,
         availability: editForm.availability,
         certifications: editForm.certifications,
         fixed_line: editForm.fixed_line,
         district: editForm.district
-      }));
-      setIsEditing(false);
-      // You'd typically show a success message here
+      };
+      
+      const response = await caregiverApi.updateCaregiverProfile(user.caregiver_id, updateData);
+      
+      if (response.success) {
+        setProfileData(response.caregiver);
+        setIsEditing(false);
+        setSuccess('Profile updated successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to update profile');
+      setError(error.message || 'Failed to update profile');
+    }
+  };
+
+  const handleChangePassword = () => {
+    setIsChangingPassword(true);
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSavePassword = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      // Validate passwords
+      if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+        setError('All password fields are required');
+        return;
+      }
+      
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        setError('New password and confirm password do not match');
+        return;
+      }
+      
+      if (passwordForm.newPassword.length < 6) {
+        setError('New password must be at least 6 characters long');
+        return;
+      }
+      
+      const passwordData = {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      };
+      
+      const response = await caregiverApi.updateCaregiverPassword(user.caregiver_id, passwordData);
+      
+      if (response.success) {
+        setIsChangingPassword(false);
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setSuccess('Password updated successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setError(error.message || 'Failed to update password');
     }
   };
 
@@ -147,6 +231,19 @@ const Caregiverprofile = () => {
             <h1>My Profile</h1>
             <p>Manage your professional information and settings</p>
           </div>
+
+          {/* Success/Error Messages */}
+          {success && (
+            <div className={styles.successMessage}>
+              ✅ {success}
+            </div>
+          )}
+          
+          {error && (
+            <div className={styles.errorMessage}>
+              ❌ {error}
+            </div>
+          )}
 
           <div className={styles.profileCard}>
             <div className={styles.profileHeader}>
@@ -249,13 +346,39 @@ const Caregiverprofile = () => {
                   <div className={styles.infoItem}>
                     <label>District</label>
                     {isEditing ? (
-                      <input
-                        type="text"
+                      <select
                         name="district"
                         value={editForm.district}
                         onChange={handleInputChange}
-                        className={styles.input}
-                      />
+                        className={styles.select}
+                      >
+                        <option value="">Select District</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Jaffna">Jaffna</option>
+                        <option value="Anuradhapura">Anuradhapura</option>
+                        <option value="Polonnaruwa">Polonnaruwa</option>
+                        <option value="Matara">Matara</option>
+                        <option value="Hambantota">Hambantota</option>
+                        <option value="Badulla">Badulla</option>
+                        <option value="Monaragala">Monaragala</option>
+                        <option value="Ratnapura">Ratnapura</option>
+                        <option value="Kegalle">Kegalle</option>
+                        <option value="Kurunegala">Kurunegala</option>
+                        <option value="Puttalam">Puttalam</option>
+                        <option value="Kalutara">Kalutara</option>
+                        <option value="Gampaha">Gampaha</option>
+                        <option value="Nuwara Eliya">Nuwara Eliya</option>
+                        <option value="Matale">Matale</option>
+                        <option value="Ampara">Ampara</option>
+                        <option value="Batticaloa">Batticaloa</option>
+                        <option value="Trincomalee">Trincomalee</option>
+                        <option value="Mullaitivu">Mullaitivu</option>
+                        <option value="Vavuniya">Vavuniya</option>
+                        <option value="Mannar">Mannar</option>
+                        <option value="Kilinochchi">Kilinochchi</option>
+                      </select>
                     ) : (
                       <span>{profileData?.district}</span>
                     )}
@@ -303,7 +426,77 @@ const Caregiverprofile = () => {
                 </div>
               </div>
 
+              {/* Security Section */}
               <div className={styles.section}>
+                <h3>Security Settings</h3>
+                {!isChangingPassword ? (
+                  <div className={styles.securityActions}>
+                    <button 
+                      onClick={handleChangePassword}
+                      className={styles.actionButton}
+                    >
+                      🔒 Change Password
+                    </button>
+                    <p className={styles.securityNote}>
+                      Keep your account secure by updating your password regularly
+                    </p>
+                  </div>
+                ) : (
+                  <div className={styles.passwordSection}>
+                    <div className={styles.passwordGrid}>
+                      <div className={styles.infoItem}>
+                        <label>Current Password</label>
+                        <input
+                          type="password"
+                          name="currentPassword"
+                          value={passwordForm.currentPassword}
+                          onChange={handlePasswordInputChange}
+                          className={styles.input}
+                          placeholder="Enter your current password"
+                        />
+                      </div>
+                      <div className={styles.infoItem}>
+                        <label>New Password</label>
+                        <input
+                          type="password"
+                          name="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={handlePasswordInputChange}
+                          className={styles.input}
+                          placeholder="Enter new password (min 6 characters)"
+                        />
+                      </div>
+                      <div className={styles.infoItem}>
+                        <label>Confirm New Password</label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={passwordForm.confirmPassword}
+                          onChange={handlePasswordInputChange}
+                          className={styles.input}
+                          placeholder="Confirm your new password"
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.passwordActions}>
+                      <button 
+                        onClick={handleSavePassword}
+                        className={styles.saveButton}
+                      >
+                        ✓ Update Password
+                      </button>
+                      <button 
+                        onClick={handleCancelPasswordChange}
+                        className={styles.cancelButton}
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/*<div className={styles.section}>
                 <h3>Account Actions</h3>
                 <div className={styles.actionsGrid}>
                   <button 
@@ -325,7 +518,7 @@ const Caregiverprofile = () => {
                     🚪 Logout
                   </button>
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         </div>
@@ -334,4 +527,4 @@ const Caregiverprofile = () => {
   );
 };
 
-export default Caregiverprofile;
+export default Profile;

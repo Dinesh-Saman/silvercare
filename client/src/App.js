@@ -11,6 +11,7 @@ import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
 import { CaregiverReg } from "./pages/caregiver/signup";
 import { CaregiverRegStep2 } from "./pages/caregiver/signup-step2";
+import Profile from "./pages/caregiver/profile";
 import CaregiverDashboard from "./pages/caregiver/dashboard";
 import CareRequestDetails from "./pages/caregiver/care-request-details";
 import CareRequests from "./pages/caregiver/care-requests";
@@ -330,7 +331,7 @@ function App() {
             path="/caregiver/profile"
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
-                <CaregiverProfile />
+                <Profile />
               </ProtectedRoute>
             }
           />

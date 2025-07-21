@@ -691,6 +691,218 @@ const fetchCareRequests = async (req, res) => {
   }
 };
 
+
+// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
+const getUpcomingShifts = async (req, res) => {
+  const caregiverId = req.params.id;
+  console.log('Fetching upcoming shifts for caregiverId:', caregiverId);
+  try {
+    // Only fetch care requests with status 'approved' and end_date >= today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await pool.query(`
+      SELECT cr.request_id, cr.start_date, cr.end_date, cr.duration, cr.status, e.address, cr.elder_id, e.name as elder_name
+      FROM carerequest cr
+      INNER JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1 AND cr.status = 'approved' AND cr.end_date >= $2
+      ORDER BY cr.start_date ASC
+    `, [caregiverId, today]);
+    const shifts = result.rows.map(row => ({
+      requestId: row.request_id,
+      date: row.start_date,
+      endDate: row.end_date,
+      duration: row.duration,
+      status: row.status,
+      address: row.address || '',
+      elderName: row.elder_name
+    }));
+    // Always return 200, even if no shifts found
+    res.status(200).json({ success: true, shifts });
+  } catch (err) {
+    console.error('Error fetching upcoming shifts:', err);
+    res.status(500).json({ success: false, error: 'Error fetching upcoming shifts' });
+  }
+};
+
+// Update caregiver profile(role caregiver)
+const updateCaregiverProfile = async (req, res) => {
+  const { caregiverId } = req.params;
+  const {
+    name,
+    email,
+    phone,
+    availability,
+    certifications,
+    fixed_line,
+    district
+  } = req.body;
+  
+  try {
+    console.log('Updating caregiver profile:', caregiverId, req.body);
+    
+    // Validate required fields
+    if (!name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name, email, and phone are required'
+      });
+    }
+    
+    // Start transaction
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Get current caregiver data
+      const caregiverResult = await client.query(
+        'SELECT user_id FROM caregiver WHERE caregiver_id = $1',
+        [caregiverId]
+      );
+      
+      if (caregiverResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: 'Caregiver not found'
+        });
+      }
+      
+      const userId = caregiverResult.rows[0].user_id;
+      
+      // Update User table
+      await client.query(
+        'UPDATE "User" SET name = $1, email = $2, phone = $3 WHERE user_id = $4',
+        [name, email, phone, userId]
+      );
+      
+      // Update caregiver table
+      await client.query(
+        'UPDATE caregiver SET availability = $1, certifications = $2, fixed_line = $3, district = $4 WHERE caregiver_id = $5',
+        [availability, certifications, fixed_line, district, caregiverId]
+      );
+      
+      await client.query('COMMIT');
+      
+      // Fetch updated profile
+      const updatedResult = await client.query(`
+        SELECT 
+          c.caregiver_id,
+          c.user_id,
+          c.availability,
+          c.certifications,
+          c.fixed_line,
+          c.district,
+          u.name as caregiver_name,
+          u.email as caregiver_email,
+          u.phone as caregiver_phone,
+          u.role,
+          u.created_at
+        FROM caregiver c
+        INNER JOIN "User" u ON c.user_id = u.user_id
+        WHERE c.caregiver_id = $1
+      `, [caregiverId]);
+      
+      console.log('Caregiver profile updated successfully');
+      
+      res.json({
+        success: true,
+        message: 'Profile updated successfully',
+        caregiver: updatedResult.rows[0]
+      });
+      
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+    
+  } catch (err) {
+    console.error('Error updating caregiver profile:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error updating profile' 
+    });
+  }
+};
+
+// Update caregiver password
+const updateCaregiverPassword = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { currentPassword, newPassword } = req.body;
+  
+  try {
+    console.log('Updating caregiver password for ID:', caregiverId);
+    
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required'
+      });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 6 characters long'
+      });
+    }
+    
+    // Get caregiver's user data
+    const caregiverResult = await pool.query(`
+      SELECT u.user_id, u.password
+      FROM caregiver c
+      INNER JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.caregiver_id = $1
+    `, [caregiverId]);
+    
+    if (caregiverResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caregiver not found'
+      });
+    }
+    
+    const user = caregiverResult.rows[0];
+    
+    // Verify current password
+    const bcrypt = require('bcrypt');
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is incorrect'
+      });
+    }
+    
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password
+    await pool.query(
+      'UPDATE "User" SET password = $1 WHERE user_id = $2',
+      [hashedNewPassword, user.user_id]
+    );
+    
+    console.log('Password updated successfully');
+    
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+    
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error updating password' 
+    });
+  }
+};
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -705,6 +917,9 @@ module.exports = {
   getAssignedFamiliesCount,
   getcarelogsCount,
   fetchSchedules,
-  fetchCareRequests
+  fetchCareRequests,
+  updateCaregiverProfile,
+  updateCaregiverPassword,
+  getUpcomingShifts,
 };
 
