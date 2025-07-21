@@ -1,3 +1,362 @@
+/* Add missing main container and section classes for LandingPage */
+.landingPage {
+  background: #f7f9f7;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.navbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(44,85,48,0.07);
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #2c5530;
+}
+
+.logoIcon {
+  font-size: 2rem;
+}
+
+.logoText {
+  font-size: 1.3rem;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navLink {
+  background: none;
+  border: none;
+  color: #2c5530;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s;
+}
+.navLink:hover {
+  color: #4a7c59;
+}
+
+.loginBtn {
+  background: none;
+  border: 2px solid #2c5530;
+  color: #2c5530;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: background 0.3s, color 0.3s;
+}
+.loginBtn:hover {
+  background: #2c5530;
+  color: #fff;
+}
+
+.getStartedBtn {
+  background: #2c5530;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.getStartedBtn:hover {
+  background: #4a7c59;
+}
+
+.hero {
+  background: linear-gradient(135deg, #eaf4ea 60%, #f7f9f7 100%);
+  padding: 60px 0 40px 0;
+}
+
+.heroContainer {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 3rem;
+  padding: 0 2rem;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #2c5530;
+  margin-bottom: 1rem;
+}
+.highlight {
+  color: #4a7c59;
+}
+.heroSubtitle {
+  font-size: 1.3rem;
+  color: #4a7c59;
+  margin-bottom: 2rem;
+}
+.heroButtons {
+  display: flex;
+  gap: 1rem;
+}
+.primaryBtn {
+  background: #2c5530;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.primaryBtn:hover {
+  background: #4a7c59;
+}
+.secondaryBtn {
+  background: none;
+  color: #2c5530;
+  border: 2px solid #2c5530;
+  border-radius: 30px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+.secondaryBtn:hover {
+  background: #2c5530;
+  color: #fff;
+}
+.heroStats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.statNumber {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c5530;
+}
+.statLabel {
+  color: #4a7c59;
+  font-size: 1rem;
+}
+.heroImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heroImagePlaceholder {
+  width: 350px;
+  height: 350px;
+  background: #eaf4ea;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(44,85,48,0.08);
+}
+.heroEmoji {
+  font-size: 5rem;
+}
+.features {
+  background: #fff;
+  padding: 60px 0;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c5530;
+}
+.sectionSubtitle {
+  color: #4a7c59;
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+}
+.featureCard {
+  background: #eaf4ea;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(44,85,48,0.07);
+  transition: box-shadow 0.3s;
+}
+.featureCard:hover {
+  box-shadow: 0 8px 32px rgba(44,85,48,0.12);
+}
+.featureIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #4a7c59;
+  transition: transform 0.3s;
+}
+.featureTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c5530;
+  margin-bottom: 0.5rem;
+}
+.featureDescription {
+  color: #4a7c59;
+  font-size: 1rem;
+}
+.about {
+  background: #f7f9f7;
+  padding: 60px 0;
+}
+.aboutContent {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.aboutText {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.aboutDescription {
+  color: #4a7c59;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+.aboutFeatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.aboutFeature {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: #eaf4ea;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  color: #2c5530;
+  font-weight: 500;
+}
+.aboutFeatureIcon {
+  font-size: 1.3rem;
+}
+.aboutImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.techStack {
+  background: #eaf4ea;
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(44,85,48,0.07);
+}
+.techItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.techItem {
+  background: #4a7c59;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.testimonials {
+  background: #fff;
+  padding: 60px 0;
+}
+.testimonialSlider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+.testimonialCard {
+  background: #eaf4ea;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 16px rgba(44,85,48,0.07);
+  max-width: 500px;
+  text-align: center;
+}
+.testimonialContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.testimonialText {
+  font-size: 1.2rem;
+  color: #2c5530;
+  font-style: italic;
+}
+.testimonialAuthor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+.authorAvatar {
+  font-size: 2rem;
+}
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 .authorName {
   font-weight: 600;
   color: #2c5530;
