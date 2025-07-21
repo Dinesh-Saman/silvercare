@@ -253,6 +253,7 @@ const Payment = () => {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [timerExpired, setTimerExpired] = useState(false);
 
   // Booking data for payment processing
   const bookingData = {
@@ -266,23 +267,132 @@ const Payment = () => {
     elderName
   };
 
+  // Initialize timer based on localStorage or fetch from server
+  useEffect(() => {
+    const initializeTimer = async () => {
+      if (!tempBookingId) return;
+
+      const timerKey = `payment_timer_${tempBookingId}`;
+      const storedTimerData = localStorage.getItem(timerKey);
+
+      try {
+        if (storedTimerData) {
+          // Use stored timer data
+          const { expiresAt } = JSON.parse(storedTimerData);
+          const now = new Date().getTime();
+          const remainingTime = Math.max(0, Math.floor((expiresAt - now) / 1000));
+          
+          console.log('Timer restored from localStorage:', {
+            expiresAt: new Date(expiresAt),
+            now: new Date(now),
+            remainingTime
+          });
+
+          if (remainingTime <= 0) {
+            setTimerExpired(true);
+            localStorage.removeItem(timerKey);
+            return;
+          }
+
+          setTimeLeft(remainingTime);
+        } else {
+          // Fetch timer data from server (temporary booking info)
+          try {
+            const response = await elderApi.getTemporaryBooking(tempBookingId);
+            
+            if (response.success && response.tempBooking) {
+              const expiresAt = new Date(response.tempBooking.expires_at).getTime();
+              const now = new Date().getTime();
+              const remainingTime = Math.max(0, Math.floor((expiresAt - now) / 1000));
+              
+              console.log('Timer initialized from server:', {
+                expiresAt: new Date(expiresAt),
+                now: new Date(now),
+                remainingTime
+              });
+
+              if (remainingTime <= 0) {
+                setTimerExpired(true);
+                return;
+              }
+
+              // Store in localStorage for future page reloads
+              localStorage.setItem(timerKey, JSON.stringify({ expiresAt }));
+              setTimeLeft(remainingTime);
+            } else {
+              // Temporary booking not found or expired
+              setTimerExpired(true);
+            }
+          } catch (err) {
+            console.error('Error fetching temporary booking:', err);
+            // Fallback to default timer if server request fails
+            const expiresAt = new Date().getTime() + (10 * 60 * 1000); // 10 minutes from now
+            localStorage.setItem(timerKey, JSON.stringify({ expiresAt }));
+            setTimeLeft(600);
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing timer:', err);
+        // Fallback to default timer
+        const expiresAt = new Date().getTime() + (10 * 60 * 1000);
+        localStorage.setItem(timerKey, JSON.stringify({ expiresAt }));
+        setTimeLeft(600);
+      }
+    };
+
+    initializeTimer();
+  }, [tempBookingId]);
+
   // Countdown timer
   useEffect(() => {
+    if (timerExpired) return;
+
     if (timeLeft <= 0) {
-      // Time expired, redirect back
-      navigate(`/family-member/elder/${elderId}/doctors`, { 
-        replace: true,
-        state: { message: 'Payment time expired. Please try booking again.' }
-      });
+      setTimerExpired(true);
+      // Clean up localStorage
+      if (tempBookingId) {
+        localStorage.removeItem(`payment_timer_${tempBookingId}`);
+      }
       return;
     }
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft(prev => {
+        const newTime = prev - 1;
+        
+        // Update localStorage every 10 seconds to keep it fresh
+        if (newTime % 10 === 0 && tempBookingId) {
+          const timerKey = `payment_timer_${tempBookingId}`;
+          const expiresAt = new Date().getTime() + (newTime * 1000);
+          localStorage.setItem(timerKey, JSON.stringify({ expiresAt }));
+        }
+        
+        return newTime;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, navigate, elderId]);
+  }, [timeLeft, timerExpired, tempBookingId]);
+
+  // Handle timer expiration
+  useEffect(() => {
+    if (timerExpired) {
+      // Clean up localStorage
+      if (tempBookingId) {
+        localStorage.removeItem(`payment_timer_${tempBookingId}`);
+      }
+      
+      // Redirect after a short delay to show the expiration message
+      const redirectTimer = setTimeout(() => {
+        navigate(`/family-member/elder/${elderId}/doctors`, { 
+          replace: true,
+          state: { message: 'Payment time expired. Please try booking again.' }
+        });
+      }, 3000);
+
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [timerExpired, navigate, elderId, tempBookingId]);
 
   // Protect the route
   useEffect(() => {
@@ -344,6 +454,11 @@ const Payment = () => {
   const handlePaymentSuccess = async (paymentData) => {
     try {
       setError(null);
+      
+      // Clean up localStorage on successful payment
+      if (tempBookingId) {
+        localStorage.removeItem(`payment_timer_${tempBookingId}`);
+      }
 
       // Convert temporary booking to confirmed appointment
       const confirmationData = {
@@ -387,19 +502,21 @@ const Payment = () => {
   };
 
   const handlePaymentError = (errorMessage) => {
+    console.error('Payment error:', errorMessage);
     setError(errorMessage);
   };
 
   const handleCancel = async () => {
     try {
-      // Cancel the temporary booking
-      await elderApi.cancelTemporaryBooking(tempBookingId);
+      if (tempBookingId) {
+        // Clean up localStorage
+        localStorage.removeItem(`payment_timer_${tempBookingId}`);
+        
+        // Cancel temporary booking
+        await elderApi.cancelTemporaryBooking(tempBookingId);
+      }
       
-      // Redirect back to appointment booking
-      const backUrl = appointmentType === 'physical' 
-        ? `/family-member/elder/${elderId}/physical-appointment/${doctorId}`
-        : `/family-member/elder/${elderId}/online-appointment/${doctorId}`;
-      navigate(backUrl);
+      navigate(`/family-member/elder/${elderId}/doctors`);
     } catch (err) {
       console.error('Error canceling booking:', err);
       // Still redirect back even if cancellation fails
@@ -434,89 +551,100 @@ const Payment = () => {
     );
   }
 
-  return (
-    <Elements stripe={stripePromise}>
+  // Show timer expired message
+  if (timerExpired) {
+    return (
       <div className={styles.container}>
         <Navbar />
         <FamilyMemberLayout>
           <div className={styles.content}>
-            {/* Header with Countdown */}
-            <div className={styles.header}>
-              <div className={styles.headerContent}>
-                <h1 className={styles.title}>
-                  💳 Secure Payment
-                </h1>
-                <p className={styles.subtitle}>
-                  Complete your payment to confirm the appointment
-                </p>
+            <div className={styles.loadingContainer}>
+              <div className={styles.loadingSpinner}></div>
+              <h2>⏰ Payment Time Expired</h2>
+              <p>Your booking slot has expired. Redirecting to book a new appointment...</p>
+            </div>
+          </div>
+        </FamilyMemberLayout>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <Navbar />
+      <FamilyMemberLayout>
+        <div className={styles.content}>
+          {/* Header */}
+          <div className={styles.header}>
+            <div className={styles.headerContent}>
+              <h1 className={styles.title}>💳 Complete Payment</h1>
+              <p className={styles.subtitle}>
+                Secure payment for your appointment booking
+              </p>
+            </div>
+            <div className={styles.timerContainer}>
+              <div className={styles.timer}>
+                <span className={styles.timerIcon}>⏱️</span>
+                <span className={styles.timerText}>Time remaining:</span>
+                <span className={`${styles.timerValue} ${timeLeft <= 60 ? styles.timerCritical : ''}`}>
+                  {formatTime(timeLeft)}
+                </span>
               </div>
-              <div className={styles.countdown}>
-                <div className={styles.countdownTimer}>
-                  <span className={styles.timerIcon}>⏰</span>
-                  <span className={styles.timerText}>Time remaining:</span>
-                                    <span className={`${styles.timerValue} ${timeLeft <= 60 ? styles.urgent : ''}`}>
-                    {formatTime(timeLeft)}
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className={styles.errorMessage}>
+              <span className={styles.errorIcon}>⚠️</span>
+              {error}
+            </div>
+          )}
+
+          <div className={styles.paymentContainer}>
+            {/* Booking Summary */}
+            <div className={styles.bookingSummary}>
+              <h2>📋 Booking Summary</h2>
+              <div className={styles.summaryDetails}>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Patient:</span>
+                  <span className={styles.value}>{elderName}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Doctor:</span>
+                  <span className={styles.value}>{doctorName}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Date:</span>
+                  <span className={styles.value}>{formatDateForDisplay(appointmentDate)}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Time:</span>
+                  <span className={styles.value}>{formatTimeForDisplay(appointmentTime)}</span>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Type:</span>
+                  <span className={styles.value}>
+                    {appointmentType === 'physical' ? '🏥 Physical' : '💻 Online'} Appointment
                   </span>
                 </div>
-                <p className={styles.countdownNote}>
-                  This slot will be released if payment is not completed in time
-                </p>
+                <div className={styles.summaryRow}>
+                  <span className={styles.label}>Duration:</span>
+                  <span className={styles.value}>
+                    {appointmentType === 'physical' ? '2 hours' : '1 hour'}
+                  </span>
+                </div>
+                <div className={`${styles.summaryRow} ${styles.totalRow}`}>
+                  <span className={styles.label}>Total Amount:</span>
+                  <span className={styles.value}>Rs. {amount}</span>
+                </div>
               </div>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className={styles.errorMessage}>
-                <span className={styles.errorIcon}>⚠️</span>
-                {error}
-              </div>
-            )}
-
-            <div className={styles.paymentContainer}>
-              {/* Booking Summary */}
-              <div className={styles.bookingSummary}>
-                <div className={styles.summaryHeader}>
-                  <h2>📋 Booking Summary</h2>
-                </div>
-                
-                <div className={styles.summaryDetails}>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Doctor:</span>
-                    <span className={styles.value}>{doctorName}</span>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Patient:</span>
-                    <span className={styles.value}>{elderName}</span>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Date:</span>
-                    <span className={styles.value}>{formatDateForDisplay(appointmentDate)}</span>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Time:</span>
-                    <span className={styles.value}>{formatTimeForDisplay(appointmentTime)}</span>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Type:</span>
-                    <span className={styles.value}>
-                      {appointmentType === 'physical' ? '🏥 Physical' : '💻 Online'}
-                    </span>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span className={styles.label}>Duration:</span>
-                    <span className={styles.value}>
-                      {appointmentType === 'physical' ? '2 hours' : '1 hour'}
-                    </span>
-                  </div>
-                  <div className={`${styles.summaryRow} ${styles.totalRow}`}>
-                    <span className={styles.label}>Total Amount:</span>
-                    <span className={styles.value}>Rs. {amount}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Form */}
-              <div className={styles.paymentSection}>
+            {/* Payment Form */}
+            <div className={styles.paymentSection}>
+              <h2>💳 Payment Details</h2>
+              <Elements stripe={stripePromise}>
                 <PaymentForm
                   amount={amount}
                   onPaymentSuccess={handlePaymentSuccess}
@@ -525,26 +653,33 @@ const Payment = () => {
                   setProcessing={setProcessing}
                   bookingData={bookingData}
                 />
-              </div>
-
-              {/* Security Notice */}
-              <div className={styles.securityNotice}>
-                <div className={styles.securityIcon}>🔒</div>
-                <div className={styles.securityText}>
-                  <h3>Secure Payment</h3>
-                  <p>Your payment information is encrypted and secure. We use Stripe's industry-standard security measures and never store your card details on our servers.</p>
-                </div>
-              </div>
-
-              {/* Cancel Button */}
-
+              </Elements>
             </div>
           </div>
-        </FamilyMemberLayout>
-      </div>
-    </Elements>
+
+          {/* Security Notice */}
+          <div className={styles.securityNotice}>
+            <div className={styles.securityIcon}>🔒</div>
+            <div className={styles.securityContent}>
+              <h3>Secure Payment</h3>
+              <p>Your payment information is encrypted and secure. We use Stripe for payment processing and do not store your card details.</p>
+            </div>
+          </div>
+
+          {/* Cancel Button */}
+          <div className={styles.cancelSection}>
+            <button
+              className={styles.cancelButton}
+              onClick={handleCancel}
+              disabled={processing}
+            >
+              Cancel Payment
+            </button>
+          </div>
+        </div>
+      </FamilyMemberLayout>
+    </div>
   );
 };
 
 export default Payment;
-
