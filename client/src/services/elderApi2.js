@@ -69,18 +69,16 @@ export const joinSession = (elderId, sessionId) => {
 
 // Care assignment functions
 export const getCareAssignmentsByWeek = (elderId, startDate = null) => {
-  const params = {};
-  if (startDate) params.startDate = startDate;
-  
-  return axios.get(`${API_BASE}/${elderId}/care-assignments/week`, { params });
+  const params = startDate ? { startDate } : {};
+  return axios.get(`http://localhost:5000/api/care-assignments/${elderId}/week`, { params });
 };
 
 export const getDayCareAssignments = (elderId, date) => {
-  return axios.get(`${API_BASE}/${elderId}/care-assignments/day`, {
+  return axios.get(`http://localhost:5000/api/care-assignments/${elderId}/day`, {
     params: { date }
   });
 };
 
 export const getCareAssignmentStats = (elderId) => {
-  return axios.get(`${API_BASE}/${elderId}/care-assignments/stats`);
+  return axios.get(`http://localhost:5000/api/care-assignments/${elderId}/stats`);
 };
