@@ -143,6 +143,10 @@ useEffect(() => {
     // Do not set debouncedSearchTerm or loading here; let debounce effect handle API call after 500ms
   };
 
+  const handleBack = () => {
+    navigate('/caregiver/dashboard');
+  };
+
   const tabs = [
     { key: 'all', label: 'All Requests', count: getTabCount('all') },
     { key: 'pending', label: 'Pending', count: getTabCount('pending') },
@@ -167,12 +171,32 @@ useEffect(() => {
     );
   }
 
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <CaregiverLayout>
+          <div className={styles.error}>
+            <p>{error}</p>
+            <button className={styles.backButton} onClick={handleBack}>
+              ← Back to Dashboard
+            </button>
+          </div>
+        </CaregiverLayout>
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
       <CaregiverLayout>
         <div className={styles.container}>
+          <button className={styles.backButton} onClick={handleBack}>
+              ← Back to Dashboard
+            </button>
           <div className={styles.header}>
+            
             <h1>Care Requests</h1>
             <p>Manage and view all your care requests</p>
           </div>

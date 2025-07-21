@@ -99,13 +99,35 @@ const ViewAllElders = () => {
     };
   };
 
+  const handleBack = () => {
+    navigate('/caregiver/dashboard');
+  };
+
   const stats = getStats();
 
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <CaregiverLayout>
+          <div className={styles.error}>
+            <p>{error}</p>
+            <button className={styles.backButton} onClick={handleBack}>
+              ← Back to Dashboard
+            </button>
+          </div>
+        </CaregiverLayout>
+      </>
+    );
+  }
   return (
     <>
       <Navbar />
       <CaregiverLayout>
         <div className={styles.container}>
+            <button className={styles.backButton} onClick={handleBack}>
+                ← Back to Dashboard
+            </button>
           {/* Header */}
           <div className={styles.header}>
             <h1 className={styles.title}>Assigned Elders</h1>

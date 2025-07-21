@@ -287,7 +287,7 @@ const CaregiverDashboard = () => {
                 <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You're all caught up! New care requests will appear here.</span>
               </div>
             ) : (
-              careRequests.map((request, i) => (
+              careRequests.slice(0, 3).map((request, i) => (
                 <div className={styles.careRequestCard} key={i}>
                   <div className={styles.careRequestHeader}>
                     <div className={styles.requestInfo}>
@@ -346,6 +346,17 @@ const CaregiverDashboard = () => {
               ))
             )}
           </div>
+          {careRequests.length >= 3 && (
+            <div className={styles.viewMoreContainer}>
+              <button 
+                className={styles.viewMoreBtn}
+                onClick={() => navigate('/caregiver/care-requests')}
+              >
+                <span>View All Requests</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
         </section>
         
         <section className={styles.upcomingShifts}>
@@ -359,7 +370,7 @@ const CaregiverDashboard = () => {
                 <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You have no upcoming shifts scheduled. Enjoy your free time!</span>
               </div>
             ) : (
-              filteredUpcomingShifts.map((shift, i) => {
+              filteredUpcomingShifts.slice(0, 3).map((shift, i) => {
                 const start = new Date(shift.date || shift.start_date);
                 const now = new Date();
                 const diffMs = start - now;
@@ -404,6 +415,17 @@ const CaregiverDashboard = () => {
               })
             )}
           </div>
+          {filteredUpcomingShifts.length >= 3 && (
+            <div className={styles.viewMoreContainer}>
+              <button 
+                className={styles.viewMoreBtn}
+                onClick={() => navigate('/caregiver/care-requests')}
+              >
+                <span>View All Shifts</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
         </section>
 
         
@@ -422,7 +444,7 @@ const CaregiverDashboard = () => {
               <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You haven't been assigned any elders yet. Stay tuned for updates!</span>
             </div>
           ) : (
-            elders.filter(e => e.status === 'approved' || e.status === 'completed').map((elder, i) => (
+            elders.filter(e => e.status === 'approved' || e.status === 'completed').slice(0, 4).map((elder, i) => (
               <div className={styles.eldercard} key={elder.family_id || elder.name + i}>
                 <div className={styles.elderHeader}>
                   <div className={styles.elderAvatar}>
@@ -464,6 +486,17 @@ const CaregiverDashboard = () => {
             ))
           )}
         </div>
+        {elders.filter(e => e.status === 'approved' || e.status === 'completed').length >= 4 && (
+          <div className={styles.viewMoreContainer}>
+            <button 
+              className={styles.viewMoreBtn}
+              onClick={() => navigate('/caregiver/elders')}
+            >
+              <span>View All Elders</span>
+              <span>→</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <section className={styles.quickLinks} style={{borderRadius: '18px', boxShadow: '0 4px 16px rgba(102,126,234,0.10)', margin: '32px 0', padding: '32px 24px'}}>                      <h2 style={{display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.35rem', color: '#2b4c7e', fontWeight: 700, marginBottom: 18}}>
