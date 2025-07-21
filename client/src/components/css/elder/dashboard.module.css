@@ -995,7 +995,7 @@
   outline-offset: 2px;
 }
 
-/* Caregiver Section Styles */
+/* Care Assignments Section */
 .weekNavigation {
   display: flex;
   align-items: center;
@@ -1003,43 +1003,57 @@
 }
 
 .weekNavBtn {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
+  padding: 8px 16px;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
+  color: #475569;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
-.weekNavBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+.weekNavBtn:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
-.weekNavBtn:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.currentWeek {
+.weekRange {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
-  font-size: 1rem;
-  min-width: 150px;
-  text-align: center;
 }
 
-.weeklyCalendar {
+.currentWeekBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.currentWeekBtn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+}
+
+.careAssignmentContent {
+  margin-top: 24px;
+}
+
+.weekGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
@@ -1048,35 +1062,41 @@
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   padding: 16px;
+  min-height: 120px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-height: 120px;
   position: relative;
 }
 
 .dayCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: #cbd5e1;
+}
+
+.hasAssignment {
   border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
 }
 
-.dayCard.todayCard {
+.hasAssignment:hover {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.todayCard {
   border-color: #10b981;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
 }
 
-.dayCard.hasAssignments {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+.todayCard:hover {
+  border-color: #059669;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
 
 .dayHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  text-align: center;
   margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e2e8f0;
 }
 
 .dayName {
@@ -1088,40 +1108,48 @@
 }
 
 .dayDate {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
+  margin-top: 4px;
 }
 
 .dayContent {
   flex: 1;
 }
 
-.assignmentPreview {
-  text-align: center;
+.assignmentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.caregiverIndicator {
-  font-size: 0.75rem;
-  color: #8b5cf6;
-  font-weight: 600;
-  margin-bottom: 4px;
+.assignmentItem {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  padding: 8px;
+  border-left: 3px solid #3b82f6;
 }
 
 .caregiverName {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #1e293b;
-  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.assignmentTime {
+  font-size: 0.625rem;
+  color: #64748b;
 }
 
 .noAssignment {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
   color: #94a3b8;
-}
-
-.noAssignmentText {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-style: italic;
 }
 
@@ -1132,170 +1160,228 @@
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.selectedDayDetails {
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 2px solid #e2e8f0;
   border-radius: 16px;
-  padding: 24px;
-  margin-top: 20px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 2px solid #e2e8f0;
 }
 
-.selectedDayTitle {
-  color: #1e293b;
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalHeader h3 {
   font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 20px 0;
-  text-align: center;
-}
-
-.assignmentsList {
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
 }
 
-.assignmentCard {
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
+.modalDate {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.3s ease;
 }
 
-.assignmentCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #8b5cf6;
+.closeBtn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
-.assignmentHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.modalBody {
+  padding: 24px 28px;
+}
+
+.assignmentDetail {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  padding: 20px;
   margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
 }
 
-.caregiverInfo {
+.assignmentDetail:last-child {
+  margin-bottom: 0;
+}
+
+.caregiverHeader {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex: 1;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .caregiverAvatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.caregiverDetails h4 {
-  margin: 0 0 4px 0;
-  color: #1e293b;
+.caregiverInfo h4 {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px 0;
 }
 
-.caregiverCertifications {
+.caregiverDistrict {
+  font-size: 0.875rem;
   color: #64748b;
-  font-size: 0.875rem;
-  margin: 0 0 8px 0;
-  font-weight: 500;
-}
-
-.caregiverContact {
-  color: #475569;
-  font-size: 0.875rem;
   margin: 0;
 }
 
-.assignmentStatus {
-  flex-shrink: 0;
+.assignmentInfo {
+  display: grid;
+  gap: 12px;
 }
 
-.statusApproved {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.assignmentPeriod {
+.infoItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.periodInfo,
-.durationInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.infoItem:last-child {
+  border-bottom: none;
 }
 
-.periodLabel,
-.durationLabel {
-  font-size: 0.75rem;
+.infoLabel {
+  font-size: 0.875rem;
   font-weight: 600;
   color: #64748b;
+}
+
+.infoValue {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.statusBadge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.periodDates,
-.durationValue {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1e293b;
+.statusApproved {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
 }
 
+.statusCompleted {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+}
+
+.statusPending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+/* Responsive Design for Care Assignments */
 @media (max-width: 768px) {
-  .weeklyCalendar {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-  
-  .dayCard {
-    min-height: 100px;
-    padding: 12px;
-  }
-  
   .weekNavigation {
     flex-direction: column;
     gap: 12px;
+    align-items: stretch;
   }
   
-  .assignmentPeriod {
+  .weekGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .dayCard {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    min-height: auto;
+  }
+  
+  .dayHeader {
+    margin-bottom: 0;
+    margin-right: 16px;
+    text-align: left;
+    min-width: 80px;
+  }
+  
+  .modalContent {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .modalHeader {
+    padding: 16px 20px 12px;
+  }
+  
+  .modalBody {
+    padding: 16px 20px;
+  }
+  
+  .caregiverHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
   }
-}
-
-@media (max-width: 480px) {
-  .weeklyCalendar {
-    grid-template-columns: repeat(2, 1fr);
+  
+  .infoItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }

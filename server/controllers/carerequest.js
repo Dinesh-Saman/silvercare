@@ -8,14 +8,16 @@ const getCareAssignmentsByWeek = async (req, res) => {
   try {
     console.log('Fetching care assignments for elder:', elderId);
     
-    // Calculate week start and end dates
+    // Calculate week start and end dates using Sri Lanka timezone
     let weekStart;
     if (startDate) {
       weekStart = new Date(startDate);
     } else {
-      // Default to current week
-      weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of current week (Sunday)
+      // Default to current week in Sri Lanka timezone
+      const now = new Date();
+      // Since we're already in Sri Lanka timezone due to process.env.TZ setting
+      weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay()); // Start of current week (Sunday)
     }
     
     weekStart.setHours(0, 0, 0, 0);
@@ -24,6 +26,7 @@ const getCareAssignmentsByWeek = async (req, res) => {
     weekEnd.setHours(23, 59, 59, 999);
     
     console.log('Week range:', weekStart, 'to', weekEnd);
+    console.log('Current time in Sri Lanka:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
     
     // Get care assignments for the week
     const result = await pool.query(`
@@ -58,6 +61,15 @@ const getCareAssignmentsByWeek = async (req, res) => {
     // Create daily assignments array for the week
     const dailyAssignments = [];
     
+    // Get today's date in Sri Lanka timezone for proper comparison
+    const today = new Date(); // Already in Sri Lanka timezone due to process.env.TZ
+    const todayDateString = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0');
+    
+    console.log('Today in Sri Lanka:', todayDateString);
+    console.log('Today day of week:', today.getDay()); // 0 = Sunday, 1 = Monday, etc.
+    
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(weekStart);
       currentDate.setDate(weekStart.getDate() + i);
@@ -69,18 +81,28 @@ const getCareAssignmentsByWeek = async (req, res) => {
         return currentDate >= assignmentStart && currentDate <= assignmentEnd;
       });
       
+      const currentDateString = currentDate.getFullYear() + '-' + 
+                               String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                               String(currentDate.getDate()).padStart(2, '0');
+      
       dailyAssignments.push({
-        date: currentDate.toISOString().split('T')[0],
+        date: currentDateString,
         dayName: currentDate.toLocaleDateString('en-US', { weekday: 'long' }),
-        isToday: currentDate.toDateString() === new Date().toDateString(),
+        isToday: currentDateString === todayDateString,
         assignments: dayAssignments
       });
+      
+      console.log(`Day ${i}: ${currentDateString} (${currentDate.toLocaleDateString('en-US', { weekday: 'long' })}), isToday: ${currentDateString === todayDateString}`);
     }
     
     res.json({
       success: true,
-      weekStart: weekStart.toISOString().split('T')[0],
-      weekEnd: weekEnd.toISOString().split('T')[0],
+      weekStart: weekStart.getFullYear() + '-' + 
+                String(weekStart.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(weekStart.getDate()).padStart(2, '0'),
+      weekEnd: weekEnd.getFullYear() + '-' + 
+              String(weekEnd.getMonth() + 1).padStart(2, '0') + '-' + 
+              String(weekEnd.getDate()).padStart(2, '0'),
       dailyAssignments: dailyAssignments,
       totalAssignments: result.rows.length
     });
