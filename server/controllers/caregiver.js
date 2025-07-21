@@ -168,6 +168,7 @@ const fetchSchedules = async (req, res) => {
 //fetch care requests for caregiver (role caregiver)
 const fetchCareRequests = async (req, res) => {
   const caregiverId = req.params.id;
+  const { search } = req.query; // Get search parameter from query string
 
   try {
     // First, auto-update any approved requests that have passed their end date
@@ -180,7 +181,7 @@ const fetchCareRequests = async (req, res) => {
     `;
     await pool.query(updateQuery, [caregiverId]);
 
-    const query = `
+    let query = `
       SELECT 
         cr.request_id,
         cr.family_id,
@@ -195,6 +196,7 @@ const fetchCareRequests = async (req, res) => {
         e.address as elder_address,
         e.medical_conditions,
         e.contact as elder_contact,
+        e.district as elder_district,
         fm.user_id as family_member_user_id,
         u.name as family_member_name,
         u.phone as family_member_phone,
@@ -204,10 +206,23 @@ const fetchCareRequests = async (req, res) => {
       JOIN familymember fm ON cr.family_id = fm.family_id
       JOIN "User" u ON fm.user_id = u.user_id
       WHERE cr.caregiver_id = $1
-      ORDER BY cr.request_date DESC, cr.start_date ASC;
     `;
 
-    const result = await pool.query(query, [caregiverId]);
+    const queryParams = [caregiverId];
+
+    // Add search conditions if search parameter exists
+    if (search) {
+      query += ` AND (
+        LOWER(e.name) LIKE LOWER($2) OR 
+        CAST(e.age AS TEXT) LIKE $2 OR 
+        LOWER(e.district) LIKE LOWER($2)
+      )`;
+      queryParams.push(`%${search}%`);
+    }
+
+    query += ` ORDER BY cr.request_date DESC, cr.start_date ASC;`;
+
+    const result = await pool.query(query, queryParams);
 
     res.status(200).json(result.rows);
   } catch (error) {

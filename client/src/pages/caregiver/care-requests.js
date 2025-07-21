@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
@@ -13,11 +13,24 @@ const CareRequests = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const isFirstLoad = useRef(true);
 
+
+// Debounce searchTerm -> debouncedSearchTerm
+useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearchTerm(searchTerm);
+  }, 500);
+  return () => clearTimeout(handler);
+}, [searchTerm]);
+
+// Fetch care requests when user or debouncedSearchTerm changes
 useEffect(() => {
   if (!user || !user.caregiver_id) return;
   fetchCareRequests();
-}, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+}, [user, debouncedSearchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-update status from 'approved' to 'completed' if end_date has passed
   useEffect(() => {
@@ -44,16 +57,22 @@ useEffect(() => {
 
   const fetchCareRequests = async () => {
     try {
-      setLoading(true);
+      // Only show loading spinner on first load or manual refresh, not while typing
+      if (isFirstLoad.current) {
+        setLoading(true);
+      }
       setError(null);
-      const response = await caregiverApi.fetchCareRequests(user.caregiver_id);
+      const response = await caregiverApi.fetchCareRequests(user.caregiver_id, debouncedSearchTerm);
       setCareRequests(response || []);
     } catch (error) {
       console.error('Error fetching care requests:', error);
       setError('Failed to fetch care requests');
       setCareRequests([]);
     } finally {
-      setLoading(false);
+      if (isFirstLoad.current) {
+        setLoading(false);
+        isFirstLoad.current = false;
+      }
     }
   };
 
@@ -119,6 +138,11 @@ useEffect(() => {
     navigate(`/caregiver/care-request/${requestId}`);
   };
 
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    // Do not set debouncedSearchTerm or loading here; let debounce effect handle API call after 500ms
+  };
+
   const tabs = [
     { key: 'all', label: 'All Requests', count: getTabCount('all') },
     { key: 'pending', label: 'Pending', count: getTabCount('pending') },
@@ -151,6 +175,22 @@ useEffect(() => {
           <div className={styles.header}>
             <h1>Care Requests</h1>
             <p>Manage and view all your care requests</p>
+          </div>
+
+          {/* Search Section */}
+          <div className={styles.searchSection}>
+            <input
+              type="text"
+              placeholder="Search by elder name, age, or district..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={styles.searchInput}
+            />
+            {searchTerm && (
+              <button onClick={handleClearSearch} className={styles.clearSearchButton}>
+                Clear Search
+              </button>
+            )}
           </div>
 
           {/* Tabs */}
@@ -230,23 +270,31 @@ useEffect(() => {
                           <span className={styles.value}>{request.elder_address}</span>
                         </div>
                         <div className={styles.detailItem}>
-                          <span className={styles.label}>Request Date:</span>
-                          <span className={styles.value}>{formatDateTime(request.request_date)}</span>
+                          <span className={styles.label}>District:</span>
+                          <span className={styles.value}>{request.elder_district}</span>
                         </div>
                       </div>
-                      
 
                       <div className={styles.detailRow}>
                         <div className={styles.detailItem}>
                           <span className={styles.label}>Family Contact:</span>
                           <span className={styles.value}>{request.family_member_name}</span>
                         </div>
-                        
+                        <div className={styles.detailItem}>
+                          <span className={styles.label}>Request Date:</span>
+                          <span className={styles.value}>{formatDateTime(request.request_date)}</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.detailRow}>
                         <div className={styles.detailItem}>
                           <span className={styles.label}>Phone:</span>
                           <span className={styles.value}>{request.family_member_phone}</span>
                         </div>
-
+                        <div className={styles.detailItem}>
+                          <span className={styles.label}>Email:</span>
+                          <span className={styles.value}>{request.family_member_email}</span>
+                        </div>
                       </div>
                     </div>
                       {/* Show time left only in pending tab */}
