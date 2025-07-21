@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
 import { useAuth } from '../../context/AuthContext';
-import { caregiverApi } from '../../services/caregiverApi';
+import { caregiverApi } from '../../services/caregiverApi2';
 import styles from "../../components/css/caregiver/profile.module.css";
 
 const Profile = () => {
@@ -34,7 +34,7 @@ const Profile = () => {
     if (user && user.caregiver_id) {
       fetchProfileData();
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProfileData = async () => {
     try {
@@ -182,13 +182,6 @@ const Profile = () => {
     } catch (error) {
       console.error('Error updating password:', error);
       setError(error.message || 'Failed to update password');
-    }
-  };
-
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      navigate('/login');
     }
   };
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
-import { caregiverApi } from '../../services/caregiverApi';
+import caregiverApi from '../../services/caregiverApi2';
 import styles from "../../components/css/caregiver/care-request-details.module.css";
 
 const CareRequestDetails = () => {
@@ -15,7 +15,7 @@ const CareRequestDetails = () => {
 
   useEffect(() => {
     fetchCareRequestDetails();
-  }, [requestId]);
+  }, [requestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCareRequestDetails = async () => {
     try {
@@ -176,7 +176,7 @@ const CareRequestDetails = () => {
                     <span>{careRequest?.duration} days</span>
                   </div>
                   {/* Show time left only for pending requests */}
-                  {careRequest?.status === 'pending' && (
+                  {(careRequest?.status === 'pending') || (careRequest?.status === 'approved') && (
                     <div className={styles.infoItem}>
                       <label>Time Left:</label>
                       <span className={

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import styles from "../../components/css/caregiver/dashboard.module.css";
 import CaregiverLayout from '../../components/CaregiverLayout';
-import caregiverApi from '../../services/caregiverApi';
+import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
 
 
@@ -339,14 +339,15 @@ const CaregiverDashboard = () => {
                 const diffMs = start - now;
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                 let colorClass = diffDays > 2 ? styles.timeLeftGreen : styles.timeLeftRed;
                 if (diffMs <= 0) colorClass = styles.timeLeftRed;
                 return (
                   <div className={styles.shiftCard} key={i}>
                     <div className={styles.shiftHeader}>
-                      <span className={styles.shiftDate}>{start.toLocaleDateString()}</span>
-                      <span className={styles.shiftTime}>{shift.time || shift.duration || ''}</span>
+                      <span className={styles.shiftDate}>
+                        {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
+                      </span>
+                      <span className={styles.shiftTime}>{shift.duration}</span>
                     </div>
                     <div className={styles.shiftDetails}>
                       <span className={styles.label}>Location:</span>
@@ -363,6 +364,14 @@ const CaregiverDashboard = () => {
                           ? `${diffDays} day${diffDays !== 1 ? 's' : ''} ${diffHours} hour${diffHours !== 1 ? 's' : ''}`
                           : 'Started'}
                       </span>
+                    </div>
+                    <div className={styles.careRequestActions}>
+                      <button 
+                        className={styles.viewMoreButton}
+                        onClick={() => navigate(`/caregiver/care-request/${shift.request_id}`)}
+                      >
+                        View More Details
+                      </button>
                     </div>
                   </div>
                 );
@@ -439,8 +448,7 @@ const CaregiverDashboard = () => {
         </div>
       </div>
 
-      <section className={styles.quickLinks} style={{background: 'linear-gradient(135deg, #eef2fa 0%, #f8fafc 100%)', borderRadius: '18px', boxShadow: '0 4px 16px rgba(102,126,234,0.10)', margin: '32px 0', padding: '32px 24px'}}>
-        <h2 style={{display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.35rem', color: '#2b4c7e', fontWeight: 700, marginBottom: 18}}>
+      <section className={styles.quickLinks} style={{borderRadius: '18px', boxShadow: '0 4px 16px rgba(102,126,234,0.10)', margin: '32px 0', padding: '32px 24px'}}>                      <h2 style={{display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.35rem', color: '#2b4c7e', fontWeight: 700, marginBottom: 18}}>
           <span role="img" aria-label="Quick Links" style={{fontSize: '2rem'}}>🚀</span> Quick Actions
         </h2>
         <div className={styles.linksGrid} style={{gap: '28px'}}>
@@ -450,7 +458,7 @@ const CaregiverDashboard = () => {
           <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)', color: '#fff', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(67,206,162,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/care-requests')}>
             <span style={{fontSize: '1.5rem'}}>📅</span> View Requests
           </button>
-          <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #ffb347 0%, #ffcc33 100%)', color: '#2d3748', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(255,179,71,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/carelogs')}>
+          <button className={styles.quickLinkBtn} style={{background: 'linear-gradient(135deg, #ffb347 0%, #ffcc33 100%)', color: '#2d3748', fontSize: '1.1rem', fontWeight: 600, padding: '18px 0', borderRadius: '12px', boxShadow: '0 2px 12px rgba(255,179,71,0.12)', display: 'flex', alignItems: 'center', gap: '12px'}} onClick={() => navigate('/caregiver/carelog')}>
             <span style={{fontSize: '1.5rem'}}>📝</span> View Carelogs
           </button>
         </div>
