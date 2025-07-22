@@ -215,8 +215,8 @@ const ElderCaregivers = () => {
           <div className={styles.pageHeader}>
             <div className={styles.headerContent}>
               <div className={styles.headerInfo}>
-                <h1>My Care Team</h1>
-                <p>Manage your caregivers and care schedule</p>
+                <h1>My Care</h1>
+                
               </div>
               <button 
                 onClick={handleBackToDashboard}
@@ -297,7 +297,7 @@ const ElderCaregivers = () => {
           {/* Caregivers Section */}
           <div className={styles.caregiversSection}>
             <div className={styles.sectionHeader}>
-              <h2>My Caregivers</h2>
+              <h2>My Past Caregivers</h2>
               <div className={styles.tabContainer}>
                 <button
                   className={`${styles.tabBtn} ${activeTab === 'active' ? styles.activeTab : ''}`}

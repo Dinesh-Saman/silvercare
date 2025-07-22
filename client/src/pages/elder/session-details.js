@@ -273,14 +273,6 @@ const SessionDetails = () => {
                     {session.session_type === 'online' ? '💻 Video Call Session' : '🏥 In-Person Session'}
                   </span>
                 </div>
-                {session.session_type === 'physical' && (
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Location:</span>
-                    <span className={styles.infoValue}>
-                      {session.current_institution}
-                    </span>
-                  </div>
-                )}
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Session Number:</span>
                   <span className={styles.infoValue}>#{session.session_id}</span>
