@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
-import { caregiverApi } from '../../services/caregiverApi';
+import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
 import styles from "../../components/css/caregiver/care-requests.module.css";
 
@@ -17,7 +17,7 @@ const CareRequests = () => {
 useEffect(() => {
   if (!user || !user.caregiver_id) return;
   fetchCareRequests();
-}, [user]);
+}, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-update status from 'approved' to 'completed' if end_date has passed
   useEffect(() => {
@@ -40,7 +40,7 @@ useEffect(() => {
         }
       }
     });
-  }, [careRequests]);
+  }, [careRequests]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCareRequests = async () => {
     try {

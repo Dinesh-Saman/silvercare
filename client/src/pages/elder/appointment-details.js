@@ -5,10 +5,10 @@ import Navbar from "../../components/navbar";
 import {
   getElderDetailsByEmail,
   getAppointmentById,
-  cancelAppointment,
   joinAppointment,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/appointment-details.module.css";
+import ElderLayout from "../../components/ElderLayout";
 
 const AppointmentDetails = () => {
   const { currentUser } = useAuth();
@@ -54,28 +54,6 @@ const AppointmentDetails = () => {
       fetchData();
     }
   }, [currentUser.email, appointmentId]);
-
-  const handleCancelAppointment = async () => {
-    if (!window.confirm("Are you sure you want to cancel this appointment?")) {
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await cancelAppointment(elderDetails.elder_id, appointmentId);
-      
-      // Refresh appointment data
-      const appointmentResponse = await getAppointmentById(elderDetails.elder_id, appointmentId);
-      setAppointment(appointmentResponse.data.appointment);
-      
-      alert("Appointment cancelled successfully");
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      alert("Failed to cancel appointment");
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleJoinAppointment = async () => {
     try {
@@ -131,6 +109,7 @@ const AppointmentDetails = () => {
   const getStatusBadgeClass = (status, dateTime) => {
     if (status === "cancelled") return styles.statusCancelled;
     if (status === "completed") return styles.statusCompleted;
+    if (status === "confirmed") return styles.statusConfirmed;
     if (new Date(dateTime) < new Date()) return styles.statusPast;
     return styles.statusUpcoming;
   };
@@ -138,14 +117,9 @@ const AppointmentDetails = () => {
   const getStatusText = (status, dateTime) => {
     if (status === "cancelled") return "Cancelled";
     if (status === "completed") return "Completed";
+    if (status === "confirmed") return "Confirmed";
     if (new Date(dateTime) < new Date()) return "Past";
-    return "Upcoming";
-  };
-
-  const canCancelAppointment = (appointment) => {
-    if (!appointment) return false;
-    if (appointment.status === "cancelled" || appointment.status === "completed") return false;
-    return new Date(appointment.date_time) > new Date();
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const isUpcomingAppointment = (appointment) => {
@@ -157,10 +131,12 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading appointment details...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -169,6 +145,7 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Error Loading Appointment</h2>
@@ -177,6 +154,7 @@ const AppointmentDetails = () => {
             Back to Appointments
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -185,6 +163,7 @@ const AppointmentDetails = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>📅</div>
           <h2>Appointment Not Found</h2>
@@ -193,6 +172,7 @@ const AppointmentDetails = () => {
             Back to Appointments
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -200,32 +180,93 @@ const AppointmentDetails = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      
+      <ElderLayout>
       <div className={styles.contentContainer}>
         {/* Header */}
         <div className={styles.header}>
-          <button 
-            onClick={() => navigate("/elder/appointments")}
-            className={styles.backBtn}
-          >
-            ← Back to Appointments
-          </button>
           <div className={styles.headerContent}>
             <h1>Appointment Details</h1>
-            <div className={styles.statusBadge}>
-              <span className={getStatusBadgeClass(appointment.status, appointment.date_time)}>
-                {getStatusText(appointment.status, appointment.date_time)}
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div className={styles.statusBadge}>
+                <span className={getStatusBadgeClass(appointment.status, appointment.date_time)}>
+                  {getStatusText(appointment.status, appointment.date_time)}
+                </span>
+              </div>
+              <button 
+                onClick={() => navigate("/elder/appointments")}
+                className={styles.backBtn}
+                style={{ marginBottom: 0 }}
+              >
+                ← Back to Appointments
+              </button>
             </div>
           </div>
         </div>
 
         <div className={styles.detailsGrid}>
+          {/* Key Appointment Information - Most Important First */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon}>📅</div>
+              <h2>Your Appointment Details</h2>
+            </div>
+            <div className={styles.cardContent}>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Date & Day:</span>
+                  <span className={styles.infoValue}>{formatDate(appointment.date_time)}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Time:</span>
+                  <span className={styles.infoValue}>{formatTime(appointment.date_time)}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Meeting Type:</span>
+                  <span className={`${styles.infoValue} ${
+                    appointment.appointment_type === 'online' 
+                      ? styles.onlineType 
+                      : styles.physicalType
+                  }`}>
+                    {appointment.appointment_type === 'online' ? '💻 Video Call Meeting' : '🏥 In-Person Visit'}
+                  </span>
+                </div>
+                {appointment.appointment_type === 'physical' && (
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>Location:</span>
+                    <span className={styles.infoValue}>
+                      {appointment.current_institution}
+                    </span>
+                  </div>
+                )}
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>Appointment Number:</span>
+                  <span className={styles.infoValue}>#{appointment.appointment_id}</span>
+                </div>
+              </div>
+              
+              {/* Time Remaining for Upcoming Appointments */}
+              {isUpcomingAppointment(appointment) && (
+                <div className={styles.timeRemainingSection}>
+                  <div className={`${styles.timeRemainingBanner} ${
+                    getTimeRemaining(appointment.date_time).urgent ? styles.urgent : styles.normal
+                  }`}>
+                    <div className={styles.timeRemainingContent}>
+                      <div className={styles.timeRemainingLabel}>Your appointment starts in</div>
+                      <div className={styles.timeRemainingValue}>
+                        {getTimeRemaining(appointment.date_time).text}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Doctor Information Card */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>👨‍⚕️</div>
-              <h2>Doctor Information</h2>
+              <h2>Your Doctor</h2>
             </div>
             <div className={styles.cardContent}>
               <div className={styles.doctorProfile}>
@@ -240,68 +281,18 @@ const AppointmentDetails = () => {
               </div>
               <div className={styles.infoGrid}>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Years of Experience:</span>
+                  <span className={styles.infoLabel}>Experience:</span>
                   <span className={styles.infoValue}>{appointment.experience_years || 'N/A'} years</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Contact:</span>
-                  <span className={styles.infoValue}>{appointment.doctor_contact || 'N/A'}</span>
+                  <span className={styles.infoLabel}>Contact Number:</span>
+                  <span className={styles.infoValue}>{appointment.doctor_contact || 'Will be provided'}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Appointment Information Card */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>📅</div>
-              <h2>Appointment Information</h2>
-            </div>
-            <div className={styles.cardContent}>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Date:</span>
-                  <span className={styles.infoValue}>{formatDate(appointment.date_time)}</span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Time:</span>
-                  <span className={styles.infoValue}>{formatTime(appointment.date_time)}</span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Type:</span>
-                  <span className={`${styles.infoValue} ${
-                    appointment.appointment_type === 'online' 
-                      ? styles.onlineType 
-                      : styles.physicalType
-                  }`}>
-                    {appointment.appointment_type === 'online' ? '💻 Online Meeting' : '🏥 Physical Visit'}
-                  </span>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Appointment ID:</span>
-                  <span className={styles.infoValue}>#{appointment.appointment_id}</span>
-                </div>
-              </div>
-              
-              {/* Time Remaining for Upcoming Appointments */}
-              {isUpcomingAppointment(appointment) && (
-                <div className={styles.timeRemainingSection}>
-                  <div className={`${styles.timeRemainingBanner} ${
-                    getTimeRemaining(appointment.date_time).urgent ? styles.urgent : styles.normal
-                  }`}>
-                    <div className={styles.timeRemainingContent}>
-                      <div className={styles.timeRemainingLabel}>Appointment starts in</div>
-                      <div className={styles.timeRemainingValue}>
-                        {getTimeRemaining(appointment.date_time).text}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Notes and Additional Information */}
+          {/* Additional Information */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>📝</div>
@@ -310,11 +301,11 @@ const AppointmentDetails = () => {
             <div className={styles.cardContent}>
               <div className={styles.infoGrid}>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Notes:</span>
-                  <span className={styles.infoValue}>{appointment.notes || 'No notes provided'}</span>
+                  <span className={styles.infoLabel}>Special Notes:</span>
+                  <span className={styles.infoValue}>{appointment.notes || 'No special instructions'}</span>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Created:</span>
+                  <span className={styles.infoLabel}>Appointment Booked:</span>
                   <span className={styles.infoValue}>
                     {new Date(appointment.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -325,25 +316,51 @@ const AppointmentDetails = () => {
                     })}
                   </span>
                 </div>
-                {appointment.appointment_type === 'physical' && (
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Location:</span>
-                    <span className={styles.infoValue}>
-                      {appointment.current_institution}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Actions Card */}
+          {/* What You Can Do - Actions Card */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>⚡</div>
-              <h2>Actions</h2>
+              <h2>What You Can Do</h2>
             </div>
             <div className={styles.cardContent}>
+              {/* Instructions for Physical Appointments */}
+              {appointment.appointment_type === 'physical' && isUpcomingAppointment(appointment) && (
+                <div className={styles.physicalInstructions}>
+                  <div className={styles.instructionHeader}>
+                    <div className={styles.instructionIcon}>🏥</div>
+                    <h3>For Your Home Visit</h3>
+                  </div>
+                  <div className={styles.instructionList}>
+                    <p>• The doctor will come to your home at the scheduled appointment time.</p>
+                    <p>• Please ensure someone is available to welcome the doctor.</p>
+                    <p>• Have your identification and any previous medical records ready if available.</p>
+                    <p>• If you have pets, please secure them for the doctor's visit.</p>
+                    <p>• If you have questions, contact the service provider directly.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Instructions for Online Appointments */}
+              {appointment.appointment_type === 'online' && isUpcomingAppointment(appointment) && (
+                <div className={styles.onlineInstructions}>
+                  <div className={styles.instructionHeader}>
+                    <div className={styles.instructionIcon}>💻</div>
+                    <h3>For Your Video Call</h3>
+                  </div>
+                  <div className={styles.instructionList}>
+                    <p>• Make sure your device (phone, tablet, or computer) is charged and has a stable internet connection.</p>
+                    <p>• Find a quiet and comfortable place for your appointment.</p>
+                    <p>• Keep your camera and microphone enabled for the call.</p>
+                    <p>• Have your identification and any medical records ready if needed.</p>
+                    <p>• Click the "Join Video Call Now" button below when it's time for your appointment.</p>
+                  </div>
+                </div>
+              )}
+
               <div className={styles.actionsGrid}>
                 {appointment.appointment_type === 'online' && isUpcomingAppointment(appointment) && (
                   <button
@@ -354,29 +371,11 @@ const AppointmentDetails = () => {
                     {actionLoading ? (
                       <>
                         <div className={styles.buttonSpinner}></div>
-                        Joining...
+                        Connecting...
                       </>
                     ) : (
                       <>
-                        🎥 Join Online Meeting
-                      </>
-                    )}
-                  </button>
-                )}
-                {canCancelAppointment(appointment) && (
-                  <button
-                    onClick={handleCancelAppointment}
-                    disabled={actionLoading}
-                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                  >
-                    {actionLoading ? (
-                      <>
-                        <div className={styles.buttonSpinner}></div>
-                        Cancelling...
-                      </>
-                    ) : (
-                      <>
-                        ❌ Cancel Appointment
+                        🎥 Join Video Call Now
                       </>
                     )}
                   </button>
@@ -385,13 +384,14 @@ const AppointmentDetails = () => {
                   onClick={() => navigate("/elder/appointments")}
                   className={`${styles.actionBtn} ${styles.backToListBtn}`}
                 >
-                  📋 Back to All Appointments
+                  📋 View All My Appointments
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      </ElderLayout>
     </div>
   );
 };

@@ -182,7 +182,7 @@ export const caregiverApi = {
   },
 
   // Get assigned elders for caregiver(role caregiver)
-  fetchAssignedElders: async (caregiverId) => {
+  /*fetchAssignedElders: async (caregiverId) => {
     try {
       const response = await axios.get(`${API_BASE}/${caregiverId}/assigned-elders`);
       return response.data;
@@ -343,7 +343,7 @@ export const caregiverApi = {
       console.error('API: Error updating password:', error);
       throw error;
     }
-  },
+  },*/
 
 };
 

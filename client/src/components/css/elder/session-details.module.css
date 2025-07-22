@@ -1,15 +1,8 @@
-/* Online Appointment Instructions */
-.onlineInstructions {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-  border: 2px solid #a5b4fc;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-/* Appointment Details Page Styles */
+/* Session Details Page Styles - Professional Enhancement */
 .pageContainer {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding-top: 10px;
 }
 
 .contentContainer {
@@ -18,7 +11,7 @@
   padding: 32px;
 }
 
-/* Header */
+/* Enhanced Professional Header */
 .header {
   background: white;
   border-radius: 16px;
@@ -79,6 +72,7 @@
   align-items: center;
 }
 
+/* Enhanced Professional Status Badges */
 .statusUpcoming {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -139,14 +133,14 @@
   letter-spacing: 0.5px;
 }
 
-/* Details Grid */
+/* Enhanced Professional Details Grid */
 .detailsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
-/* Cards */
+/* Enhanced Professional Cards */
 .card {
   background: white;
   border-radius: 16px;
@@ -198,8 +192,8 @@
   gap: 16px;
 }
 
-/* Doctor Profile */
-.doctorProfile {
+/* Enhanced Professional Counselor Profile */
+.counselorProfile {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -210,7 +204,7 @@
   border: 2px solid #bae6fd;
 }
 
-.doctorAvatar {
+.counselorAvatar {
   width: 60px;
   height: 60px;
   background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
@@ -226,7 +220,7 @@
   flex-shrink: 0;
 }
 
-.doctorInfo h3 {
+.counselorInfo h3 {
   color: #1e293b;
   font-size: 1.25rem;
   font-weight: 700;
@@ -245,11 +239,25 @@
 .institution {
   color: #64748b;
   font-size: 0.875rem;
-  margin: 0;
+  margin: 0 0 4px 0;
   font-weight: 500;
 }
 
-/* Info Grid */
+.experience {
+  color: #059669;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.district {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Enhanced Professional Info Grid */
 .infoGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -263,8 +271,11 @@
   padding: 16px 20px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 10px;
-  /* border-left removed */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.infoItem:last-child {
+  border-bottom: none;
 }
 
 .infoLabel {
@@ -305,7 +316,7 @@
   letter-spacing: 0.5px !important;
 }
 
-/* Professional Time Remaining Section */
+/* Enhanced Professional Time Remaining Section */
 .timeRemainingSection {
   margin-top: 16px;
 }
@@ -372,65 +383,11 @@
   100% { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3); }
 }
 
-/* Actions */
+/* Enhanced Professional Actions */
 .actionsGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-}
-
-/* Physical Appointment Instructions */
-.physicalInstructions {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid #bae6fd;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.instructionHeader {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.instructionIcon {
-  font-size: 1.5rem;
-  padding: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-  min-width: 44px;
-  min-height: 44px;
-}
-
-.instructionHeader h3 {
-  color: #1e293b;
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.instructionList {
-  margin: 0;
-}
-
-.instructionList p {
-  color: #374151;
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin: 0 0 8px 0;
-  line-height: 1.5;
-}
-
-.instructionList p:last-child {
-  margin-bottom: 0;
 }
 
 /* Modern Professional Action Buttons */
@@ -461,7 +418,7 @@
 .actionBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+  transform: none !important;
 }
 
 .joinBtn {
@@ -474,16 +431,6 @@
   box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5);
 }
 
-.cancelBtn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-}
-
-.cancelBtn:hover {
-  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
-}
-
 .backToListBtn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
@@ -492,20 +439,6 @@
 
 .backToListBtn:hover {
   box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
-}
-
-.cancelBtn:hover {
-  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
-}
-
-.backToListBtn {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-.backToListBtn:hover {
-  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
 }
 
 /* Button Spinner */
@@ -518,7 +451,7 @@
   animation: spin 1s linear infinite;
 }
 
-/* Loading States */
+/* Enhanced Professional Loading States */
 .loadingContainer {
   display: flex;
   flex-direction: column;
@@ -550,7 +483,7 @@
   margin: 0;
 }
 
-/* Error States */
+/* Enhanced Professional Error States */
 .errorContainer {
   display: flex;
   flex-direction: column;
@@ -612,155 +545,94 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes glow {
-  0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
-  100% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); }
+  0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(102, 126, 234, 0.8); }
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-10px); }
-  60% { transform: translateY(-5px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .contentContainer {
-    padding: 20px 16px;
+    padding: 16px;
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .headerContent h1 {
+    font-size: 1.5rem;
   }
   
   .detailsGrid {
     grid-template-columns: 1fr;
   }
   
-  .headerContent {
-    flex-direction: column;
-    gap: 20px;
-    align-items: flex-start;
-  }
-  
-  .headerContent h1 {
-    font-size: 1.75rem;
-  }
-  
-  .doctorProfile {
+  .counselorProfile {
     flex-direction: column;
     text-align: center;
-    padding: 20px;
+    gap: 16px;
   }
   
-  .doctorAvatar {
-    width: 72px;
-    height: 72px;
-    font-size: 1.75rem;
+  .counselorInfo h3 {
+    font-size: 1.25rem;
   }
   
   .infoItem {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    padding: 24px 20px;
+    gap: 8px;
   }
   
   .infoValue {
     text-align: left;
     max-width: 100%;
-    font-size: 1rem;
-  }
-  
-  .timeRemainingContent {
-    padding: 24px 20px;
-  }
-  
-  .timeRemainingValue {
-    font-size: 2rem;
-  }
-  
-  .timeRemainingLabel {
-    font-size: 1rem;
   }
   
   .actionsGrid {
-    gap: 16px;
+    flex-direction: column;
+    align-items: stretch;
   }
   
   .actionBtn {
-    padding: 18px 24px;
-    font-size: 1rem;
-    min-height: 56px;
+    justify-content: center;
+    padding: 14px 24px;
   }
 }
 
 @media (max-width: 480px) {
-  .contentContainer {
-    padding: 16px 12px;
-  }
-  
   .card {
-    padding: 24px 20px;
+    padding: 20px;
   }
   
-  .header {
-    padding: 24px 20px;
-  }
-  
-  .backBtn {
-    padding: 12px 20px;
-    font-size: 0.875rem;
-  }
-  
-  .headerContent h1 {
+  .counselorAvatar {
+    width: 60px;
+    height: 60px;
     font-size: 1.5rem;
   }
   
-  .cardHeader h2 {
-    font-size: 1.25rem;
-  }
-  
-  .cardIcon {
-    font-size: 1.5rem;
-    padding: 12px;
-    min-width: 48px;
-    min-height: 48px;
-  }
-  
-  .doctorAvatar {
-    width: 64px;
-    height: 64px;
-    font-size: 1.5rem;
-  }
-  
-  .doctorInfo h3 {
-    font-size: 1.25rem;
-  }
-  
-  .specialization {
-    font-size: 1rem;
+  .timeRemainingContent {
+    padding: 16px;
   }
   
   .timeRemainingValue {
-    font-size: 1.75rem;
-  }
-  
-  .timeRemainingLabel {
-    font-size: 0.875rem;
-  }
-  
-  .infoLabel {
-    font-size: 0.875rem;
-  }
-  
-  .infoValue {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
   
   .actionBtn {
     font-size: 0.875rem;
-    padding: 16px 20px;
+    padding: 12px 20px;
   }
 }
 
@@ -768,48 +640,60 @@
 .backBtn:focus,
 .actionBtn:focus,
 .retryBtn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* Print styles */
 @media print {
   .pageContainer {
-    background: white;
-  }
-  
-  .card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    box-shadow: none;
+    background: white !important;
   }
   
   .backBtn,
-  .actionBtn {
+  .actionsGrid {
     display: none;
+  }
+  
+  .card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    background: white !important;
+  }
+  
+  .timeRemainingBanner {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
   }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .card {
-    background: white;
     border: 2px solid #000;
+    background: white !important;
   }
   
-  .infoItem {
-    background: #f3f4f6;
-    border: 1px solid #000;
+  .actionBtn {
+    border: 2px solid;
+  }
+  
+  .statusUpcoming,
+  .statusPast,
+  .statusCompleted,
+  .statusConfirmed,
+  .statusCancelled {
+    border: 2px solid #000;
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .card,
-  .actionBtn,
-  .backBtn,
-  .retryBtn {
-    transition: none;
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
   
   .loadingSpinner,
@@ -817,7 +701,7 @@
     animation: none;
   }
   
-  .timeRemainingIcon {
+  .timeRemainingBanner.urgent {
     animation: none;
   }
 }

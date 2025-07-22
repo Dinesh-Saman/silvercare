@@ -5,10 +5,10 @@ import Navbar from "../../components/navbar";
 import {
   getElderDetailsByEmail,
   getAllAppointments,
-  cancelAppointment,
   joinAppointment,
 } from "../../services/elderApi2";
 import styles from "../../components/css/elder/appointments.module.css";
+import ElderLayout from "../../components/ElderLayout";
 
 const AllAppointments = () => {
   const { currentUser } = useAuth();
@@ -118,25 +118,6 @@ const AllAppointments = () => {
   );
   const totalPages = Math.ceil(filteredAppointments.length / appointmentsPerPage);
 
-  const handleCancelAppointment = async (appointmentId) => {
-    if (!window.confirm("Are you sure you want to cancel this appointment?")) {
-      return;
-    }
-
-    try {
-      await cancelAppointment(elderDetails.elder_id, appointmentId);
-      
-      // Refresh appointments
-      const appointmentsResponse = await getAllAppointments(elderDetails.elder_id);
-      setAppointments(appointmentsResponse.data.appointments || []);
-      
-      alert("Appointment cancelled successfully");
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      alert("Failed to cancel appointment");
-    }
-  };
-
   const handleJoinAppointment = async (appointmentId) => {
     try {
       const response = await joinAppointment(elderDetails.elder_id, appointmentId);
@@ -175,6 +156,7 @@ const AllAppointments = () => {
   const getStatusBadgeClass = (status, dateTime) => {
     if (status === "cancelled") return styles.statusCancelled;
     if (status === "completed") return styles.statusCompleted;
+    if (status === "confirmed") return styles.statusConfirmed;
     if (new Date(dateTime) < new Date()) return styles.statusPast;
     return styles.statusUpcoming;
   };
@@ -182,13 +164,9 @@ const AllAppointments = () => {
   const getStatusText = (status, dateTime) => {
     if (status === "cancelled") return "Cancelled";
     if (status === "completed") return "Completed";
+    if (status === "confirmed") return "Confirmed";
     if (new Date(dateTime) < new Date()) return "Past";
-    return "Upcoming";
-  };
-
-  const canCancelAppointment = (appointment) => {
-    if (appointment.status === "cancelled" || appointment.status === "completed") return false;
-    return new Date(appointment.date_time) > new Date();
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const getTimeRemaining = (dateString) => {
@@ -219,10 +197,12 @@ const AllAppointments = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading your appointments...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -231,6 +211,7 @@ const AllAppointments = () => {
     return (
       <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Error Loading Appointments</h2>
@@ -239,6 +220,7 @@ const AllAppointments = () => {
             Try Again
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
@@ -246,61 +228,52 @@ const AllAppointments = () => {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      
+      <ElderLayout>
       <div className={styles.contentContainer}>
-        {/* Filters and Search */}
+        {/* Professional Filters and Search Section */}
         <div className={styles.filtersContainer}>
           <div className={styles.filtersHeader}>
-            <h2>All Appointments</h2>
-            <button 
-              onClick={() => navigate("/elder/dashboard")}
-              className={styles.backBtn}
-            >
+            <h2>Your Appointments</h2>
+            <button onClick={() => navigate("/elder/dashboard")} className={styles.backBtn}>
               ← Back to Dashboard
             </button>
           </div>
           
           <div className={styles.filtersContent}>
-            <div className={styles.filtersRow}>
-              {/* Status Filter */}
-              <div className={styles.filterGroup}>
-                <div className={styles.statusFilters}>
-                  {[
-                    { key: "all", label: "All", count: appointments.length },
-                    { key: "upcoming", label: "Upcoming", count: appointments.filter(apt => new Date(apt.date_time) > new Date() && apt.status !== "cancelled").length },
-                    { key: "past", label: "Past", count: appointments.filter(apt => new Date(apt.date_time) < new Date() || apt.status === "completed").length },
-                    { key: "cancelled", label: "Cancelled", count: appointments.filter(apt => apt.status === "cancelled").length }
-                  ].map((filter) => (
-                    <button
-                      key={filter.key}
-                      className={`${styles.filterBtn} ${
-                        activeFilter === filter.key ? styles.activeFilter : ""
-                      }`}
-                      onClick={() => setActiveFilter(filter.key)}
-                    >
-                      {filter.label} ({filter.count})
-                    </button>
-                  ))}
-                </div>
+            {/* Status Filter Row */}
+            <div className={styles.statusFilterSection}>
+              <div className={styles.statusFilters}>
+                {[
+                  { key: "all", label: "All", count: appointments.length },
+                  { key: "upcoming", label: "Upcoming", count: appointments.filter(apt => new Date(apt.date_time) > new Date() && apt.status !== "cancelled").length },
+                  { key: "past", label: "Past", count: appointments.filter(apt => new Date(apt.date_time) < new Date() || apt.status === "completed").length },
+                  { key: "cancelled", label: "Cancelled", count: appointments.filter(apt => apt.status === "cancelled").length }
+                ].map((filter) => (
+                  <button
+                    key={filter.key}
+                    className={`${styles.filterBtn} ${activeFilter === filter.key ? styles.activeFilter : ""}`}
+                    onClick={() => setActiveFilter(filter.key)}
+                  >
+                    {filter.label} ({filter.count})
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className={styles.filtersRow}>
-              {/* Search */}
+            {/* Search and Filters Row */}
+            <div className={styles.searchFilterSection}>
               <div className={styles.filterGroup}>
-                <label>Search:</label>
+                <label>Search Appointments</label>
                 <input
                   type="text"
-                  placeholder="Search by doctor name or specialization..."
+                  placeholder="Doctor name or specialization..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.searchInput}
                 />
               </div>
-
-              {/* Date Filter */}
               <div className={styles.filterGroup}>
-                <label>Filter by Date:</label>
+                <label>Date</label>
                 <input
                   type="date"
                   value={dateFilter}
@@ -308,10 +281,8 @@ const AllAppointments = () => {
                   className={styles.dateInput}
                 />
               </div>
-
-              {/* Type Filter */}
               <div className={styles.filterGroup}>
-                <label>Filter by Type:</label>
+                <label>Type</label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
@@ -322,11 +293,10 @@ const AllAppointments = () => {
                   <option value="physical">Physical</option>
                 </select>
               </div>
-
-              {/* Clear Filters */}
               <div className={styles.filterGroup}>
+                <label>&nbsp;</label>
                 <button onClick={clearFilters} className={styles.clearBtn}>
-                  Clear All Filters
+                  Clear Filters
                 </button>
               </div>
             </div>
@@ -407,14 +377,6 @@ const AllAppointments = () => {
                       🎥 Join Meeting
                     </button>
                   )}
-                  {canCancelAppointment(appointment) && (
-                    <button
-                      onClick={() => handleCancelAppointment(appointment.appointment_id)}
-                      className={styles.cancelBtn}
-                    >
-                      ❌ Cancel
-                    </button>
-                  )}
                   <button 
                     onClick={() => navigate(`/elder/appointment/${appointment.appointment_id}`)}
                     className={styles.detailsBtn}
@@ -492,6 +454,7 @@ const AllAppointments = () => {
           </div>
         )}
       </div>
+      </ElderLayout>
     </div>
   );
 };

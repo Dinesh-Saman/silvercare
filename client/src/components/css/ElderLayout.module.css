@@ -1,0 +1,99 @@
+.layoutContainer {
+  display: flex;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.mainContent {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  margin-left: 250px; /* Default sidebar width */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.mainContent.collapsed {
+  margin-left: 70px; /* Collapsed sidebar width */
+}
+
+.mainContent.expanded {
+  margin-left: 250px; /* Full sidebar width */
+}
+
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+  }
+  
+  .mainContent.collapsed {
+    margin-left: 0;
+  }
+  
+  .mainContent.expanded {
+    margin-left: 0;
+  }
+}
+
+/* Ensure content doesn't overflow */
+.contentWrapper > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Smooth transitions for content */
+.mainContent.transitioning {
+  pointer-events: none;
+}
+
+/* Additional styling for better visual hierarchy */
+.contentWrapper {
+  background: #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* Responsive content wrapper */
+@media (max-width: 768px) {
+  .contentWrapper {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 0;
+  }
+}
+
+/* Loading state for smooth transitions */
+.mainContent.loading {
+  opacity: 0.9;
+}
+
+/* Focus states for accessibility */
+.mainContent:focus-within {
+  outline: 2px solid #10B981;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .layoutContainer {
+    display: block;
+  }
+  
+  .mainContent {
+    margin-left: 0 !important;
+  }
+  
+  .contentWrapper {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+}
