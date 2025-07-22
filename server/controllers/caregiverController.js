@@ -478,6 +478,7 @@ const updateCareRequestStatus = async (req, res) => {
 };
 
 // Get care request details by ID(role caregiver)
+{/*
 const getCareRequestById = async (req, res) => {
   const { requestId } = req.params;
   
@@ -691,39 +692,6 @@ const fetchCareRequests = async (req, res) => {
   }
 };
 
-
-// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
-const getUpcomingShifts = async (req, res) => {
-  const caregiverId = req.params.id;
-  console.log('Fetching upcoming shifts for caregiverId:', caregiverId);
-  try {
-    // Only fetch care requests with status 'approved' and end_date >= today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const result = await pool.query(`
-      SELECT cr.request_id, cr.start_date, cr.end_date, cr.duration, cr.status, e.address, cr.elder_id, e.name as elder_name
-      FROM carerequest cr
-      INNER JOIN elder e ON cr.elder_id = e.elder_id
-      WHERE cr.caregiver_id = $1 AND cr.status = 'approved' AND cr.end_date >= $2
-      ORDER BY cr.start_date ASC
-    `, [caregiverId, today]);
-    const shifts = result.rows.map(row => ({
-      requestId: row.request_id,
-      date: row.start_date,
-      endDate: row.end_date,
-      duration: row.duration,
-      status: row.status,
-      address: row.address || '',
-      elderName: row.elder_name
-    }));
-    // Always return 200, even if no shifts found
-    res.status(200).json({ success: true, shifts });
-  } catch (err) {
-    console.error('Error fetching upcoming shifts:', err);
-    res.status(500).json({ success: false, error: 'Error fetching upcoming shifts' });
-  }
-};
-
 // Update caregiver profile(role caregiver)
 const updateCaregiverProfile = async (req, res) => {
   const { caregiverId } = req.params;
@@ -903,6 +871,58 @@ const updateCaregiverPassword = async (req, res) => {
   }
 };
 
+// Get upcoming shifts for caregiver (approved and future)
+const getUpcomingShifts = async (req, res) => {
+  const caregiverId = req.params.id;
+  try {
+    // Only fetch shifts with status 'approved' and start_date >= today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const query = `
+      SELECT 
+        cr.request_id,
+        cr.elder_id,
+        cr.start_date,
+        cr.end_date,
+        cr.status,
+        cr.duration,
+        e.name as elder_name,
+        e.address as location
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1
+        AND cr.status = 'approved'
+        AND cr.start_date >= $2
+      ORDER BY cr.start_date ASC;
+    `;
+    
+    const result = await pool.query(query, [caregiverId, today]);
+    console.log('Raw upcoming shifts from DB:', result.rows);
+    
+    // Format for frontend: return all fields needed for dashboard
+    const shifts = result.rows.map(row => {
+      // Format duration properly
+      
+      // Include request_id for frontend navigation
+      return {
+        request_id: row.request_id,
+        start_date: row.start_date,
+        end_date: row.end_date,
+        status: row.status,
+        duration: row.duration,
+        location: row.location,
+        elderName: row.elder_name
+      };
+    });
+    
+    console.log('Formatted upcoming shifts for frontend:', shifts);
+    res.status(200).json(shifts);
+  } catch (error) {
+    console.error('Error fetching upcoming shifts:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};*/}
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -911,15 +931,15 @@ module.exports = {
   createCareRequest,
   getCareRequestsByFamily,
   searchCaregivers,
-  updateCareRequestStatus,
-  getCareRequestById,
-  getAssignedElders,
-  getAssignedFamiliesCount,
-  getcarelogsCount,
-  fetchSchedules,
-  fetchCareRequests,
-  updateCaregiverProfile,
-  updateCaregiverPassword,
-  getUpcomingShifts,
+  updateCareRequestStatus
+  //getCareRequestById,
+  //getAssignedElders,
+  //getAssignedFamiliesCount,
+  //getcarelogsCount,
+  //fetchSchedules,
+  //fetchCareRequests,
+  //updateCaregiverProfile,
+  //updateCaregiverPassword,
+  //getUpcomingShifts
 };
 

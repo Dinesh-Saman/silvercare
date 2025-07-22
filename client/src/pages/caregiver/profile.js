@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
 import { useAuth } from '../../context/AuthContext';
-import { caregiverApi } from '../../services/caregiverApi';
+import { caregiverApi } from '../../services/caregiverApi2';
 import styles from "../../components/css/caregiver/profile.module.css";
 
 const Profile = () => {
@@ -34,7 +34,7 @@ const Profile = () => {
     if (user && user.caregiver_id) {
       fetchProfileData();
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProfileData = async () => {
     try {
@@ -185,11 +185,8 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      navigate('/login');
-    }
+  const handleBack = () => {
+    navigate('/caregiver/dashboard');
   };
 
   if (loading) {
@@ -200,6 +197,22 @@ const Profile = () => {
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
             <p>Loading profile...</p>
+          </div>
+        </CaregiverLayout>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <CaregiverLayout>
+          <div className={styles.error}>
+            <p>{error}</p>
+            <button className={styles.backButton} onClick={handleBack}>
+              ← Back to Dashboard
+            </button>
           </div>
         </CaregiverLayout>
       </>
@@ -227,6 +240,9 @@ const Profile = () => {
       <Navbar />
       <CaregiverLayout>
         <div className={styles.container}>
+          <button className={styles.backButton} onClick={handleBack}>
+            ← Back to Dashboard
+          </button>
           <div className={styles.header}>
             <h1>My Profile</h1>
             <p>Manage your professional information and settings</p>

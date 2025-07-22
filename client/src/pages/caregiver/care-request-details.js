@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
-import { caregiverApi } from '../../services/caregiverApi';
+import caregiverApi from '../../services/caregiverApi2';
 import styles from "../../components/css/caregiver/care-request-details.module.css";
 
 const CareRequestDetails = () => {
@@ -15,7 +15,7 @@ const CareRequestDetails = () => {
 
   useEffect(() => {
     fetchCareRequestDetails();
-  }, [requestId]);
+  }, [requestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCareRequestDetails = async () => {
     try {
@@ -69,7 +69,6 @@ const CareRequestDetails = () => {
   };
 
   const handleBack = () => {
-    navigate('/caregiver/dashboard');
     navigate('/caregiver/care-requests');
   };
 
@@ -129,7 +128,7 @@ const CareRequestDetails = () => {
           <div className={styles.error}>
             <p>{error}</p>
             <button className={styles.backButton} onClick={handleBack}>
-              ← Back to previous page
+              ← Back to care requests page
             </button>
           </div>
         </CaregiverLayout>
@@ -142,10 +141,12 @@ const CareRequestDetails = () => {
       <Navbar />
       <CaregiverLayout>
         <div className={styles.container}>
-          <div className={styles.header}>
-            <button className={styles.backButton} onClick={handleBack}>
-            ← Back to previous page
+           <button className={styles.backButton} onClick={handleBack}>
+            ← Back to care requests page
             </button>
+            
+          <div className={styles.header}>
+           
             <h1>Care Request Details</h1>
             <div className={styles.statusBadge}>
               <span className={`${styles.status} ${styles[careRequest?.status?.toLowerCase()]}`}>
@@ -175,23 +176,17 @@ const CareRequestDetails = () => {
                     <label>Duration:</label>
                     <span>{careRequest?.duration} days</span>
                   </div>
-                     {/* Show time left for pending and approved requests */}
-                     {(careRequest?.status === 'pending' || careRequest?.status === 'approved') && (
-                       <div className={styles.infoItem}>
-                         <label>Time Left:</label>
-                         <span className={
-                           (() => {
-                             const now = new Date();
-                             const start = new Date(careRequest.start_date);
-                             const diffMs = start - now;
-                             const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-                             return diffDays > 2 ? styles.greenText : styles.redText;
-                           })()
-                         }>
-                           {getTimeLeft(careRequest.start_date)}
-                         </span>
-                       </div>
-                     )}
+                  {/* Show time left only for pending requests */}
+                  {(careRequest?.status === 'pending') || (careRequest?.status === 'approved') && (
+                    <div className={styles.infoItem}>
+                      <label>Time Left:</label>
+                      <span className={
+                        (new Date(careRequest.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
+                      }>
+                        {getTimeLeft(careRequest.start_date)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

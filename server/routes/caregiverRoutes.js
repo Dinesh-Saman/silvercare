@@ -8,7 +8,10 @@ const {
   createCareRequest,
   getCareRequestsByFamily,
   searchCaregivers,
-  updateCareRequestStatus,
+  updateCareRequestStatus
+} = require('../controllers/caregiverController');
+
+const { 
   getCareRequestById,
   getAssignedElders,
   getAssignedFamiliesCount,
@@ -17,8 +20,13 @@ const {
   fetchCareRequests,
   updateCaregiverProfile,
   updateCaregiverPassword,
-  getUpcomingShifts
-} = require('../controllers/caregiverController');
+  getUpcomingShifts,
+  getCarelogs,
+  addCarelog,
+  getElderDetails,
+  getElderCarelogs,
+  addElderReport
+} = require('../controllers/caregiver');
 
 // Get all caregivers
 router.get('/', getAllCaregivers);
@@ -62,7 +70,7 @@ router.get('/:id/caregiver-schedules', fetchSchedules);
 //Get care requests for caregiver(role caregiver)
 router.get('/:id/care-requests', fetchCareRequests);
 
-// Get upcoming shifts for caregiver (status 'approved')(role caregiver)
+//Get upcoming shifts for caregiver(role caregiver)
 router.get('/:id/upcoming-shifts', getUpcomingShifts);
 
 // Update caregiver profile(role caregiver)
@@ -70,5 +78,14 @@ router.put('/:caregiverId/profile', updateCaregiverProfile);
 
 // Update caregiver password(role caregiver)
 router.put('/:caregiverId/password', updateCaregiverPassword);
+
+// Carelogs for caregiver
+router.get('/:id/carelogs', getCarelogs);
+router.post('/:id/carelogs', addCarelog);
+
+// Elder management routes
+router.get('/elder/:elderId/details', getElderDetails);
+router.get('/:caregiverId/elder/:elderId/carelogs', getElderCarelogs);
+router.post('/:caregiverId/elder/:elderId/report', addElderReport);
 
 module.exports = router;

@@ -163,7 +163,7 @@ const PaymentSuccess = () => {
               <div className={styles.detailRow}>
                 <span className={styles.label}>Status:</span>
                 <span className={`${styles.value} ${styles.statusPending}`}>
-                  ⏳ Pending Doctor Confirmation
+                  ⏳ Confirmation the Appointment
                 </span>
               </div>
             </div>
@@ -205,21 +205,8 @@ const PaymentSuccess = () => {
             </div>
             
             <div className={styles.nextStepsList}>
-              <div className={styles.nextStep}>
-                <div className={styles.stepIcon}>1️⃣</div>
-                <div className={styles.stepContent}>
-                  <h3>Doctor Confirmation</h3>
-                  <p>The doctor will review and confirm your appointment within 24 hours.</p>
-                </div>
-              </div>
+
               
-              <div className={styles.nextStep}>
-                <div className={styles.stepIcon}>2️⃣</div>
-                <div className={styles.stepContent}>
-                  <h3>Confirmation Notification</h3>
-                  <p>You'll receive an email and SMS with appointment confirmation details.</p>
-                </div>
-              </div>
               
               <div className={styles.nextStep}>
                 <div className={styles.stepIcon}>3️⃣</div>
@@ -255,9 +242,7 @@ const PaymentSuccess = () => {
                 <li>Please arrive 10 minutes early for physical appointments</li>
                 <li>For online appointments, test your camera and microphone beforehand</li>
                 <li>Keep your appointment ID handy for reference</li>
-                <li>Cancellations must be made at least 2 hours before the appointment</li>
-                <li>If you need to reschedule, contact support or use the appointment management page</li>
-                <li>Payment receipts have been sent to your registered email</li>
+                <li>Cancellations must be made at least 3 days before the appointment</li>
               </ul>
             </div>
           </div>

@@ -71,7 +71,7 @@ const CaregiverSidebar = ({ onItemClick }) => {
       path: '/caregiver/dashboard'
     },
     {
-      key: 'elderly-management',
+      key: 'elder',
       label: 'Elders',
       icon: '👴',
       path: '/caregiver/elders'

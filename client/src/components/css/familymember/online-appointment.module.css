@@ -142,10 +142,25 @@
   border-bottom: 2px solid #f1f5f9;
 }
 
-/* Calendar Section */
+/* Calendar and Time Section - Side by Side Layout */
 .calendarSection {
   padding: 30px;
   border-bottom: 1px solid #f1f5f9;
+}
+
+.calendarTimeContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.calendarWrapper {
+  max-width: 500px;
+}
+
+.timeWrapper {
+  max-width: 600px;
 }
 
 .calendarContainer {
@@ -276,10 +291,10 @@
   background: #f8fafc;
 }
 
-/* Time Section */
+/* Time Section - Now positioned beside calendar */
 .timeSection {
-  padding: 30px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 0;
+  border-bottom: none;
 }
 
 .timeSlots {
@@ -469,6 +484,13 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .calendarTimeContainer {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
@@ -503,6 +525,11 @@
   .requirements {
     grid-template-columns: 1fr;
   }
+
+  .calendarTimeContainer {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -510,9 +537,7 @@
     padding: 10px;
   }
 
-  .calendarSection,
-  .timeSection,
-  .formSection {
+  .calendarSection {
     padding: 20px;
   }
 
@@ -529,9 +554,9 @@
     padding: 10px 8px;
     font-size: 0.9rem;
   }
+}
 
-  /* Add these styles to your existing CSS */
-
+/* Error and Success States */
 .errorMessage {
   background-color: #fee;
   border: 1px solid #fcc;
@@ -585,131 +610,103 @@
   margin-right: 8px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .submitButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 .submitButton:disabled:hover {
-  background-color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   transform: none;
 }
 
 .retryButton {
-  background-color: #007bff;
+  background: #8b5cf6;
   color: white;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
   cursor: pointer;
-  margin-right: 12px;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
+  font-weight: 500;
+  margin-right: 10px;
+  transition: all 0.2s;
 }
 
 .retryButton:hover {
-  background-color: #0056b3;
+  background: #7c3aed;
+  transform: translateY(-1px);
 }
 
 .errorContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
   text-align: center;
-  background: #f8f9fa;
+  padding: 40px;
+  background: white;
   border-radius: 12px;
-  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .errorContainer h2 {
-  color: #dc3545;
+  color: #ef4444;
   margin-bottom: 16px;
 }
 
 .errorContainer p {
-  color: #666;
+  color: #64748b;
   margin-bottom: 24px;
 }
-/* Add these styles to your existing CSS file */
 
-.blockedSlotsInfo {
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-}
-
-.infoText {
-  margin: 0;
-  color: #856404;
-  font-size: 14px;
-}
-
+/* Blocked Time Slots */
 .blockedTime {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  border-color: #fecaca !important;
   cursor: not-allowed !important;
-  opacity: 0.6;
   position: relative;
 }
 
 .blockedTime:hover {
-  background-color: #f8d7da !important;
-  transform: none !important;
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  border-color: #fecaca !important;
 }
 
 .blockedIcon {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 10px;
+  margin-left: 4px;
+  font-size: 0.8rem;
 }
 
+.blockedSlotsInfo {
+  background: #fef3cd;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.infoText {
+  color: #92400e;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Time Slot Legend */
 .timeSlotLegend {
   display: flex;
   gap: 20px;
-  margin-top: 16px;
-  padding: 12px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  margin-top: 15px;
   flex-wrap: wrap;
 }
 
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #64748b;
-}
-
-.legendColor {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
 .availableTimeColor {
-  background-color: #e3f2fd;
+  background: white;
+  border: 2px solid #e2e8f0;
 }
 
 .selectedTimeColor {
-  background-color: #8b5cf6;
+  background: #8b5cf6;
 }
 
 .blockedTimeColor {
-  background-color: #f8d7da;
-}
-
-
-
+  background: #fef2f2;
+  border: 2px solid #fecaca;
 }

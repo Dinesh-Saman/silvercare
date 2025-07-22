@@ -344,13 +344,23 @@ const BookingSummary = () => {
               
               <div className={styles.disclaimerContent}>
                 <ul className={styles.disclaimerList}>
-                  <li>This appointment booking is subject to doctor's availability and confirmation.</li>
-                  <li>Payment is non-refundable once the appointment is confirmed by the doctor.</li>
-                  <li>You will receive appointment confirmation and meeting details via email/SMS.</li>
-                  <li>For online appointments, ensure you have a stable internet connection.</li>
-                  <li>Please arrive 10 minutes early for physical appointments.</li>
-                  <li>Cancellation must be done at least 2 hours before the appointment time.</li>
-                  <li>In case of emergency, contact the provided emergency number.</li>
+                  <li>This appointment booking is subject to doctor's availability</li>
+                  {appointmentType === 'online' ? (
+                    <>
+                      <li>For online appointments, ensure you have a stable internet connection.</li>
+                      <li>Please join the meeting 5 minutes early and test your camera and microphone.</li>
+                      <li>You will receive meeting details via email after payment confirmation.</li>
+                      <li>Online appointments are conducted via secure video conferencing platform.</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>For physical appointments, please arrive 15 minutes early at the doctor's clinic.</li>
+                      <li>Bring all relevant medical documents and previous prescriptions.</li>
+                      <li>Please confirm the Home address and contact details before doctor visit if it should change , use chat system with the doctor.</li>
+                      <li>Physical appointments have a 2-hour duration to ensure comprehensive consultation.</li>
+                    </>
+                  )}
+                  <li>Cancellation must be done at least 3 days before the appointment time.</li>
                   <li>By proceeding, you agree to our terms and conditions.</li>
                 </ul>
                 
