@@ -5,11 +5,17 @@ const {
   getAppointmentById,
   updateAppointmentStatus,
   cancelAppointment,
-  getAppointmentStats
+  getAppointmentStats,
+  getAppointmentHistory 
 } = require('../controllers/appointmentController');
 
+<<<<<<< Updated upstream
 // Get all appointments for a family member with filters
 router.get('/family-member/:familyMemberId', getAllAppointmentsByFamily);
+=======
+// Get all appointments for a family member (with filtering support)
+router.get('/family/:familyMemberId', getAllAppointmentsByFamily);
+>>>>>>> Stashed changes
 
 // Get appointment statistics for a family member
 router.get('/family-member/:familyMemberId/stats', getAppointmentStats);
@@ -19,6 +25,7 @@ router.get('/:appointmentId', getAppointmentById);
 
 // Update appointment status
 router.put('/:appointmentId/status', updateAppointmentStatus);
+router.get('/family/:familyMemberId/history', getAppointmentHistory);
 
 // Cancel appointment
 router.put('/:appointmentId/cancel', cancelAppointment);

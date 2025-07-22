@@ -121,7 +121,8 @@ const getElderDashboardStats = async (req, res) => {
       FROM appointment 
       WHERE elder_id = $1 
       AND date_time > NOW()
-      AND status IN ('approved', 'confirmed')
+      AND status IN ('confirmed')
+      AND status != 'cancelled'
     `,
       [elderId]
     );
@@ -133,7 +134,8 @@ const getElderDashboardStats = async (req, res) => {
       FROM session 
       WHERE elder_id = $1 
       AND date_time > NOW()
-      AND status IN ('pending', 'completed')
+      AND status IN ('confirmed')
+      AND status != 'cancelled'
     `,
       [elderId]
     );
@@ -150,12 +152,14 @@ const getElderDashboardStats = async (req, res) => {
       [elderId]
     );
 
-    // Get active caregivers count (caregivers who have recent logs)
+    // Get active caregivers count (caregivers who have approved assignments)
     const activeCaregiversResult = await pool.query(
       `
       SELECT COUNT(DISTINCT caregiver_id) as count
-      FROM carelog 
+      FROM carerequest 
       WHERE elder_id = $1
+      AND status IN ('approved', 'completed')
+      AND end_date >= CURRENT_DATE
     `,
       [elderId]
     );
@@ -210,7 +214,7 @@ const getElderAppointments = async (req, res) => {
       FROM appointment a
       INNER JOIN doctor d ON a.doctor_id = d.doctor_id
       INNER JOIN "User" u ON d.user_id = u.user_id
-      WHERE a.elder_id = $1 AND a.status != 'pending'
+      WHERE a.elder_id = $1
       ORDER BY a.date_time DESC
     `,
       [elderId]
@@ -261,12 +265,29 @@ const getUpcomingAppointments = async (req, res) => {
       FROM appointment a
       JOIN doctor d ON a.doctor_id = d.doctor_id
       JOIN "User" u ON d.user_id = u.user_id
+<<<<<<< Updated upstream
       WHERE a.elder_id = $1 
       AND a.date_time > NOW()
       AND a.status IN ('approved')
       ORDER BY a.date_time ASC`,
       [elderId]
     );
+=======
+      WHERE a.elder_id = $1
+      AND a.date_time > NOW()
+      AND a.status IN ('confirmed')
+      AND a.status != 'cancelled'
+      ORDER BY a.date_time ASC`;
+    
+    const queryParams = [elderId];
+    
+    if (limit) {
+      query += ` LIMIT $2`;
+      queryParams.push(parseInt(limit));
+    }
+
+    const result = await pool.query(query, queryParams);
+>>>>>>> Stashed changes
 
     res.json({
       success: true,
@@ -319,9 +340,22 @@ const getPastAppointments = async (req, res) => {
       JOIN "User" u ON d.user_id = u.user_id
       WHERE a.elder_id = $1 
       AND (a.date_time < NOW() OR a.status IN ('completed', 'cancelled'))
+<<<<<<< Updated upstream
       ORDER BY a.date_time DESC`,
       [elderId]
     );
+=======
+      ORDER BY a.date_time DESC`;
+    
+    const queryParams = [elderId];
+    
+    if (limit) {
+      query += ` LIMIT $2`;
+      queryParams.push(parseInt(limit));
+    }
+
+    const result = await pool.query(query, queryParams);
+>>>>>>> Stashed changes
 
     res.json({
       success: true,
@@ -442,6 +476,7 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
+<<<<<<< Updated upstream
 // Cancel appointment
 const cancelAppointment = async (req, res) => {
   const { elderId, appointmentId } = req.params;
@@ -488,6 +523,10 @@ const cancelAppointment = async (req, res) => {
 
 // Reschedule appointment
 const rescheduleAppointment = async (req, res) => {
+=======
+// Join appointment (for online appointments)
+const joinAppointment = async (req, res) => {
+>>>>>>> Stashed changes
   const { elderId, appointmentId } = req.params;
   const { newDateTime, reason } = req.body;
 
@@ -546,6 +585,10 @@ module.exports = {
   getPastAppointments,
   getAllAppointments,
   getAppointmentById,
+<<<<<<< Updated upstream
   cancelAppointment,
   rescheduleAppointment,
+=======
+  joinAppointment,
+>>>>>>> Stashed changes
 };

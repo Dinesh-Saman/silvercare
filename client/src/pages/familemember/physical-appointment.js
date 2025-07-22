@@ -186,13 +186,18 @@ useEffect(() => {
   };
 
   // Generate available time slots for physical appointments (2 hour duration)
+  // Generate available time slots for physical appointments (2 hour duration)
   const generateTimeSlots = () => {
     const slots = [];
-    // Morning slots (9 AM - 12 PM)
-    for (let hour = 9; hour < 12; hour++) {
+    // Morning slots (9 AM - 12:30 PM)
+    for (let hour = 9; hour <= 12; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
+    // Early afternoon slots (1:00 PM - 1:30 PM)
+    slots.push('13:00'); // 1:00 PM
+    slots.push('13:30'); // 1:30 PM
+    
     // Afternoon slots (2 PM - 5 PM)
     for (let hour = 14; hour < 17; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
@@ -200,6 +205,7 @@ useEffect(() => {
     }
     return slots;
   };
+
 
   // Check if a time slot is blocked
   const isTimeSlotBlocked = (timeSlot) => {
@@ -443,106 +449,113 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className={styles.appointmentForm}>
-            {/* Calendar Section */}
+            <div className={styles.appointmentForm}>
+            {/* Calendar and Time Section - Combined */}
             <div className={styles.calendarSection}>
-              <h2 className={styles.sectionTitle}>📅 Select Date</h2>
-              <div className={styles.calendarContainer}>
-                <div className={styles.calendarHeader}>
-                  <h3>{currentMonth} {currentYear}</h3>
-                </div>
-                <div className={styles.calendarGrid}>
-                  <div className={styles.dayHeaders}>
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                      <div key={day} className={styles.dayHeader}>{day}</div>
-                    ))}
-                  </div>
-                  <div className={styles.daysGrid}>
-                    {calendarDays.map((dayInfo, index) => (
-                      <div
-                        key={index}
-                        className={`${styles.dayCell} ${
-                          dayInfo ? (
-                            dayInfo.isToday ? styles.today :
-                            dayInfo.isPast ? styles.pastDay :
-                            dayInfo.isWeekend ? styles.weekend :
-                            dayInfo.date === selectedDate ? styles.selected :
-                            styles.available
-                          ) : styles.empty
-                        }`}
-                        onClick={() => {
-                          if (dayInfo && dayInfo.isAvailable) {
-                            handleDateSelection(dayInfo.date);
-                          }
-                        }}
-                      >
-                        {dayInfo?.day}
+              <div className={styles.calendarTimeContainer}>
+                {/* Calendar Wrapper */}
+                <div className={styles.calendarWrapper}>
+                  <h2 className={styles.sectionTitle}>📅 Select Date</h2>
+                  <div className={styles.calendarContainer}>
+                    <div className={styles.calendarHeader}>
+                      <h3>{currentMonth} {currentYear}</h3>
+                    </div>
+                    <div className={styles.calendarGrid}>
+                      <div className={styles.dayHeaders}>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                          <div key={day} className={styles.dayHeader}>{day}</div>
+                        ))}
                       </div>
-                    ))}
+                      <div className={styles.daysGrid}>
+                        {calendarDays.map((dayInfo, index) => (
+                          <div
+                            key={index}
+                            className={`${styles.dayCell} ${
+                              dayInfo ? (
+                                dayInfo.isToday ? styles.today :
+                                dayInfo.isPast ? styles.pastDay :
+                                dayInfo.isWeekend ? styles.weekend :
+                                dayInfo.date === selectedDate ? styles.selected :
+                                styles.available
+                              ) : styles.empty
+                            }`}
+                            onClick={() => {
+                              if (dayInfo && dayInfo.isAvailable) {
+                                handleDateSelection(dayInfo.date);
+                              }
+                            }}
+                          >
+                            {dayInfo?.day}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.calendarLegend}>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.availableColor}></div>
+                        <span>Available</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.selectedColor}></div>
+                        <span>Selected</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.weekendColor}></div>
+                        <span>Weekend</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.pastColor}></div>
+                        <span>Past</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className={styles.calendarLegend}>
-                  <div className={styles.legendItem}>
-                    <div className={styles.legendColor + ' ' + styles.availableColor}></div>
-                    <span>Available</span>
-                  </div>
-                  <div className={styles.legendItem}>
-                    <div className={styles.legendColor + ' ' + styles.selectedColor}></div>
-                    <span>Selected</span>
-                  </div>
-                  <div className={styles.legendItem}>
-                    <div className={styles.legendColor + ' ' + styles.weekendColor}></div>
-                    <span>Weekend</span>
-                  </div>
-                  <div className={styles.legendItem}>
-                    <div className={styles.legendColor + ' ' + styles.pastColor}></div>
-                    <span>Past</span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Time Selection */}
-            <div className={styles.timeSection}>
-              <h2 className={styles.sectionTitle}>🕐 Select Time</h2>
-              {selectedDate && blockedSlots.length > 0 && (
-                <div className={styles.blockedSlotsInfo}>
-                  <p className={styles.infoText}>
-                    ⚠️ Some time slots are unavailable due to existing appointments (2-hour blocks for physical appointments)
-                  </p>
-                </div>
-              )}
-              <div className={styles.timeSlots}>
-                {timeSlots.map(time => {
-                  const isBlocked = isTimeSlotBlocked(time);
-                  return (
-                    <button
-                      key={time}
-                      className={`${styles.timeSlot} ${
-                        selectedTime === time ? styles.selectedTime : ''
-                      } ${isBlocked ? styles.blockedTime : ''}`}
-                      onClick={() => handleTimeSelection(time)}
-                      disabled={!selectedDate || isBlocked}
-                      title={isBlocked ? 'This time slot is not available (conflicts with existing appointment)' : ''}
-                    >
-                      {time}
-                      {isBlocked && <span className={styles.blockedIcon}>🚫</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className={styles.timeSlotLegend}>
-                <div className={styles.legendItem}>
-                  <div className={styles.legendColor + ' ' + styles.availableTimeColor}></div>
-                  <span>Available</span>
-                </div>
-                <div className={styles.legendItem}>
-                  <div className={styles.legendColor + ' ' + styles.selectedTimeColor}></div>
-                  <span>Selected</span>
-                </div>
-                <div className={styles.legendItem}>
-                  <div className={styles.legendColor + ' ' + styles.blockedTimeColor}></div>
-                  <span>Blocked</span>
+                {/* Time Wrapper */}
+                <div className={styles.timeWrapper}>
+                  <div className={styles.timeSection}>
+                    <h2 className={styles.sectionTitle}>🕐 Select Time</h2>
+                    {selectedDate && blockedSlots.length > 0 && (
+                      <div className={styles.blockedSlotsInfo}>
+                        <p className={styles.infoText}>
+                          ⚠️ Some time slots are unavailable due to existing appointments (2-hour blocks for physical appointments)
+                        </p>
+                      </div>
+                    )}
+                    <div className={styles.timeSlots}>
+                      {timeSlots.map(time => {
+                        const isBlocked = isTimeSlotBlocked(time);
+                        return (
+                          <button
+                            key={time}
+                            className={`${styles.timeSlot} ${
+                              selectedTime === time ? styles.selectedTime : ''
+                            } ${isBlocked ? styles.blockedTime : ''}`}
+                            onClick={() => handleTimeSelection(time)}
+                            disabled={!selectedDate || isBlocked}
+                            title={isBlocked ? 'This time slot is not available (conflicts with existing appointment)' : ''}
+                          >
+                            {time}
+                            {isBlocked && <span className={styles.blockedIcon}>🚫</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className={styles.timeSlotLegend}>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.availableTimeColor}></div>
+                        <span>Available</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.selectedTimeColor}></div>
+                        <span>Selected</span>
+                      </div>
+                      <div className={styles.legendItem}>
+                        <div className={styles.legendColor + ' ' + styles.blockedTimeColor}></div>
+                        <span>Blocked</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -579,6 +592,7 @@ useEffect(() => {
               </button>
             </div>
           </div>
+
         </div>
       </FamilyMemberLayout>
     </div>

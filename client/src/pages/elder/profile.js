@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import { getElderDetailsByEmail } from '../../services/elderApi2';
 import styles from '../../components/css/elder/profile.module.css';
+import ElderLayout from '../../components/ElderLayout';
 
 const ElderProfile = () => {
   const { currentUser, logout } = useAuth();
@@ -66,20 +67,23 @@ const ElderProfile = () => {
 
   if (loading) {
     return (
-      <div className={styles.profileContainer}>
+      <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner}></div>
           <p>Loading your profile...</p>
         </div>
+        </ElderLayout>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={styles.profileContainer}>
+      <div className={styles.pageContainer}>
         <Navbar />
+        <ElderLayout>
         <div className={styles.errorContainer}>
           <div className={styles.errorIcon}>⚠️</div>
           <h2>Oops! Something went wrong</h2>
@@ -91,13 +95,15 @@ const ElderProfile = () => {
             Try Again
           </button>
         </div>
+        </ElderLayout>
       </div>
     );
   }
 
   return (
-    <div className={styles.profileContainer}>
+    <div className={styles.pageContainer}>
       <Navbar />
+<<<<<<< Updated upstream
       
       <div className={styles.profileContent}>
         {/* Header Section */}
@@ -109,28 +115,62 @@ const ElderProfile = () => {
             ← Back to Dashboard
           </button>
           
-          <div className={styles.headerContent}>
-            <h1>My Profile</h1>
-            <p>Manage your personal information and settings</p>
+=======
+      <ElderLayout>
+      <div className={styles.contentContainer}>
+        {/* Success Message */}
+        {successMessage && (
+          <div className={styles.successMessage}>
+            ✅ {successMessage}
           </div>
+        )}
 
-          <div className={styles.headerActions}>
+        {/* Error Message */}
+        {error && (
+          <div className={styles.errorMessage}>
+            ❌ {error}
+          </div>
+        )}
+
+        {/* Modern Professional Header */}
+        <div className={styles.header}>
+>>>>>>> Stashed changes
+          <div className={styles.headerContent}>
+            <div className={styles.headerInfo}>
+              <h1>My Profile</h1>
+              <p>Manage your personal information and settings</p>
+            </div>
+            <div className={styles.headerActions}>
+              <button 
+                className={styles.editBtn}
+                onClick={() => setIsEditing(!isEditing)}
+                disabled={saving}
+              >
+                {isEditing ? 'Cancel' : 'Edit Profile'}
+              </button>
+              <button 
+                className={styles.logoutBtn}
+                onClick={logout}
+              >
+                Logout
+              </button>
+            </div>
             <button 
+<<<<<<< Updated upstream
               className={styles.editBtn}
               onClick={() => setIsEditing(!isEditing)}
+=======
+              className={styles.backBtn}
+              onClick={handleBackToDashboard}
+              style={{ marginLeft: 'auto' }}
+>>>>>>> Stashed changes
             >
-              {isEditing ? 'Cancel' : 'Edit Profile'}
-            </button>
-            <button 
-              className={styles.logoutBtn}
-              onClick={logout}
-            >
-              Logout
+              ← Back to Dashboard
             </button>
           </div>
         </div>
 
-        {/* Profile Card */}
+        {/* Modern Professional Profile Card */}
         <div className={styles.profileCard}>
           {/* Profile Image Section */}
           <div className={styles.profileImageSection}>
@@ -276,6 +316,10 @@ const ElderProfile = () => {
                     <label>Phone</label>
                     <span>{elderDetails.family_member.phone}</span>
                   </div>
+<<<<<<< Updated upstream
+=======
+                {/* Fixed Line removed as requested */}
+>>>>>>> Stashed changes
                 </div>
                 
                 <div className={styles.familyActions}>
@@ -297,29 +341,22 @@ const ElderProfile = () => {
             </div>
             
             <div className={styles.settingsGrid}>
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>Notifications</span>
-                  <span className={styles.settingDesc}>Receive email and SMS notifications</span>
-                </div>
-                <button className={styles.toggleBtn}>Enabled</button>
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>Notifications</span>
+                <span className={styles.settingDesc}>Receive email and SMS notifications</span>
               </div>
-              
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>Privacy</span>
-                  <span className={styles.settingDesc}>Control who can see your information</span>
-                </div>
-                <button className={styles.toggleBtn}>Private</button>
+              <button className={styles.toggleBtn}>Enabled</button>
+            </div>
+            
+            <div className={styles.settingItem}>
+              <div className={styles.settingInfo}>
+                <span className={styles.settingLabel}>Privacy</span>
+                <span className={styles.settingDesc}>Control who can see your information</span>
               </div>
-              
-              <div className={styles.settingItem}>
-                <div className={styles.settingInfo}>
-                  <span className={styles.settingLabel}>Emergency Alerts</span>
-                  <span className={styles.settingDesc}>Automatic emergency notifications</span>
-                </div>
-                <button className={styles.toggleBtn}>Enabled</button>
-              </div>
+              <button className={styles.toggleBtn}>Private</button>
+            </div>
+            {/* Emergency Alerts section removed as requested */}
             </div>
           </div>
         </div>
@@ -327,18 +364,42 @@ const ElderProfile = () => {
         {/* Action Buttons */}
         {isEditing && (
           <div className={styles.actionButtons}>
+<<<<<<< Updated upstream
             <button className={styles.saveBtn}>
               💾 Save Changes
             </button>
             <button 
               className={styles.cancelBtn}
               onClick={() => setIsEditing(false)}
+=======
+            <button 
+              className={styles.editBtn}
+              onClick={handleSaveChanges}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <div className={styles.buttonSpinner}></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Save Changes
+                </>
+              )}
+            </button>
+            <button 
+              className={styles.logoutBtn}
+              onClick={handleCancelEdit}
+              disabled={saving}
+>>>>>>> Stashed changes
             >
               Cancel
             </button>
           </div>
         )}
       </div>
+      </ElderLayout>
     </div>
   );
 };

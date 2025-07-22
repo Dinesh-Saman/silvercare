@@ -22,7 +22,14 @@ const doctorRoutes = require('./routes/doctorRoutes'); // Indipa Added this line
 const adminRoutes = require('./routes/adminRoutes'); // Add this line by Nimal
 const caregiverRoutes = require('./routes/caregiverRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes'); // Add this line
+<<<<<<< Updated upstream
 
+=======
+const paymentRoutes = require('./routes/paymentRoutes');
+const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
+const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
+>>>>>>> Stashed changes
 
 app.use('/api/users', userRoutes); // Mount the full route
 app.use('/api/register', registerRoutes);
@@ -32,7 +39,14 @@ app.use('/api/doctor', doctorRoutes); // Indipa Added this line
 app.use('/api/admin', adminRoutes); // Add this line by Nimal
 app.use('/api/caregivers', caregiverRoutes);
 app.use('/api/appointments', appointmentRoutes); // Add this line
+<<<<<<< Updated upstream
 
+=======
+app.use('/api/payment', paymentRoutes);
+app.use('/api/healthprofessional', healthprofessionalRoutes);
+app.use('/api/care-assignments', careAssignmentRoutes);
+app.use('/api/availability', availabilityRoutes);
+>>>>>>> Stashed changes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -24,9 +24,27 @@ const {
   getPastAppointments,
   getAllAppointments,
   getAppointmentById,
+<<<<<<< Updated upstream
   cancelAppointment,
   rescheduleAppointment
+=======
+  joinAppointment
+>>>>>>> Stashed changes
 } = require('../controllers/elder');
+
+const {
+  getUpcomingSessions,
+  getPastSessions,
+  getAllSessions,
+  getSessionById,
+  joinSession
+} = require('../controllers/session');
+
+const {
+  getCareAssignmentsByWeek,
+  getDayCareAssignments,
+  getCareAssignmentStats
+} = require('../controllers/carerequest');
 
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
@@ -69,9 +87,25 @@ router.get('/:elderId/appointments', getElderAppointments);
 router.get('/:elderId/appointments/upcoming', getUpcomingAppointments);
 router.get('/:elderId/appointments/past', getPastAppointments);
 router.get('/:elderId/appointments/:appointmentId', getAppointmentById);
+<<<<<<< Updated upstream
 router.get('/:elderId/appointments', getAllAppointments);
 router.put('/:elderId/appointments/:appointmentId/cancel', cancelAppointment);
 router.put('/:elderId/appointments/:appointmentId/reschedule', rescheduleAppointment);
+=======
+router.post('/:elderId/appointments/:appointmentId/join', joinAppointment);
+
+// Session routes for elders - MUST BE BEFORE /:elderId route
+router.get('/:elderId/sessions/upcoming', getUpcomingSessions);
+router.get('/:elderId/sessions/past', getPastSessions);
+router.get('/:elderId/sessions', getAllSessions);
+router.get('/:elderId/sessions/:sessionId', getSessionById);
+router.post('/:elderId/sessions/:sessionId/join', joinSession);
+
+// Care assignment routes for elders - MUST BE BEFORE /:elderId route
+router.get('/:elderId/care-assignments/week', getCareAssignmentsByWeek);
+router.get('/:elderId/care-assignments/day', getDayCareAssignments);
+router.get('/:elderId/care-assignments/stats', getCareAssignmentStats);
+>>>>>>> Stashed changes
 
 // Get specific elder by ID
 router.get('/:elderId', getElderById);

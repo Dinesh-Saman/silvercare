@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import UserPage from './pages/UserPage';
@@ -19,10 +20,56 @@ import { HealthProfessionalRegStep2 } from './pages/healthproffesional/signup-st
 import { HealthProfessionalRegStep3 } from './pages/healthproffesional/signup-step3';
 import HealthProfessionalDashboard from './pages/healthproffesional/dashboard';
 import { DoctorRegStep2 } from './pages/doctor/signup-step2';
+=======
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import UserPage from "./pages/UserPage";
+import { FamilyMemberReg } from "./pages/familemember/signup";
+import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
+import ElderSignup from "./pages/familemember/elder-signup";
+import FamilyMemberDashboard from "./pages/familemember/dashboard";
+import FamilyMemberElders from "./pages/familemember/elders";
+import ElderDetails from "./pages/familemember/elder-details";
+import CaregiverDetails from "./pages/familemember/caregiver-details";
+import FamilyMemberLayout from "./components/FamilyMemberLayout";
+import { CaregiverReg } from "./pages/caregiver/signup";
+import { CaregiverRegStep2 } from "./pages/caregiver/signup-step2";
+import Profile from "./pages/caregiver/profile";
+import CaregiverDashboard from "./pages/caregiver/dashboard";
+import CareRequestDetails from "./pages/caregiver/care-request-details";
+import CareRequests from "./pages/caregiver/care-requests";
+import Carelogs from './pages/caregiver/carelog';
+import Elder from './pages/caregiver/elder';
+import ViewAllElders from './pages/caregiver/viewAllElders';
+import AdminDashboard from "./pages/admin/dashboard";
+import { DoctorReg } from "./pages/doctor/signup";
+import { MentalHealthProfessionalReg } from "./pages/healthproffesional/signup";
+import { HealthProfessionalRegStep2 } from "./pages/healthproffesional/signup-step2";
+import { HealthProfessionalRegStep3 } from "./pages/healthproffesional/signup-step3";
+import HealthProfessionalDashboard from "./pages/healthproffesional/dashboard";
+import { DoctorRegStep2 } from "./pages/doctor/signup-step2";
+>>>>>>> Stashed changes
 // Import new appointment components
 import PhysicalAppointment from './pages/familemember/physical-appointment';
 import OnlineAppointment from './pages/familemember/online-appointment';
 import Appointments from './pages/familemember/appointments';
+<<<<<<< Updated upstream
+=======
+import CancelAppointment from "./pages/familemember/cancel-appointment";
+import AppointmentHistory from "./pages/familemember/appointment-history";
+import BookingSummary from './pages/familemember/booking-summary';
+import Payment from './pages/familemember/payment';
+import PaymentSuccess from './pages/familemember/payment-success';
+
+
+
+import AllAppointments from "./pages/elder/appointments";
+import AppointmentDetails from "./pages/elder/appointment-details";
+import AllSessions from "./pages/elder/sessions";
+import SessionDetails from "./pages/elder/session-details";
+import ElderCaregivers from "./pages/elder/caregivers";
+import ElderEvents from "./pages/elder/events";
+>>>>>>> Stashed changes
 
 
 import DoctorDashboard from './pages/doctor/dashboard';
@@ -128,6 +175,24 @@ function App() {
 } />
 
 
+          <Route
+  path="/family-member/cancel-appointment"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <CancelAppointment />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/family-member/appointment-history"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <AppointmentHistory />
+    </ProtectedRoute>
+  }
+/>
+
           {/* Add the elders route */}
           <Route path="/family-member/elders" element={
             <ProtectedRoute allowedRoles={['family_member']}>
@@ -197,12 +262,86 @@ function App() {
             </ProtectedRoute>
           } />
 
+<<<<<<< Updated upstream
           <Route path="/admin/users" element={
               <ProtectedRoute allowedRoles={['admin']}>
+=======
+          <Route
+            path="/caregiver/care-requests"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <CareRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/care-request/:requestId"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <CareRequestDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/profile"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/carelog"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <Carelogs />
+              </ProtectedRoute>
+            }
+          />
+
+
+
+          <Route
+            path="/caregiver/elders"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <ViewAllElders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/elder/:elderId"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <Elder />
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+>>>>>>> Stashed changes
                 <AdminUsers />
               </ProtectedRoute>
             } />
 
+<<<<<<< Updated upstream
           <Route path="/elder/dashboard" element={
             <ProtectedRoute allowedRoles={['elder']}>
               <ElderDashboard />
@@ -213,6 +352,105 @@ function App() {
               <ElderProfile />
             </ProtectedRoute>
           } />
+=======
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminReports />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/elder/profile"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/appointments"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <AllAppointments />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/appointment/:appointmentId"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <AppointmentDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/sessions"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <AllSessions />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/session/:sessionId"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <SessionDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/caregivers"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderCaregivers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/events"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderEvents />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/caregivers"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <CaregiverDetails />
+              </ProtectedRoute>
+            }
+          />
+>>>>>>> Stashed changes
 
           <Route path="/family-member/caregivers" element={
             <ProtectedRoute allowedRoles={['family_member']}>

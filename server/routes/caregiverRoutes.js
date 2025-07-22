@@ -10,6 +10,26 @@ const {
   searchCaregivers,
   updateCareRequestStatus
 } = require('../controllers/caregiverController');
+<<<<<<< Updated upstream
+=======
+
+const { 
+  getCareRequestById,
+  getAssignedElders,
+  getAssignedFamiliesCount,
+  getcarelogsCount,
+  fetchSchedules,
+  fetchCareRequests,
+  updateCaregiverProfile,
+  updateCaregiverPassword,
+  getUpcomingShifts,
+  getCarelogs,
+  addCarelog,
+  getElderDetails,
+  getElderCarelogs,
+  addElderReport
+} = require('../controllers/caregiver');
+>>>>>>> Stashed changes
 
 // Get all caregivers
 router.get('/', getAllCaregivers);
@@ -35,4 +55,43 @@ router.post('/:caregiverId/request', createCareRequest);
 // Update care request status
 router.put('/requests/:requestId/status', updateCareRequestStatus);
 
+<<<<<<< Updated upstream
+=======
+// Get care request details by ID(role caregiver)
+router.get('/requests/:requestId', getCareRequestById);
+
+//get assigned elders(role caregiver)
+router.get('/:id/assigned-elders', getAssignedElders);
+
+//Number of families assigned to specific caregiver(role caregiver)
+router.get('/:id/assigned-families', getAssignedFamiliesCount);
+
+//Number of carelogs(role caregiver)
+router.get('/:id/carelogs-count', getcarelogsCount);
+
+//Number of carelogs(role caregiver)
+router.get('/:id/caregiver-schedules', fetchSchedules);
+
+//Get care requests for caregiver(role caregiver)
+router.get('/:id/care-requests', fetchCareRequests);
+
+//Get upcoming shifts for caregiver(role caregiver)
+router.get('/:id/upcoming-shifts', getUpcomingShifts);
+
+// Update caregiver profile(role caregiver)
+router.put('/:caregiverId/profile', updateCaregiverProfile);
+
+// Update caregiver password(role caregiver)
+router.put('/:caregiverId/password', updateCaregiverPassword);
+
+// Carelogs for caregiver
+router.get('/:id/carelogs', getCarelogs);
+router.post('/:id/carelogs', addCarelog);
+
+// Elder management routes
+router.get('/elder/:elderId/details', getElderDetails);
+router.get('/:caregiverId/elder/:elderId/carelogs', getElderCarelogs);
+router.post('/:caregiverId/elder/:elderId/report', addElderReport);
+
+>>>>>>> Stashed changes
 module.exports = router;
