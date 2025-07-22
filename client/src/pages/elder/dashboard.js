@@ -884,6 +884,11 @@ const ElderDashboard = () => {
                   onClick={() => setActiveSessionTab("upcoming")}
                 >
                   Upcoming
+                  {statsData.upcomingSessions > 0 && (
+                    <span className={styles.countBadge}>
+                      {statsData.upcomingSessions}
+                    </span>
+                  )}
                 </button>
                 <button
                   className={`${styles.tabBtn} ${
