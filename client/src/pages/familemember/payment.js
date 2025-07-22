@@ -3,7 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
-  CardElement,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
@@ -27,16 +29,28 @@ const PaymentForm = ({
   const stripe = useStripe();
   const elements = useElements();
   const [cardError, setCardError] = useState(null);
-  const [cardComplete, setCardComplete] = useState(false);
+  const [cardComplete, setCardComplete] = useState({
+    cardNumber: false,
+    cardExpiry: false,
+    cardCvc: false
+  });
   const [billingDetails, setBillingDetails] = useState({
     name: '',
     email: '',
     phone: ''
   });
 
-  const handleCardChange = (event) => {
-    setCardError(event.error ? event.error.message : null);
-    setCardComplete(event.complete);
+  const handleCardChange = (elementType) => (event) => {
+    if (event.error) {
+      setCardError(event.error.message);
+    } else {
+      setCardError(null);
+    }
+    
+    setCardComplete(prev => ({
+      ...prev,
+      [elementType]: event.complete
+    }));
   };
 
   const handleBillingChange = (e) => {
@@ -44,6 +58,14 @@ const PaymentForm = ({
       ...billingDetails,
       [e.target.name]: e.target.value
     });
+  };
+
+  const isFormComplete = () => {
+    return cardComplete.cardNumber && 
+           cardComplete.cardExpiry && 
+           cardComplete.cardCvc &&
+           billingDetails.name && 
+           billingDetails.email;
   };
 
   const handleSubmit = async (event) => {
@@ -54,13 +76,8 @@ const PaymentForm = ({
       return;
     }
 
-    if (!cardComplete) {
-      setCardError('Please complete your card information');
-      return;
-    }
-
-    if (!billingDetails.name || !billingDetails.email) {
-      setCardError('Please fill in all required billing details');
+    if (!isFormComplete()) {
+      setCardError('Please complete all card information and billing details');
       return;
     }
 
@@ -94,7 +111,7 @@ const PaymentForm = ({
       // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
-          card: elements.getElement(CardElement),
+          card: elements.getElement(CardNumberElement),
           billing_details: {
             name: billingDetails.name,
             email: billingDetails.email,
@@ -123,6 +140,23 @@ const PaymentForm = ({
     } finally {
       setProcessing(false);
     }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
+      },
+      invalid: {
+        color: '#9e2146',
+      },
+    },
   };
 
   return (
@@ -175,28 +209,40 @@ const PaymentForm = ({
       {/* Card Details */}
       <div className={styles.cardSection}>
         <h3>💳 Card Information</h3>
-        <div className={styles.cardElementContainer}>
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: '16px',
-                  color: '#424770',
-                  '::placeholder': {
-                    color: '#aab7c4',
-                  },
-                  fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                  fontSmoothing: 'antialiased',
-                },
-                invalid: {
-                  color: '#9e2146',
-                },
-              },
-              hidePostalCode: true,
-            }}
-            onChange={handleCardChange}
-          />
+        
+        {/* Card Number */}
+        <div className={styles.cardInputGroup}>
+          <label>Card Number *</label>
+          <div className={styles.cardElementContainer}>
+            <CardNumberElement
+              options={cardElementOptions}
+              onChange={handleCardChange('cardNumber')}
+            />
+          </div>
         </div>
+
+        {/* Expiry and CVC */}
+        <div className={styles.cardRow}>
+          <div className={styles.cardInputGroup}>
+            <label>Expiry Date *</label>
+            <div className={styles.cardElementContainer}>
+              <CardExpiryElement
+                options={cardElementOptions}
+                onChange={handleCardChange('cardExpiry')}
+              />
+            </div>
+          </div>
+          <div className={styles.cardInputGroup}>
+            <label>CVC *</label>
+            <div className={styles.cardElementContainer}>
+              <CardCvcElement
+                options={cardElementOptions}
+                onChange={handleCardChange('cardCvc')}
+              />
+            </div>
+          </div>
+        </div>
+
         {cardError && (
           <div className={styles.cardError}>
             <span className={styles.errorIcon}>⚠️</span>
@@ -219,7 +265,7 @@ const PaymentForm = ({
       <button
         type="submit"
         className={styles.payButton}
-        disabled={!stripe || processing || !cardComplete}
+        disabled={!stripe || processing || !isFormComplete()}
       >
         {processing ? (
           <>
@@ -418,7 +464,7 @@ const Payment = () => {
   // Format countdown time
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+       const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
@@ -683,3 +729,4 @@ const Payment = () => {
 };
 
 export default Payment;
+
