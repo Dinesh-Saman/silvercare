@@ -227,17 +227,9 @@ const AppointmentDetails = () => {
                       ? styles.onlineType 
                       : styles.physicalType
                   }`}>
-                    {appointment.appointment_type === 'online' ? '💻 Video Call Meeting' : '🏥 In-Person Visit'}
+                    {appointment.appointment_type === 'online' ? '💻 Video Call Meeting' : '🏥 Home Visit'}
                   </span>
                 </div>
-                {appointment.appointment_type === 'physical' && (
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>Location:</span>
-                    <span className={styles.infoValue}>
-                      {appointment.current_institution}
-                    </span>
-                  </div>
-                )}
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Appointment Number:</span>
                   <span className={styles.infoValue}>#{appointment.appointment_id}</span>
@@ -282,7 +274,7 @@ const AppointmentDetails = () => {
               <div className={styles.infoGrid}>
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Experience:</span>
-                  <span className={styles.infoValue}>{appointment.experience_years || 'N/A'} years</span>
+                  <span className={styles.infoValue}>{appointment.years_experience || 'N/A'} years</span>
                 </div>
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Contact Number:</span>
@@ -327,11 +319,25 @@ const AppointmentDetails = () => {
               <h2>What You Can Do</h2>
             </div>
             <div className={styles.cardContent}>
+              {!isUpcomingAppointment(appointment) && (
+                <div className={styles.physicalInstructions}>
+                  <div className={styles.instructionHeader}>
+                    <div className={styles.instructionIcon}>✅</div>
+                    <h3>Appointment Status</h3>
+                  </div>
+                  <div className={styles.instructionList}>
+                    <p>• Your appointment has ended.</p>
+                    <p>• You can view all appointments in the "All Appointments" section.</p>
+                    <p>• If you need another appointment, please book a new one.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Instructions for Physical Appointments */}
               {appointment.appointment_type === 'physical' && isUpcomingAppointment(appointment) && (
                 <div className={styles.physicalInstructions}>
                   <div className={styles.instructionHeader}>
-                    <div className={styles.instructionIcon}>🏥</div>
+                    <div className={styles.instructionIcon}>🧑‍🏫</div>
                     <h3>For Your Home Visit</h3>
                   </div>
                   <div className={styles.instructionList}>
