@@ -258,6 +258,31 @@ export const caregiverApi = {
     }
   },
 
+  // Fetch weekly reports for daily care section
+  fetchWeeklyReports: async (caregiverId, startDate, endDate) => {
+    try {
+      const response = await axios.get(`${API_BASE}/${caregiverId}/weekly-reports?startDate=${startDate}&endDate=${endDate}`);
+      return response.data;
+    } catch (error) {
+      console.error('API: Error fetching weekly reports:', error);
+      return [];
+    }
+  },
+
+  // Submit daily report
+  submitDailyReport: async (caregiverId, elderId, reportData) => {
+    try {
+      const response = await axios.post(`${API_BASE}/${caregiverId}/daily-report`, {
+        elder_id: elderId,
+        ...reportData
+      });
+      return response.data;
+    } catch (error) {
+      console.error('API: Error submitting daily report:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default caregiverApi;

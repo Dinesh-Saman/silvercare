@@ -1,4 +1,5 @@
 const pool = require('../db');
+const StatusUpdateService = require('../services/statusUpdateService');
 
 // Get care request details by ID(role caregiver)
 const getCareRequestById = async (req, res) => {
@@ -65,12 +66,13 @@ const getCareRequestById = async (req, res) => {
   }
 };
 
-
 //get assigned elders(role caregiver)
 const getAssignedElders = async (req, res) => {
   const caregiverId = req.params.id;
 
   try {
+    // Auto-update expired requests using the service
+    await StatusUpdateService.updateExpiredRequestsForCaregiver(caregiverId);
 
      const query = `SELECT 
         e.elder_id,
@@ -171,15 +173,8 @@ const fetchCareRequests = async (req, res) => {
   const { search } = req.query; // Get search parameter from query string
 
   try {
-    // First, auto-update any approved requests that have passed their end date
-    const updateQuery = `
-      UPDATE carerequest 
-      SET status = 'completed'
-      WHERE caregiver_id = $1 
-      AND status = 'approved' 
-      AND end_date < CURRENT_DATE;
-    `;
-    await pool.query(updateQuery, [caregiverId]);
+    // Auto-update expired requests using the service
+    await StatusUpdateService.updateExpiredRequestsForCaregiver(caregiverId);
 
     let query = `
       SELECT 
@@ -416,6 +411,9 @@ const getUpcomingShifts = async (req, res) => {
   const { startDate, endDate } = req.query; // Optional week range parameters
   
   try {
+    // Auto-update expired requests using the service
+    await StatusUpdateService.updateExpiredRequestsForCaregiver(caregiverId);
+    
     let query;
     let queryParams;
     
@@ -680,6 +678,170 @@ const addElderReport = async (req, res) => {
   }
 };
 
+// Get weekly reports for daily care section
+const getWeeklyReports = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { startDate, endDate } = req.query;
+  
+  try {
+    console.log('Fetching weekly reports for caregiver:', caregiverId, 'from', startDate, 'to', endDate);
+    
+    // First, get all care assignments for the caregiver in the date range
+    const assignmentQuery = `
+      SELECT DISTINCT
+        cr.elder_id,
+        e.name as elder_name,
+        cr.start_date,
+        cr.end_date
+      FROM carerequest cr
+      JOIN elder e ON cr.elder_id = e.elder_id
+      WHERE cr.caregiver_id = $1
+        AND cr.status IN ('confirmed', 'approved')
+        AND cr.start_date <= $3::date 
+        AND cr.end_date >= $2::date
+      ORDER BY e.name;
+    `;
+    
+    const assignmentResult = await pool.query(assignmentQuery, [caregiverId, startDate, endDate]);
+    console.log('Found assignments:', assignmentResult.rows);
+    
+    // Get existing reports for the date range
+    const reportsQuery = `
+      SELECT 
+        cl.elder_id,
+        cl.date,
+        cl.log_id IS NOT NULL as has_report,
+        cl.notes,
+        cl.mood,
+        cl.health_status,
+        cl.medications_given,
+        cl.activities,
+        cl.concerns
+      FROM carelog cl
+      WHERE cl.caregiver_id = $1
+        AND cl.date >= $2::date 
+        AND cl.date <= $3::date;
+    `;
+    
+    const reportsResult = await pool.query(reportsQuery, [caregiverId, startDate, endDate]);
+    console.log('Found existing reports:', reportsResult.rows);
+    
+    // Create reports by date map
+    const reportsByDate = {};
+    reportsResult.rows.forEach(report => {
+      const dateKey = report.date.toISOString().split('T')[0];
+      if (!reportsByDate[dateKey]) {
+        reportsByDate[dateKey] = {};
+      }
+      reportsByDate[dateKey][report.elder_id] = {
+        hasReport: report.has_report,
+        existingReport: {
+          notes: report.notes,
+          mood: report.mood,
+          health_status: report.health_status,
+          medications_given: report.medications_given,
+          activities: report.activities,
+          concerns: report.concerns
+        }
+      };
+    });
+    
+    // Create 7 days array - always return 7 days regardless of assignments
+    const weeklyReports = [];
+    const startDateObj = new Date(startDate);
+    
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(startDateObj);
+      currentDate.setDate(startDateObj.getDate() + i);
+      const dateKey = currentDate.toISOString().split('T')[0];
+      
+      // Find assignment for this date
+      let dayAssignment = null;
+      for (const assignment of assignmentResult.rows) {
+        const assignStart = new Date(assignment.start_date);
+        const assignEnd = new Date(assignment.end_date);
+        assignStart.setHours(0, 0, 0, 0);
+        assignEnd.setHours(23, 59, 59, 999);
+        
+        if (currentDate >= assignStart && currentDate <= assignEnd) {
+          dayAssignment = assignment;
+          break;
+        }
+      }
+      
+      if (dayAssignment) {
+        // There's an assignment for this day
+        const elderId = dayAssignment.elder_id;
+        const reportData = reportsByDate[dateKey] && reportsByDate[dateKey][elderId];
+        
+        weeklyReports.push({
+          date: dateKey,
+          elder_id: elderId,
+          elder_name: dayAssignment.elder_name,
+          hasReport: reportData ? reportData.hasReport : false,
+          existingReport: reportData ? reportData.existingReport : null
+        });
+      } else {
+        // No assignment for this day
+        weeklyReports.push({
+          date: dateKey,
+          elder_id: null,
+          elder_name: 'No Assignment',
+          hasReport: false,
+          existingReport: null
+        });
+      }
+    }
+    
+    console.log('Final weekly reports:', weeklyReports);
+    res.json(weeklyReports);
+  } catch (error) {
+    console.error('Error fetching weekly reports:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Submit daily report
+const submitDailyReport = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { elder_id, notes, mood, health_status, medications_given, activities, concerns, date } = req.body;
+  
+  try {
+    // Check if report already exists for this date
+    const existingQuery = `
+      SELECT log_id FROM carelog 
+      WHERE elder_id = $1 AND caregiver_id = $2 AND date = $3
+    `;
+    const existingResult = await pool.query(existingQuery, [elder_id, caregiverId, date]);
+    
+    let query, result;
+    
+    if (existingResult.rows.length > 0) {
+      // Update existing report
+      query = `
+        UPDATE carelog 
+        SET notes = $4, mood = $5, health_status = $6, medications_given = $7, activities = $8, concerns = $9
+        WHERE elder_id = $1 AND caregiver_id = $2 AND date = $3
+        RETURNING *;
+      `;
+      result = await pool.query(query, [elder_id, caregiverId, date, notes, mood, health_status, medications_given, activities, concerns]);
+    } else {
+      // Insert new report
+      query = `
+        INSERT INTO carelog (elder_id, caregiver_id, notes, mood, health_status, medications_given, activities, concerns, date)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *;
+      `;
+      result = await pool.query(query, [elder_id, caregiverId, notes, mood, health_status, medications_given, activities, concerns, date]);
+    }
+    
+    res.json({ success: true, carelog: result.rows[0] });
+  } catch (error) {
+    console.error('Error submitting daily report:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getCareRequestById,
   getAssignedElders,
@@ -694,6 +856,8 @@ module.exports = {
   addCarelog,
   getElderDetails,
   getElderCarelogs,
-  addElderReport
+  addElderReport,
+  getWeeklyReports,
+  submitDailyReport
 };
 
