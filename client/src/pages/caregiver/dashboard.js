@@ -44,13 +44,16 @@ const CaregiverDashboard = () => {
     setLoading(true);
     Promise.all([
       caregiverApi.fetchAssignedElders(caregiverId).then((data) => {
+        console.log('Raw elder data from API:', data);
         const transformed = data.map((elder) => ({
+          elder_id: elder.elder_id, // Add this missing field!
           name: elder.name,
           age: elder.age,
           duration: elder.duration || "N/A",
           status: elder.status,
           family_id: elder.family_id,
         }));
+        console.log('Transformed elder data:', transformed);
         setElders(transformed);
       }),
       caregiverApi.getAssignedFamiliesCount(caregiverId).then((data) => {
@@ -249,6 +252,29 @@ const CaregiverDashboard = () => {
       </div>
 
       <div className={styles.dashboardgrid}>
+
+        <section className={styles.performanceStats}>
+          <h2 style={{display: 'flex', alignItems: 'center', gap: 8}}>
+            <span role="img" aria-label="Performance">🏆</span> Performance Stats
+          </h2>
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #38a169 0%, #43cea2 100%)', marginBottom: 10}}>
+                <span role="img" aria-label="Completed">✅</span>
+              </div>
+              <span className={styles.statLabel}>Completed Shifts</span>
+              <span className={styles.statValue}>{completedShifts}</span>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)', marginBottom: 10}}>
+                <span role="img" aria-label="Hours">⏱️</span>
+              </div>
+              <span className={styles.statLabel}>Total Hours Worked</span>
+              <span className={styles.statValue}>{totalHoursWorked}</span>
+            </div>
+          </div>
+        </section>
+
         <section className={styles.carerequest}>
           <h2 style={{display: 'flex', alignItems: 'center', gap: 8}}>
             <span role="img" aria-label="Care Requests">📝</span> Care Requests
@@ -261,7 +287,7 @@ const CaregiverDashboard = () => {
                 <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You're all caught up! New care requests will appear here.</span>
               </div>
             ) : (
-              careRequests.map((request, i) => (
+              careRequests.slice(0, 3).map((request, i) => (
                 <div className={styles.careRequestCard} key={i}>
                   <div className={styles.careRequestHeader}>
                     <div className={styles.requestInfo}>
@@ -320,6 +346,17 @@ const CaregiverDashboard = () => {
               ))
             )}
           </div>
+          {careRequests.length >= 3 && (
+            <div className={styles.viewMoreContainer}>
+              <button 
+                className={styles.viewMoreBtn}
+                onClick={() => navigate('/caregiver/care-requests')}
+              >
+                <span>View All Requests</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
         </section>
         
         <section className={styles.upcomingShifts}>
@@ -333,7 +370,7 @@ const CaregiverDashboard = () => {
                 <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You have no upcoming shifts scheduled. Enjoy your free time!</span>
               </div>
             ) : (
-              filteredUpcomingShifts.map((shift, i) => {
+              filteredUpcomingShifts.slice(0, 3).map((shift, i) => {
                 const start = new Date(shift.date || shift.start_date);
                 const now = new Date();
                 const diffMs = start - now;
@@ -378,29 +415,20 @@ const CaregiverDashboard = () => {
               })
             )}
           </div>
+          {filteredUpcomingShifts.length >= 3 && (
+            <div className={styles.viewMoreContainer}>
+              <button 
+                className={styles.viewMoreBtn}
+                onClick={() => navigate('/caregiver/care-requests')}
+              >
+                <span>View All Shifts</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
         </section>
 
-        <section className={styles.performanceStats}>
-          <h2 style={{display: 'flex', alignItems: 'center', gap: 8}}>
-            <span role="img" aria-label="Performance">🏆</span> Performance Stats
-          </h2>
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #38a169 0%, #43cea2 100%)', marginBottom: 10}}>
-                <span role="img" aria-label="Completed">✅</span>
-              </div>
-              <span className={styles.statLabel}>Completed Shifts</span>
-              <span className={styles.statValue}>{completedShifts}</span>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)', marginBottom: 10}}>
-                <span role="img" aria-label="Hours">⏱️</span>
-              </div>
-              <span className={styles.statLabel}>Total Hours Worked</span>
-              <span className={styles.statValue}>{totalHoursWorked}</span>
-            </div>
-          </div>
-        </section>
+        
 
       </div>
 
@@ -416,8 +444,8 @@ const CaregiverDashboard = () => {
               <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You haven't been assigned any elders yet. Stay tuned for updates!</span>
             </div>
           ) : (
-            elders.filter(e => e.status === 'approved' || e.status === 'completed').map((elder, i) => (
-              <div className={styles.eldercard} key={i}>
+            elders.filter(e => e.status === 'approved' || e.status === 'completed').slice(0, 4).map((elder, i) => (
+              <div className={styles.eldercard} key={elder.family_id || elder.name + i}>
                 <div className={styles.elderHeader}>
                   <div className={styles.elderAvatar}>
                     {elder.name.split(' ').map(n => n[0]).join('')}
@@ -441,11 +469,34 @@ const CaregiverDashboard = () => {
                         {elder.status}
                       </span>
                   </div>
+                  <div className={styles.elderDetail}>
+                    <button
+                      className={styles.viewMoreButton}
+                      onClick={() => {
+                        console.log('Navigating to elder page with:', elder);
+                        console.log('Elder ID:', elder.elder_id);
+                        navigate(`/caregiver/elder/${elder.elder_id}`);
+                      }}
+                    >
+                      View Elder
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
+        {elders.filter(e => e.status === 'approved' || e.status === 'completed').length >= 4 && (
+          <div className={styles.viewMoreContainer}>
+            <button 
+              className={styles.viewMoreBtn}
+              onClick={() => navigate('/caregiver/elders')}
+            >
+              <span>View All Elders</span>
+              <span>→</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <section className={styles.quickLinks} style={{borderRadius: '18px', boxShadow: '0 4px 16px rgba(102,126,234,0.10)', margin: '32px 0', padding: '32px 24px'}}>                      <h2 style={{display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.35rem', color: '#2b4c7e', fontWeight: 700, marginBottom: 18}}>

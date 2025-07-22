@@ -73,11 +73,13 @@ const getAssignedElders = async (req, res) => {
   try {
 
      const query = `SELECT 
+        e.elder_id,
         e.name,
         e.age,
         cr.duration,
         cr.status,
         cr.caregiver_id,
+        cr.family_id,
         u.user_id
       FROM carerequest cr
       JOIN elder e ON cr.elder_id = e.elder_id
@@ -166,6 +168,7 @@ const fetchSchedules = async (req, res) => {
 //fetch care requests for caregiver (role caregiver)
 const fetchCareRequests = async (req, res) => {
   const caregiverId = req.params.id;
+  const { search } = req.query; // Get search parameter from query string
 
   try {
     // First, auto-update any approved requests that have passed their end date
@@ -178,7 +181,7 @@ const fetchCareRequests = async (req, res) => {
     `;
     await pool.query(updateQuery, [caregiverId]);
 
-    const query = `
+    let query = `
       SELECT 
         cr.request_id,
         cr.family_id,
@@ -193,6 +196,7 @@ const fetchCareRequests = async (req, res) => {
         e.address as elder_address,
         e.medical_conditions,
         e.contact as elder_contact,
+        e.district as elder_district,
         fm.user_id as family_member_user_id,
         u.name as family_member_name,
         u.phone as family_member_phone,
@@ -202,10 +206,23 @@ const fetchCareRequests = async (req, res) => {
       JOIN familymember fm ON cr.family_id = fm.family_id
       JOIN "User" u ON fm.user_id = u.user_id
       WHERE cr.caregiver_id = $1
-      ORDER BY cr.request_date DESC, cr.start_date ASC;
     `;
 
-    const result = await pool.query(query, [caregiverId]);
+    const queryParams = [caregiverId];
+
+    // Add search conditions if search parameter exists
+    if (search) {
+      query += ` AND (
+        LOWER(e.name) LIKE LOWER($2) OR 
+        CAST(e.age AS TEXT) LIKE $2 OR 
+        LOWER(e.district) LIKE LOWER($2)
+      )`;
+      queryParams.push(`%${search}%`);
+    }
+
+    query += ` ORDER BY cr.request_date DESC, cr.start_date ASC;`;
+
+    const result = await pool.query(query, queryParams);
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -482,6 +499,160 @@ const addCarelog = async (req, res) => {
   }
 };
 
+// Get elder details with family information
+const getElderDetails = async (req, res) => {
+  const { elderId } = req.params;
+  console.log('Backend: getElderDetails called with elderId:', elderId);
+  
+  try {
+    const query = `
+      SELECT 
+        e.elder_id,
+        e.name,
+        e.dob,
+        e.age,
+        e.gender,
+        e.contact,
+        e.address,
+        e.nic,
+        e.medical_conditions,
+        e.profile_photo,
+        e.email,
+        e.district,
+        e.created_at,
+        fm.family_id,
+        u.user_id as family_user_id,
+        u.name as family_name,
+        u.email as family_email,
+        u.phone as family_phone,
+        fm.address as family_address,
+        fm.phone_fixed as family_phone_fixed
+      FROM elder e
+      JOIN familymember fm ON e.family_id = fm.family_id
+      JOIN "User" u ON fm.user_id = u.user_id
+      WHERE e.elder_id = $1;
+    `;
+    
+    console.log('Backend: Executing query:', query);
+    console.log('Backend: Query parameters:', [elderId]);
+    
+    const result = await pool.query(query, [elderId]);
+    console.log('Backend: Query result rows count:', result.rows.length);
+    
+    if (result.rows.length === 0) {
+      console.log('Backend: No elder found with id:', elderId);
+      return res.status(404).json({ error: 'Elder not found' });
+    }
+    
+    const data = result.rows[0];
+    console.log('Backend: Raw data from DB:', data);
+    
+    const elder = {
+      elder_id: data.elder_id,
+      name: data.name,
+      dob: data.dob,
+      age: data.age,
+      gender: data.gender,
+      contact: data.contact,
+      address: data.address,
+      nic: data.nic,
+      medical_conditions: data.medical_conditions,
+      profile_photo: data.profile_photo,
+      email: data.email,
+      district: data.district,
+      created_at: data.created_at
+    };
+    
+    const familyMember = {
+      family_id: data.family_id,
+      user_id: data.family_user_id,
+      name: data.family_name,
+      email: data.family_email,
+      phone: data.family_phone,
+      address: data.family_address,
+      phone_fixed: data.family_phone_fixed
+    };
+    
+    console.log('Backend: Formatted elder:', elder);
+    console.log('Backend: Formatted familyMember:', familyMember);
+    
+    res.status(200).json({ elder, familyMember });
+  } catch (error) {
+    console.error('Backend: Error fetching elder details:', error);
+    console.error('Backend: Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to fetch elder details', details: error.message });
+  }
+};
+
+// Get carelogs for specific elder
+const getElderCarelogs = async (req, res) => {
+  const { caregiverId, elderId } = req.params;
+  try {
+    const query = `
+      SELECT 
+        cl.log_id as carelog_id,
+        cl.elder_id,
+        cl.caregiver_id,
+        cl.notes,
+        cl.mood,
+        cl.date,
+        cl.health_status,
+        cl.medications_given,
+        cl.activities,
+        cl.concerns,
+        e.name as elder_name
+      FROM carelog cl
+      JOIN elder e ON cl.elder_id = e.elder_id
+      WHERE cl.caregiver_id = $1 AND cl.elder_id = $2
+      ORDER BY cl.date DESC;
+    `;
+    const result = await pool.query(query, [caregiverId, elderId]);
+    res.status(200).json({ carelogs: result.rows });
+  } catch (error) {
+    console.error('Error fetching elder carelogs:', error);
+    res.status(500).json({ carelogs: [] });
+  }
+};
+
+// Add detailed elder report
+const addElderReport = async (req, res) => {
+  const { caregiverId, elderId } = req.params;
+  const { notes, mood, health_status, medications_given, activities, concerns } = req.body;
+  
+  try {
+    const query = `
+      INSERT INTO carelog 
+      (elder_id, caregiver_id, notes, mood, date, health_status, medications_given, activities, concerns)
+      VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8)
+      RETURNING 
+        log_id as carelog_id, 
+        elder_id, 
+        caregiver_id, 
+        notes, 
+        mood, 
+        date,
+        health_status,
+        medications_given,
+        activities,
+        concerns;
+    `;
+    const result = await pool.query(query, [
+      elderId, 
+      caregiverId, 
+      notes, 
+      mood, 
+      health_status, 
+      medications_given, 
+      activities, 
+      concerns
+    ]);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding elder report:', error);
+    res.status(500).json({ error: 'Failed to add elder report' });
+  }
+};
+
 module.exports = {
   getCareRequestById,
   getAssignedElders,
@@ -493,6 +664,9 @@ module.exports = {
   updateCaregiverPassword,
   getUpcomingShifts,
   getCarelogs,
-  addCarelog
+  addCarelog,
+  getElderDetails,
+  getElderCarelogs,
+  addElderReport
 };
 

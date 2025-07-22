@@ -1,3 +1,82 @@
+/* Performance Stats Section */
+.performanceStats {
+  background: #fff;
+  padding: 28px 24px 24px 24px;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(102, 126, 234, 0.09);
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.performanceStats h2 {
+  font-size: 22px;
+  color: #2b4c7e;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e0e6ed;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 22px;
+  margin-top: 10px;
+}
+
+.statCard {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.statCard:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
+  border-color: #667eea;
+}
+
+.statLabel {
+  font-size: 15px;
+  color: #764ba2;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+  .performanceStats {
+    padding: 16px 8px;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .statValue {
+    font-size: 1.5rem;
+  }
+}
 .dashboard {
   padding: 30px;
   font-family: 'Segoe UI', sans-serif;
@@ -276,6 +355,35 @@ section {
   color: #718096;
   font-style: italic;
   padding: 40px 20px;
+}
+
+.viewMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.viewMoreBtn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewMoreBtn:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6b46a5 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .upcomingShifts {
