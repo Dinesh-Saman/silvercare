@@ -74,6 +74,12 @@ const ElderSidebar = ({ onItemClick }) => {
       case 'caregiver-chat':
         navigate('/elder/caregiver-chat');
         break;
+      case 'caregivers':
+        navigate('/elder/caregivers');
+        break;
+      case 'events':
+        navigate('/elder/events');
+        break;
       case 'my-caregivers':
         navigate('/elder/caregivers');
         break;

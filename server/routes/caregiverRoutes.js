@@ -22,7 +22,10 @@ const {
   updateCaregiverPassword,
   getUpcomingShifts,
   getCarelogs,
-  addCarelog
+  addCarelog,
+  getElderDetails,
+  getElderCarelogs,
+  addElderReport
 } = require('../controllers/caregiver');
 
 // Get all caregivers
@@ -79,5 +82,10 @@ router.put('/:caregiverId/password', updateCaregiverPassword);
 // Carelogs for caregiver
 router.get('/:id/carelogs', getCarelogs);
 router.post('/:id/carelogs', addCarelog);
+
+// Elder management routes
+router.get('/elder/:elderId/details', getElderDetails);
+router.get('/:caregiverId/elder/:elderId/carelogs', getElderCarelogs);
+router.post('/:caregiverId/elder/:elderId/report', addElderReport);
 
 module.exports = router;

@@ -16,6 +16,8 @@ import CaregiverDashboard from "./pages/caregiver/dashboard";
 import CareRequestDetails from "./pages/caregiver/care-request-details";
 import CareRequests from "./pages/caregiver/care-requests";
 import Carelogs from './pages/caregiver/carelog';
+import Elder from './pages/caregiver/elder';
+import ViewAllElders from './pages/caregiver/viewAllElders';
 import AdminDashboard from "./pages/admin/dashboard";
 import { DoctorReg } from "./pages/doctor/signup";
 import { MentalHealthProfessionalReg } from "./pages/healthproffesional/signup";
@@ -40,6 +42,8 @@ import AllAppointments from "./pages/elder/appointments";
 import AppointmentDetails from "./pages/elder/appointment-details";
 import AllSessions from "./pages/elder/sessions";
 import SessionDetails from "./pages/elder/session-details";
+import ElderCaregivers from "./pages/elder/caregivers";
+import ElderEvents from "./pages/elder/events";
 
 
 import DoctorDashboard from './pages/doctor/dashboard';
@@ -349,6 +353,27 @@ function App() {
             }
           />
 
+
+
+          <Route
+            path="/caregiver/elders"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <ViewAllElders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/elder/:elderId"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <Elder />
+              </ProtectedRoute>
+            }
+          />
+
+
           <Route
             path="/admin/dashboard"
             element={
@@ -434,6 +459,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <SessionDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/caregivers"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderCaregivers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/events"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderEvents />
               </ProtectedRoute>
             }
           />

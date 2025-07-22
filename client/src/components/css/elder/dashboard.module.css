@@ -339,17 +339,20 @@
 }
 
 .countBadge {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 6px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
   border-radius: 10px;
   margin-left: 8px;
-  min-width: 20px;
+  min-width: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.15);
+  transition: background 0.2s, color 0.2s;
 }
 
 /* Modern Appointments Grid */
@@ -1078,7 +1081,7 @@
 
 .dayCard {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 2px solid #e2e8f0;
+  /* border: 2px solid #e2e8f0; */
   border-radius: 12px;
   padding: 16px;
   min-height: 120px;

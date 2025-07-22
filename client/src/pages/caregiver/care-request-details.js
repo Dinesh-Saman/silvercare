@@ -69,7 +69,6 @@ const CareRequestDetails = () => {
   };
 
   const handleBack = () => {
-    navigate('/caregiver/dashboard');
     navigate('/caregiver/care-requests');
   };
 
@@ -129,7 +128,7 @@ const CareRequestDetails = () => {
           <div className={styles.error}>
             <p>{error}</p>
             <button className={styles.backButton} onClick={handleBack}>
-              ← Back to previous page
+              ← Back to care requests page
             </button>
           </div>
         </CaregiverLayout>
@@ -142,10 +141,12 @@ const CareRequestDetails = () => {
       <Navbar />
       <CaregiverLayout>
         <div className={styles.container}>
-          <div className={styles.header}>
-            <button className={styles.backButton} onClick={handleBack}>
-            ← Back to previous page
+           <button className={styles.backButton} onClick={handleBack}>
+            ← Back to care requests page
             </button>
+            
+          <div className={styles.header}>
+           
             <h1>Care Request Details</h1>
             <div className={styles.statusBadge}>
               <span className={`${styles.status} ${styles[careRequest?.status?.toLowerCase()]}`}>
