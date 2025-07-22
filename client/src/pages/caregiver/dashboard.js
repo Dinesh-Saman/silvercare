@@ -1,5 +1,5 @@
 // dashboard.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar';
 import styles from "../../components/css/caregiver/dashboard.module.css";
@@ -20,6 +20,10 @@ const CaregiverDashboard = () => {
   const [loading, setLoading] = useState(true);
   // Upcoming shifts fetched from backend
   const [upcomingShifts, setUpcomingShifts] = useState([]);
+  // Week-by-week filtering for confirmed shifts
+  const [currentWeek, setCurrentWeek] = useState(0); // 0 = this week, 1 = next week, etc.
+  const [weeklyShifts, setWeeklyShifts] = useState([]);
+  const [loadingWeeklyShifts, setLoadingWeeklyShifts] = useState(false);
 
   // Helper to show time left in days/hours/minutes
   const getTimeLeft = (startDate) => {
@@ -168,47 +172,102 @@ const CaregiverDashboard = () => {
     });
   }, []);
 
-  // Loading spinner
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <CaregiverLayout>
-          <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ width: 60, height: 60, border: '6px solid #e2e8f0', borderTop: '6px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: 24 }} />
-            <p style={{ color: '#667eea', fontSize: 20, fontWeight: 500 }}>Loading dashboard...</p>
-            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          </div>
-        </CaregiverLayout>
-      </>
-    );
-  }
+  // Helper function to calculate week range
+  const getWeekRange = (weekOffset = 0) => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay() + 1 + weekOffset * 7); // Monday
+    start.setHours(0,0,0,0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6); // Sunday
+    end.setHours(23,59,59,999);
+    return { start, end };
+  };
+
+  // Function to fetch shifts for a specific week
+  const fetchWeeklyShifts = async (weekOffset) => {
+    if (!user || !user.caregiver_id) return;
+    
+    console.log(`Fetching shifts for week offset: ${weekOffset}`);
+    setLoadingWeeklyShifts(true);
+    const { start, end } = getWeekRange(weekOffset);
+    
+    console.log(`Week range: ${start.toISOString().split('T')[0]} to ${end.toISOString().split('T')[0]}`);
+    
+    try {
+      const data = await caregiverApi.fetchUpcomingShifts(
+        user.caregiver_id,
+        start.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        end.toISOString().split('T')[0]
+      );
+      console.log(`Week ${weekOffset} shifts data:`, data);
+      setWeeklyShifts(data);
+    } catch (error) {
+      console.error('Error fetching weekly shifts:', error);
+      setWeeklyShifts([]);
+    } finally {
+      setLoadingWeeklyShifts(false);
+    }
+  };
+
+  // Fetch shifts when currentWeek changes
+  useEffect(() => {
+    console.log('currentWeek changed to:', currentWeek);
+    fetchWeeklyShifts(currentWeek);
+  }, [currentWeek, user]);
+
+
+  // --- Week-by-week filtering for confirmed shifts ---
+
+  // Only show confirmed shifts from the general upcoming shifts for summary card
+  const confirmedShifts = useMemo(() =>
+    upcomingShifts.filter(s => s.status && s.status.toLowerCase() === 'confirmed'),
+    [upcomingShifts]
+  );
+
+  const { start: weekStart, end: weekEnd } = getWeekRange(currentWeek);
+
+  // Format dates with month names (no year)
+  const formatDateWithMonth = (date) => {
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  // Generate week label with improved formatting
+  const getWeekLabel = (weekOffset) => {
+    if (weekOffset === 0) return "This Week";
+    if (weekOffset === 1) return "Next Week";
+    if (weekOffset === -1) return "Last Week";
+    return null; // No label for other weeks
+  };
+
+  const weekLabel = getWeekLabel(currentWeek);
+  const dateRange = `${formatDateWithMonth(weekStart)} - ${formatDateWithMonth(weekEnd)}`;
+  
+  // Format the display: show brackets only for This Week, Next Week, Last Week
+  const weekRangeLabel = weekLabel ? `${dateRange} (${weekLabel})` : dateRange;
+  
+  // Allow going back in weeks (don't restrict to future only)
+  const isPrevWeekDisabled = false; // Allow navigation to past weeks
+  
+  // Remove week limit - allow unlimited navigation
+  const isNextWeekDisabled = false;
 
   // Filter elders with status 'approved' or 'completed'
   const filteredElders = elders.filter(e => e.status === 'approved' || e.status === 'completed');
   // Get unique family IDs from filtered elders
   const uniqueFamilyIds = Array.from(new Set(filteredElders.map(e => e.family_id))).filter(Boolean);
 
-  // Filtered upcoming shifts for summary card
-  // Backend already filters for approved shifts, just check date
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  console.log('Today date for filtering:', today);
-  console.log('All upcoming shifts before filtering:', upcomingShifts);
-  
-  const filteredUpcomingShifts = upcomingShifts.filter(shift => {
-    const start = new Date(shift.date || shift.start_date);
-    start.setHours(0, 0, 0, 0);
-    console.log('Shift details:', shift);
-    console.log('Shift date:', shift.date || shift.start_date);
-    console.log('Parsed start date:', start);
-    console.log('Date comparison (start >= today):', start >= today);
-    const passes = start >= today;
-    console.log('Overall filter result:', passes);
-    return passes;
-  });
-  
-  console.log('Filtered upcoming shifts:', filteredUpcomingShifts);
+  // For summary card: count of upcoming confirmed shifts in all future weeks
+  const filteredUpcomingShifts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return confirmedShifts.filter(shift => {
+      const start = new Date(shift.startDate || shift.start_date);
+      start.setHours(0, 0, 0, 0);
+      return start >= today;
+    });
+  }, [confirmedShifts]);
 
   const dashboardContent = (
     <div className={styles.dashboard}>
@@ -346,7 +405,6 @@ const CaregiverDashboard = () => {
               ))
             )}
           </div>
-          {careRequests.length >= 3 && (
             <div className={styles.viewMoreContainer}>
               <button 
                 className={styles.viewMoreBtn}
@@ -356,22 +414,52 @@ const CaregiverDashboard = () => {
                 <span>→</span>
               </button>
             </div>
-          )}
         </section>
         
         <section className={styles.upcomingShifts}>
-          <h2 style={{display: 'flex', alignItems: 'center', gap: 8}}>
-            <span role="img" aria-label="Upcoming Shifts">📅</span> Upcoming Shifts
-          </h2>
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: '2px solid #e0e6ed', flexWrap: 'nowrap', overflow: 'hidden'}}>
+            <h2 style={{display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: '20px', color: '#2b4c7e', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>
+              <span role="img" aria-label="Upcoming Shifts">📅</span> Upcoming Shifts
+            </h2>
+            <div className={styles.weekNavRow} style={{display: 'flex', alignItems: 'center', gap: 3, marginBottom: 0, flexShrink: 0}}>
+              <button
+                className={styles.weekNavBtn}
+                onClick={() => {
+                  setCurrentWeek(currentWeek - 1);
+                }}
+                disabled={isPrevWeekDisabled}
+                style={{fontSize: '18px', padding: '6px 8px'}}
+              >
+                ← Prev Week
+              </button>
+              <span className={styles.weekNavLabel} style={{margin: '0 4px', fontSize: '18px', whiteSpace: 'nowrap', textAlign: 'center'}}>
+                {weekRangeLabel}
+              </span>
+              <button
+                className={styles.weekNavBtn}
+                onClick={() => {
+                  setCurrentWeek(currentWeek + 1);
+                }}
+                disabled={isNextWeekDisabled}
+                style={{fontSize: '18px', padding: '6px 8px'}}
+              >
+                Next Week→
+              </button>
+            </div>
+          </div>
           <div className={styles.shiftsList}>
-            {filteredUpcomingShifts.length === 0 ? (
+            {loadingWeeklyShifts ? (
+              <div style={{display: 'flex', justifyContent: 'center', padding: '20px'}}>
+                <span>Loading shifts...</span>
+              </div>
+            ) : weeklyShifts.length === 0 ? (
               <div className={styles.noShifts} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(102,126,234,0.08)'}}>
                 <span style={{fontSize: '2.5rem', marginBottom: '12px'}}>📅</span>
-                <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You have no upcoming shifts scheduled. Enjoy your free time!</span>
+                <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You have no confirmed shifts scheduled for this week.</span>
               </div>
             ) : (
-              filteredUpcomingShifts.slice(0, 3).map((shift, i) => {
-                const start = new Date(shift.date || shift.start_date);
+              weeklyShifts.map((shift, i) => {
+                const start = new Date(shift.start_date);
                 const now = new Date();
                 const diffMs = start - now;
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -384,15 +472,15 @@ const CaregiverDashboard = () => {
                       <span className={styles.shiftDate}>
                         {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
                       </span>
-                      <span className={styles.shiftTime}>{shift.duration}</span>
+                      <span className={styles.shiftTime}>{shift.duration} days</span>
                     </div>
                     <div className={styles.shiftDetails}>
                       <span className={styles.label}>Location:</span>
-                      <span className={styles.value}>{shift.location || shift.address}</span>
+                      <span className={styles.value}>{shift.location}</span>
                     </div>
                     <div className={styles.shiftDetails}>
                       <span className={styles.label}>Elder:</span>
-                      <span className={styles.value}>{shift.elderName || 'N/A'}</span>
+                      <span className={styles.value}>{shift.elderName}</span>
                     </div>
                     <div className={styles.shiftDetails}>
                       <span className={styles.label}>Time Left:</span>
@@ -415,7 +503,6 @@ const CaregiverDashboard = () => {
               })
             )}
           </div>
-          {filteredUpcomingShifts.length >= 3 && (
             <div className={styles.viewMoreContainer}>
               <button 
                 className={styles.viewMoreBtn}
@@ -425,7 +512,6 @@ const CaregiverDashboard = () => {
                 <span>→</span>
               </button>
             </div>
-          )}
         </section>
 
         

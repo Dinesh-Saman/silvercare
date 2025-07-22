@@ -410,38 +410,65 @@ const updateCaregiverPassword = async (req, res) => {
   }
 };
 
-// Get upcoming shifts for caregiver (approved and future)
+// Get upcoming shifts for caregiver with optional week filtering (confirmed status only)
 const getUpcomingShifts = async (req, res) => {
   const caregiverId = req.params.id;
+  const { startDate, endDate } = req.query; // Optional week range parameters
+  
   try {
-    // Only fetch shifts with status 'approved' and start_date >= today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const query = `
-      SELECT 
-        cr.request_id,
-        cr.elder_id,
-        cr.start_date,
-        cr.end_date,
-        cr.status,
-        cr.duration,
-        e.name as elder_name,
-        e.address as location
-      FROM carerequest cr
-      JOIN elder e ON cr.elder_id = e.elder_id
-      WHERE cr.caregiver_id = $1
-        AND cr.status = 'approved'
-        AND cr.start_date >= $2
-      ORDER BY cr.start_date ASC;
-    `;
+    let query;
+    let queryParams;
     
-    const result = await pool.query(query, [caregiverId, today]);
+    if (startDate && endDate) {
+      // Week-based filtering for confirmed shifts
+      query = `
+        SELECT 
+          cr.request_id,
+          cr.elder_id,
+          cr.start_date,
+          cr.end_date,
+          cr.status,
+          cr.duration,
+          e.name as elder_name,
+          e.address as location
+        FROM carerequest cr
+        JOIN elder e ON cr.elder_id = e.elder_id
+        WHERE cr.caregiver_id = $1
+          AND LOWER(cr.status) = 'confirmed'
+          AND cr.start_date >= $2
+          AND cr.start_date <= $3
+        ORDER BY cr.start_date ASC;
+      `;
+      queryParams = [caregiverId, startDate, endDate];
+    } else {
+      // Default: fetch all future confirmed shifts
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      query = `
+        SELECT 
+          cr.request_id,
+          cr.elder_id,
+          cr.start_date,
+          cr.end_date,
+          cr.status,
+          cr.duration,
+          e.name as elder_name,
+          e.address as location
+        FROM carerequest cr
+        JOIN elder e ON cr.elder_id = e.elder_id
+        WHERE cr.caregiver_id = $1
+          AND LOWER(cr.status) = 'confirmed'
+          AND cr.start_date >= $2
+        ORDER BY cr.start_date ASC;
+      `;
+      queryParams = [caregiverId, today];
+    }
+    
+    const result = await pool.query(query, queryParams);
     console.log('Raw upcoming shifts from DB:', result.rows);
     
     // Format for frontend: return all fields needed for dashboard
     const shifts = result.rows.map(row => {
-      // Format duration properly
-      
       // Include request_id for frontend navigation
       return {
         request_id: row.request_id,

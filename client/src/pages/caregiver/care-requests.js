@@ -151,6 +151,7 @@ useEffect(() => {
     { key: 'all', label: 'All Requests', count: getTabCount('all') },
     { key: 'pending', label: 'Pending', count: getTabCount('pending') },
     { key: 'approved', label: 'Approved', count: getTabCount('approved') },
+    { key: 'confirmed', label: 'Confirmed', count: getTabCount('confirmed') },
     { key: 'cancelled', label: 'Rejected', count: getTabCount('cancelled') },
     { key: 'completed', label: 'Completed', count: getTabCount('completed') }
   ];

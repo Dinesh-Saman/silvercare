@@ -63,10 +63,14 @@ export const caregiverApi = {
     }
   },
 
-  // Get upcoming shifts for caregiver(role caregiver)
-  fetchUpcomingShifts: async (caregiverId) => {
+  // Get upcoming shifts for caregiver with optional week filtering
+  fetchUpcomingShifts: async (caregiverId, startDate = null, endDate = null) => {
     try {
-      const response = await axios.get(`${API_BASE}/${caregiverId}/upcoming-shifts`);
+      let url = `${API_BASE}/${caregiverId}/upcoming-shifts`;
+      if (startDate && endDate) {
+        url += `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+      }
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       console.error('API: Error fetching upcoming shifts:', error);
