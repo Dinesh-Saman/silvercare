@@ -250,7 +250,7 @@ const SessionDetails = () => {
           {/* Key Session Information - Most Important First */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>�</div>
+              <div className={styles.cardIcon}>👨‍💼</div>
               <h2>Your Session Details</h2>
             </div>
             <div className={styles.cardContent}>
@@ -308,7 +308,7 @@ const SessionDetails = () => {
           {/* Counselor Information Card */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <div className={styles.cardIcon}>�‍⚕️</div>
+              <div className={styles.cardIcon}>👨‍💼</div>
               <h2>Your Counselor</h2>
             </div>
             <div className={styles.cardContent}>

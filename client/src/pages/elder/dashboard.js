@@ -1038,16 +1038,7 @@ const ElderDashboard = () => {
                               </span>
                             </div>
                           )}
-                          {assignment.certifications && (
-                            <div className={styles.infoItem}>
-                              <span className={styles.infoLabel}>
-                                Certifications:
-                              </span>
-                              <span className={styles.infoValue}>
-                                {assignment.certifications}
-                              </span>
-                            </div>
-                          )}
+                          {/* Certifications field removed as requested */}
                         </div>
                       </div>
                     )
