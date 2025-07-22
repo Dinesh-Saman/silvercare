@@ -1,13 +1,14 @@
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding-bottom: 40px;
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
 }
 
 .content {
-  padding: 20px;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 20px 24px;
 }
 
 /* Loading States */
@@ -16,19 +17,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  color: white;
+  min-height: 60vh;
+  color: #64748b;
   text-align: center;
 }
 
 .loadingSpinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(255, 255, 255, 0.3);
-  border-top: 5px solid white;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -38,14 +39,17 @@
 
 /* Header */
 .header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 32px 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .headerContent {
@@ -53,80 +57,87 @@
 }
 
 .title {
-  font-size: 2.5rem;
+  color: #1e293b;
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
-  font-size: 1.2rem;
-  color: #718096;
-  margin: 0;
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0 0 12px 0;
 }
 
-/* NEW: Cancellation Policy Styles */
 .cancellationPolicy {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-radius: 12px;
+  border: 1px solid #3b82f6;
   margin-top: 8px;
-  padding: 8px 12px;
-  background-color: #e8f4fd;
-  border-radius: 6px;
-  font-size: 0.9rem;
 }
 
 .policyIcon {
   font-size: 1rem;
+  color: #2563eb;
 }
 
 .policyText {
-  color: #2c5aa0;
-  font-weight: 500;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .backButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 25px;
-  font-size: 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .backButton:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 /* Error Message */
 .errorMessage {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 15px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #fecaca;
+  color: #dc2626;
+  padding: 16px 20px;
   border-radius: 12px;
-  margin-bottom: 20px;
-  text-align: center;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
 }
 
 .errorIcon {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
 }
 
 /* Statistics Section */
 .statsSection {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .statsGrid {
@@ -136,30 +147,37 @@
 }
 
 .statCard {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
-  padding: 25px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .statCard:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
 }
 
 .statIcon {
-  font-size: 2rem;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   border-radius: 50%;
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
 }
 
 .statContent {
@@ -167,31 +185,56 @@
 }
 
 .statNumber {
+  color: #3b82f6;
   font-size: 2rem;
   font-weight: 700;
-  color: #2d3748;
   margin: 0;
 }
 
 .statLabel {
-  color: #718096;
-  margin: 5px 0 0 0;
-  font-size: 0.9rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 4px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Stats card specific colors */
+.statCard:nth-child(1) .statIcon {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.statCard:nth-child(2) .statIcon {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.statCard:nth-child(3) .statIcon {
+  background: #f3e8ff;
+  color: #8b5cf6;
+}
+
+.statCard:nth-child(4) .statIcon {
+  background: #fef3c7;
+  color: #f59e0b;
 }
 
 /* Filters Section */
 .filtersSection {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .filtersContainer {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  gap: 24px;
   align-items: end;
 }
 
@@ -203,23 +246,26 @@
 
 .filterGroup label {
   font-weight: 600;
-  color: #2d3748;
-  font-size: 0.9rem;
+  color: #1e293b;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .filterSelect, .searchInput {
   padding: 12px 16px;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
   background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .filterSelect:focus, .searchInput:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .searchInput {
@@ -228,10 +274,13 @@
 
 /* Appointments Section */
 .appointmentsSection {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
   min-height: 400px;
 }
 
@@ -240,83 +289,88 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 48px 20px;
   text-align: center;
 }
 
 .noAppointmentsIcon {
-  font-size: 4rem;
-  margin-bottom: 20px;
+  font-size: 3rem;
+  margin-bottom: 16px;
   opacity: 0.5;
 }
 
 .noAppointments h2 {
-  color: #2d3748;
-  margin-bottom: 10px;
+  color: #475569;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
 }
 
 .noAppointments p {
-  color: #718096;
-  margin-bottom: 30px;
-  font-size: 1.1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0 0 24px 0;
+  max-width: 400px;
 }
 
 .bookAppointmentButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 1.1rem;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .bookAppointmentButton:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 /* Appointments List */
 .appointmentsList {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
-/* Enhanced appointment card styling */
 .appointmentCard {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 2px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  position: relative;
 }
 
 .appointmentCard:hover {
-  border-color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
 }
 
 .appointmentHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
 }
 
 .appointmentType {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .typeIcon {
@@ -324,84 +378,89 @@
 }
 
 .typeText {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
-/* NEW: Enhanced status container */
 .appointmentStatusContainer {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   align-items: flex-end;
 }
 
 .appointmentStatus {
   padding: 8px 16px;
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: white;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* NEW: Cancellation status indicator */
 .cancellationStatus {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
 }
 
 .cancellationText {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .appointmentBody {
-  padding: 25px;
+  padding: 28px;
 }
 
 .appointmentInfo {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .infoRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
 }
 
 .infoItem {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .infoIcon {
-  font-size: 1.2rem;
-  width: 35px;
-  height: 35px;
-  background: #e2e8f0;
+  font-size: 1.25rem;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
 }
 
 .infoContent {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
 .infoLabel {
-  font-size: 0.8rem;
-  color: #718096;
+  font-size: 0.75rem;
+  color: #64748b;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -409,49 +468,51 @@
 
 .infoValue {
   font-size: 1rem;
-  color: #2d3748;
+  color: #1e293b;
   font-weight: 600;
   word-wrap: break-word;
 }
 
-/* NEW: Cancellation Policy Info */
 .cancellationPolicyInfo {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  margin-top: 8px;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
 }
 
 .policyContent {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  flex: 1;
 }
 
 .appointmentNotes {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 15px;
-  background: #f1f5f9;
-  border-radius: 8px;
-  margin-top: 10px;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  margin-top: 16px;
+  border: 1px solid #cbd5e1;
 }
 
 .notesContent {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   flex: 1;
 }
 
 .notesText {
-  font-size: 0.95rem;
-  color: #4a5568;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
   font-style: italic;
 }
 
@@ -459,63 +520,65 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 2px solid #e2e8f0;
 }
 
 .appointmentMeta {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .appointmentId, .appointmentCreated {
-  font-size: 0.8rem;
-  color: #718096;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .appointmentId {
   font-weight: 600;
+  color: #475569;
 }
 
-/* NEW: Days ago indicator */
 .daysAgo {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: #64748b;
   font-weight: 400;
   margin-left: 4px;
 }
 
-/* NEW: Enhanced appointment actions */
 .appointmentActions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-/* NEW: Enhanced cancel button */
 .cancelButton {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  position: relative;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  white-space: nowrap;
 }
 
 .cancelButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #c0392b, #a93226);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
 .cancelButton:disabled {
@@ -525,17 +588,17 @@
 }
 
 .cancelButton.cancelling {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 }
 
-/* NEW: Refund amount indicator */
 .refundAmount {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   opacity: 0.9;
   font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
-/* NEW: Button spinner */
 .buttonSpinner {
   width: 14px;
   height: 14px;
@@ -545,163 +608,209 @@
   animation: spin 1s linear infinite;
 }
 
-/* NEW: Cannot cancel info */
 .cannotCancelInfo {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background-color: #fdf2f2;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border: 1px solid #fecaca;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
   color: #dc2626;
 }
 
 .cannotCancelIcon {
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .cannotCancelText {
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* NEW: View details button */
 .viewDetailsButton {
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.viewDetailsButton:hover {
-  background: linear-gradient(135deg, #2980b9, #21618c);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
-}
-
-/* Legacy view button (keeping for compatibility) */
-.viewButton {
-  background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  white-space: nowrap;
+}
+
+.viewDetailsButton:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+}
+
+.viewButton {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .viewButton:hover {
-  background: #667eea;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* Load More Section */
 .loadMoreSection {
-  text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #e2e8f0;
 }
 
 .loadMoreButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
-  font-size: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 .loadMoreButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 .loadMoreButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .paginationInfo {
   text-align: center;
   margin-top: 20px;
-  color: #718096;
-  font-size: 0.9rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-/* NEW: Payment info styling */
-.infoRow:has(.infoIcon:contains("💰")) {
-  background-color: #f0f9ff;
-  padding: 8px;
-  border-radius: 6px;
-  border-left: 3px solid #3498db;
+.paginationInfo p {
+  margin: 0;
 }
 
-/* NEW: Success/Error message styling for cancellation */
+/* Success/Error message styling for cancellation */
 .cancellationSuccess {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 2px solid #10b981;
+  color: #065f46;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .cancellationError {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #ef4444;
+  color: #991b1b;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+}
+
+/* Animation for status changes */
+@keyframes statusChange {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.appointmentCard.statusChanged {
+  animation: statusChange 0.5s ease-in-out;
+}
+
+/* Hover effects for interactive elements */
+.appointmentCard .infoItem:hover .infoIcon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  transform: scale(1.05);
+  transition: all 0.3s ease;
+}
+
+/* Focus states for accessibility */
+.cancelButton:focus,
+.viewDetailsButton:focus,
+.viewButton:focus,
+.loadMoreButton:focus,
+.backButton:focus,
+.bookAppointmentButton:focus,
+.filterSelect:focus,
+.searchInput:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .container {
-    margin-left: 0;
-  }
-
   .content {
-    padding: 15px;
+    padding: 16px 20px;
   }
 
   .header {
     flex-direction: column;
     gap: 20px;
     text-align: center;
+    padding: 24px;
   }
 
   .title {
-    font-size: 2rem;
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
   }
 
   .statsGrid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
   }
 
   .filtersContainer {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 24px;
   }
 
   .searchInput {
@@ -710,20 +819,21 @@
 }
 
 @media (max-width: 768px) {
-  .header {
+  .content {
+    padding: 12px 16px;
+  }
+
+  .header, .statsSection .statCard, .filtersContainer, .appointmentsSection {
     padding: 20px;
   }
 
   .title {
-    font-size: 1.8rem;
-  }
-
-  .subtitle {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
 
   .statsGrid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .statCard {
@@ -733,7 +843,7 @@
   .statIcon {
     width: 50px;
     height: 50px;
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .statNumber {
@@ -742,61 +852,60 @@
 
   .infoRow {
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 16px;
   }
 
   .appointmentFooter {
     flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
+    gap: 16px;
+    align-items: stretch;
   }
 
-  /* NEW: Responsive appointment actions */
   .appointmentStatusContainer {
     align-items: flex-start;
   }
-  
+
   .cancellationStatus {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
-  
+
   .appointmentActions {
     flex-direction: column;
     align-items: stretch;
-    gap: 6px;
-    align-self: stretch;
-    justify-content: space-between;
+    gap: 8px;
   }
-  
+
   .cancelButton,
-  .viewDetailsButton {
+  .viewDetailsButton,
+  .viewButton {
     width: 100%;
     justify-content: center;
   }
-  
+
   .cannotCancelInfo {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+    font-size: 0.7rem;
+    padding: 6px 12px;
   }
 }
 
 @media (max-width: 480px) {
   .content {
-    padding: 10px;
+    padding: 8px 12px;
   }
 
-  .header, .statsSection, .filtersSection, .appointmentsSection {
-    padding: 15px;
+  .header, .statsSection .statCard, .filtersContainer, .appointmentsSection {
+    padding: 16px;
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.125rem;
   }
 
   .appointmentHeader {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     text-align: center;
+    padding: 20px;
   }
 
   .appointmentBody {
@@ -804,123 +913,60 @@
   }
 
   .infoItem {
-    gap: 10px;
+    gap: 12px;
   }
 
   .infoIcon {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     font-size: 1rem;
   }
 
   .appointmentActions {
-    flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .cancelButton, .viewButton, .viewDetailsButton {
-    width: 100%;
-    padding: 10px;
+    padding: 10px 16px;
+    font-size: 0.8rem;
   }
 
-  /* NEW: Mobile-specific cancellation policy */
   .cancellationPolicy {
     flex-direction: column;
     text-align: center;
-    gap: 4px;
+    gap: 6px;
   }
 
   .cancellationPolicyInfo {
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     text-align: center;
   }
 }
 
-/* NEW: Animation for status changes */
-@keyframes statusChange {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.appointmentCard.statusChanged {
-  animation: statusChange 0.5s ease-in-out;
-}
-
-/* NEW: Hover effects for interactive elements */
-.appointmentCard .infoItem:hover .infoIcon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  transform: scale(1.1);
-  transition: all 0.3s ease;
-}
-
-/* NEW: Focus states for accessibility */
-.cancelButton:focus,
-.viewDetailsButton:focus,
-.loadMoreButton:focus,
-.backButton:focus {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-/* NEW: Print styles */
+/* Print styles */
 @media print {
   .container {
-    margin-left: 0;
     background: white;
   }
 
   .header,
-  .statsSection,
+  .statsSection .statCard,
   .filtersSection,
   .appointmentsSection {
     background: white;
     box-shadow: none;
+    border: 1px solid #ccc;
   }
 
   .appointmentActions,
-  .loadMoreSection {
+  .loadMoreSection,
+  .backButton {
     display: none;
   }
 
   .appointmentCard {
     break-inside: avoid;
-    border: 1px solid #ccc;
     margin-bottom: 20px;
-  }
-}
-
-/* NEW: Dark mode support (if needed in future) */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-  }
-
-  .header,
-  .statsSection .statCard,
-  .filtersContainer,
-  .appointmentsSection {
-    background: rgba(45, 55, 72, 0.95);
-    color: #e2e8f0;
-  }
-
-  .appointmentCard {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-
-  .title,
-  .statNumber,
-  .infoValue {
-    color: #e2e8f0;
-  }
-
-  .subtitle,
-  .statLabel,
-  .infoLabel {
-    color: #a0aec0;
   }
 }

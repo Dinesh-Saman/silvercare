@@ -613,15 +613,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                               </div>
                             )}
 
-                            <button
-                              className={styles.viewDetailsButton}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAppointmentClick(appointment.appointment_id);
-                              }}
-                            >
-                              View Details
-                            </button>
+
                           </div>
                         </div>
                       </div>
