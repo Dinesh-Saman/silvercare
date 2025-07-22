@@ -57,9 +57,12 @@
 
 .headerContent {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 20px;
+}
+.headerInfo {
+  text-align: left;
+  flex: 1;
 }
 
 /* Modern Professional Back Button - Matching Appointments Page */
@@ -90,7 +93,7 @@
 }
 
 .headerInfo {
-  text-align: center;
+  text-align: left;
   flex: 1;
 }
 
