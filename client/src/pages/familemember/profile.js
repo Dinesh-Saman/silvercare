@@ -1,125 +1,306 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/navbar';
-import styles from "../../components/css/navbar.module.css";
 import { useAuth } from '../../context/AuthContext';
+import { getFamilyMemberDetails, updateFamilyMemberDetails } from '../../services/familyMemberApi';
+import styles from '../../components/css/familymember/profile.module.css';
+import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 
 const FamilyMemberProfile = () => {
-    const { currentUser, logout } = useAuth();
-  return (
-    <div>
-      <Navbar />
-          <div>
-      <h1>Welcome, {currentUser.name}!</h1>
-      <p>Email: {currentUser.email}</p>
-      <p>Role: {currentUser.role}</p>
-      {/* Caregiver-specific content */}
-      <button onClick={logout}>Logout</button>
-    </div>
-      <div style={{
-        padding: '40px',
-        fontFamily: 'Arial, sans-serif',
-        backgroundColor: '#f8f9fa',
-        minHeight: '100vh',
-        paddingTop: '120px' // Added extra padding to account for fixed navbar
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '40px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h1 style={{
-            color: '#2c3e50',
-            fontSize: '2.5rem',
-            marginBottom: '16px',
-            textAlign: 'center'
-          }}>
-            Welcome to Your Caregiver Dashboard
-          </h1>
-          
-          <p style={{
-            color: '#7f8c8d',
-            fontSize: '1.2rem',
-            textAlign: 'center',
-            marginBottom: '40px'
-          }}>
-            Manage your caregiving services and connect with families in need
-          </p>
+  const { currentUser, logout } = useAuth();
+  const [familyMemberData, setFamilyMemberData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    phone_fixed: ''
+  });
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
-            marginTop: '40px'
-          }}>
-            <div style={{
-              backgroundColor: '#e8f5e8',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #c3e6c3'
-            }}>
-              <h3 style={{ color: '#27ae60', marginBottom: '12px' }}>My Profile</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Manage your professional profile and credentials
-              </p>
-            </div>
+  // Fetch family member details on component mount
+  useEffect(() => {
+    const fetchFamilyMemberDetails = async () => {
+      if (!currentUser?.user_id) return;
+      
+      try {
+        setIsLoading(true);
+        const response = await getFamilyMemberDetails(currentUser.user_id);
+        
+        if (response.success) {
+          setFamilyMemberData(response.familyMember);
+          setFormData({
+            name: response.familyMember.name || '',
+            email: response.familyMember.email || '',
+            phone: response.familyMember.phone || '',
+            phone_fixed: response.familyMember.phone_fixed || ''
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching family member details:', err);
+        setError('Failed to load profile details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-            <div style={{
-              backgroundColor: '#e8f4fd',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #b3d9f7'
-            }}>
-              <h3 style={{ color: '#3498db', marginBottom: '12px' }}>Available Jobs</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Browse and apply for caregiving opportunities
-              </p>
-            </div>
+    fetchFamilyMemberDetails();
+  }, [currentUser]);
 
-            <div style={{
-              backgroundColor: '#fff3cd',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #ffeaa7'
-            }}>
-              <h3 style={{ color: '#f39c12', marginBottom: '12px' }}>My Clients</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                View and manage your current client relationships
-              </p>
-            </div>
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-            <div style={{
-              backgroundColor: '#fde8e8',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid #fab1a0'
-            }}>
-              <h3 style={{ color: '#e74c3c', marginBottom: '12px' }}>Schedule</h3>
-              <p style={{ color: '#2c3e50', fontSize: '14px' }}>
-                Manage your appointments and availability
-              </p>
-            </div>
-          </div>
+  const handleSave = async () => {
+    if (!currentUser?.user_id) return;
+    
+    try {
+      setIsSaving(true);
+      setError('');
+      setSuccessMessage('');
+      
+      const response = await updateFamilyMemberDetails(currentUser.user_id, formData);
+      
+      if (response.success) {
+        setFamilyMemberData(response.familyMember);
+        setIsEditing(false);
+        setSuccessMessage('Profile updated successfully!');
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(''), 3000);
+      }
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-          <div style={{
-            marginTop: '40px',
-            padding: '24px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ color: '#2c3e50', marginBottom: '12px' }}>
-              🎉 Registration Successful!
-            </h3>
-            <p style={{ color: '#7f8c8d' }}>
-              Your caregiver account has been created successfully. 
-              Start exploring the platform and connect with families who need your care.
-            </p>
+  const handleCancel = () => {
+    if (familyMemberData) {
+      setFormData({
+        name: familyMemberData.name || '',
+        email: familyMemberData.email || '',
+        phone: familyMemberData.phone || '',
+        phone_fixed: familyMemberData.phone_fixed || ''
+      });
+    }
+    setIsEditing(false);
+    setError('');
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.pageContainer}>
+        <Navbar />
+        <div className={styles.contentContainer}>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading profile...</p>
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className={styles.pageContainer}>
+      <Navbar />
+       <FamilyMemberLayout>
+      
+      <div className={styles.contentContainer}>
+        {/* Header Section - Following Elder Profile Structure */}
+        <div className={styles.header}>
+          <div className={styles.headerContent}>
+            <div className={styles.headerInfo}>
+              <h1>Family Member Profile</h1>
+              <p>Manage your profile information and account settings</p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Profile Card Section - Following Elder Profile Structure */}
+        <div className={styles.profileCard}>
+          <div className={styles.profileImageSection}>
+            <div className={styles.imageContainer}>
+              <div className={styles.profilePlaceholder}>
+                {familyMemberData?.name ? familyMemberData.name.charAt(0).toUpperCase() : 'F'}
+                <div className={styles.statusIndicator}></div>
+              </div>
+            </div>
+ 
+          </div>
+
+          <div className={styles.profileInfo}>
+            <div className={styles.profileName}>
+              <h2>{familyMemberData?.name || 'Family Member'}</h2>
+              <span className={styles.roleTag}>Family Member</span>
+            </div>
+
+            <div className={styles.profileMeta}>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Email</span>
+                <span className={styles.metaValue}>{familyMemberData?.email || 'Not provided'}</span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Phone</span>
+                <span className={styles.metaValue}>{familyMemberData?.phone || 'Not provided'}</span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Member Since</span>
+                <span className={styles.metaValue}>
+                  {familyMemberData?.created_at ? 
+                    new Date(familyMemberData.created_at).toLocaleDateString() : 
+                    'Not available'
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Information Sections - Following Elder Profile Structure */}
+        <div className={styles.infoSections}>
+          {/* Personal Information Section */}
+          <div className={styles.infoSection}>
+            <div className={styles.sectionHeader}>
+              <h3>👤 Personal Information</h3>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className={styles.editBtn}
+                >
+                  Edit Profile
+                </button>
+              )}
+            </div>
+
+            {error && (
+              <div className={styles.errorMessage}>
+                ⚠️ {error}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className={styles.successMessage}>
+                ✅ {successMessage}
+              </div>
+            )}
+
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <label>Full Name</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                    placeholder="Enter your full name"
+                  />
+                ) : (
+                  <span>{familyMemberData?.name || 'Not provided'}</span>
+                )}
+              </div>
+
+              <div className={styles.infoItem}>
+                <label>Email Address</label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                    placeholder="Enter your email address"
+                  />
+                ) : (
+                  <span>{familyMemberData?.email || 'Not provided'}</span>
+                )}
+              </div>
+
+              <div className={styles.infoItem}>
+                <label>Mobile Phone</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                    placeholder="Enter your mobile phone"
+                  />
+                ) : (
+                  <span>{familyMemberData?.phone || 'Not provided'}</span>
+                )}
+              </div>
+
+              <div className={styles.infoItem}>
+                <label>Fixed Phone</label>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    name="phone_fixed"
+                    value={formData.phone_fixed}
+                    onChange={handleInputChange}
+                    className={styles.editInput}
+                    placeholder="Enter your fixed phone"
+                  />
+                ) : (
+                  <span>{familyMemberData?.phone_fixed || 'Not provided'}</span>
+                )}
+              </div>
+
+  
+
+ 
+            </div>
+
+            {isEditing && (
+              <div className={styles.actionButtons}>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className={styles.saveBtn}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className={styles.buttonSpinner}></div>
+                      Saving...
+                    </>
+                  ) : (
+                    '💾 Save Changes'
+                  )}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className={styles.cancelBtn}
+                >
+                  ❌ Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+
+
+         
+        </div>
+        
+      </div>
+      </FamilyMemberLayout>
     </div>
   );
 };
