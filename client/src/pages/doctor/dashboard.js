@@ -15,11 +15,13 @@ const DoctorDashboard = () => {
     todaysAppointments: [],
     upcomingAppointments: [],
     nextAppointment: null,
+    nextAppointments: [],
     counts: {
       todaysAppointments: 0,
       upcomingAppointments: 0
     }
   });
+  const [currentPatientIndex, setCurrentPatientIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -171,6 +173,10 @@ const DoctorDashboard = () => {
           return;
         }
         setDashboardData(dashboard.data);
+        setCurrentPatientIndex(0); // Reset to first patient when data loads
+        console.log('Dashboard data loaded:', dashboard.data);
+        console.log('nextAppointments:', dashboard.data.nextAppointments);
+        console.log('nextAppointment:', dashboard.data.nextAppointment);
       } catch (err) {
         // Try to parse error if it's HTML
         if (err.message && err.message.startsWith('<!DOCTYPE')) {
@@ -212,8 +218,19 @@ const DoctorDashboard = () => {
 
   const elders = getUniqueElders();
 
-  // Next patient: from nextAppointment
-  const nextPatient = dashboardData.nextAppointment
+  // Next patient: from nextAppointments array with current index, fallback to single nextAppointment
+  const nextPatient = dashboardData.nextAppointments && dashboardData.nextAppointments.length > 0
+    ? {
+        name: dashboardData.nextAppointments[currentPatientIndex]?.elder_name,
+        dob: dashboardData.nextAppointments[currentPatientIndex]?.elder_dob,
+        gender: dashboardData.nextAppointments[currentPatientIndex]?.elder_gender,
+        contact: dashboardData.nextAppointments[currentPatientIndex]?.elder_contact,
+        address: dashboardData.nextAppointments[currentPatientIndex]?.elder_address,
+        medical_conditions: dashboardData.nextAppointments[currentPatientIndex]?.medical_conditions,
+        avatar: dashboardData.nextAppointments[currentPatientIndex]?.elder_avatar,
+        appointment: dashboardData.nextAppointments[currentPatientIndex]
+      }
+    : dashboardData.nextAppointment
     ? {
         name: dashboardData.nextAppointment.elder_name,
         dob: dashboardData.nextAppointment.elder_dob,
@@ -225,6 +242,19 @@ const DoctorDashboard = () => {
         appointment: dashboardData.nextAppointment
       }
     : null;
+
+  // Navigation functions for next patients
+  const nextPatientHandler = () => {
+    if (dashboardData.nextAppointments && currentPatientIndex < dashboardData.nextAppointments.length - 1) {
+      setCurrentPatientIndex(currentPatientIndex + 1);
+    }
+  };
+
+  const previousPatientHandler = () => {
+    if (currentPatientIndex > 0) {
+      setCurrentPatientIndex(currentPatientIndex - 1);
+    }
+  };
 
   // Upcoming consultations: from upcomingAppointments
   const consultations = (dashboardData.upcomingAppointments || []).map(app => ({
@@ -331,7 +361,30 @@ const DoctorDashboard = () => {
         {/* Next Patient & Tasks Section - Left Half */}
         <div className={styles.leftContentContainer}>
           <div className={styles.contentCard} data-tour="next-patient">
-            <h2 className={styles.sectionTitle}>🏥 Next Patient</h2>
+            <div className={styles.nextPatientHeader}>
+              <h2 className={styles.sectionTitle}>🏥 Next Patient</h2>
+              {dashboardData.nextAppointments && dashboardData.nextAppointments.length > 1 && (
+                <div className={styles.patientNavigation}>
+                  <button 
+                    className={`${styles.navBtn} ${currentPatientIndex === 0 ? styles.disabled : ''}`}
+                    onClick={previousPatientHandler}
+                    disabled={currentPatientIndex === 0}
+                  >
+                    ⬅️ Previous
+                  </button>
+                  <span className={styles.patientCounter}>
+                    {currentPatientIndex + 1} of {dashboardData.nextAppointments.length}
+                  </span>
+                  <button 
+                    className={`${styles.navBtn} ${currentPatientIndex === dashboardData.nextAppointments.length - 1 ? styles.disabled : ''}`}
+                    onClick={nextPatientHandler}
+                    disabled={currentPatientIndex === dashboardData.nextAppointments.length - 1}
+                  >
+                    Next ➡️
+                  </button>
+                </div>
+              )}
+            </div>
             {nextPatient ? (
               <div className={styles.nextPatientCard}>
                 <div className={styles.patientHeader}>

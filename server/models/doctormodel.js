@@ -1,10 +1,10 @@
 const pool = require('../db');
 
-// Get all appointments for a specific doctor
+// Get all appointments for a specific doctor (only confirmed appointments)
 const getAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-      (SELECT 
+      SELECT 
         a.appointment_id as id,
         'appointment' as source,
         a.elder_id,
@@ -12,6 +12,7 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -19,33 +20,12 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
+        e.profile_photo as elder_avatar
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1)
-      UNION ALL
-      (SELECT 
-        tb.temp_booking_id as id,
-        'temporary_booking' as source,
-        tb.elder_id,
-        tb.doctor_id,
-        tb.date_time,
-        'confirmed' as status,
-        tb.notes,
-        tb.patient_name as elder_name,
-        null as elder_email,
-        null as elder_dob,
-        null as elder_gender,
-        tb.contact_number as elder_contact,
-        null as elder_address,
-        tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
-      FROM temporary_booking tb
-      WHERE tb.doctor_id = $1 
-      AND tb.expires_at > CURRENT_TIMESTAMP)
-      ORDER BY date_time ASC
+      WHERE a.doctor_id = $1 
+      AND a.status = 'confirmed'
+      ORDER BY a.date_time ASC
     `, [doctorId]);
     return result.rows;
   } catch (error) {
@@ -54,127 +34,19 @@ const getAppointmentsByDoctorId = async (doctorId) => {
   }
 };
 
-// Get upcoming appointments for a specific doctor
+// Get upcoming appointments for a specific doctor (only confirmed appointments)
 const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-      (SELECT 
-        a.appointment_id as id,
-        'appointment' as source,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 AND a.date_time >= CURRENT_TIMESTAMP)
-      UNION ALL
-      (SELECT 
-        tb.temp_booking_id as id,
-        'temporary_booking' as source,
-        tb.elder_id,
-        tb.doctor_id,
-        tb.date_time,
-        'confirmed' as status,
-        tb.notes,
-        tb.patient_name as elder_name,
-        null as elder_email,
-        null as elder_dob,
-        null as elder_gender,
-        tb.contact_number as elder_contact,
-        null as elder_address,
-        tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
-      FROM temporary_booking tb
-      WHERE tb.doctor_id = $1 AND tb.date_time >= CURRENT_TIMESTAMP
-      AND tb.expires_at > CURRENT_TIMESTAMP)
-      ORDER BY date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching upcoming appointments:', error);
-    throw error;
-  }
-};
-
-// Get today's appointments for a specific doctor
-const getTodaysAppointmentsByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
-      (SELECT 
-        a.appointment_id as id,
-        'appointment' as source,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 
-      AND DATE(a.date_time) = CURRENT_DATE)
-      UNION ALL
-      (SELECT 
-        tb.temp_booking_id as id,
-        'temporary_booking' as source,
-        tb.elder_id,
-        tb.doctor_id,
-        tb.date_time,
-        'confirmed' as status,
-        tb.notes,
-        tb.patient_name as elder_name,
-        null as elder_email,
-        null as elder_dob,
-        null as elder_gender,
-        tb.contact_number as elder_contact,
-        null as elder_address,
-        tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
-      FROM temporary_booking tb
-      WHERE tb.doctor_id = $1 
-      AND DATE(tb.date_time) = CURRENT_DATE
-      AND tb.expires_at > CURRENT_TIMESTAMP)
-      ORDER BY date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching today\'s appointments:', error);
-    throw error;
-  }
-};
-
-// Get next appointment for a specific doctor
-const getNextAppointmentByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
       SELECT 
-        a.appointment_id,
+        a.appointment_id as id,
+        'appointment' as source,
         a.elder_id,
         a.doctor_id,
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -187,12 +59,117 @@ const getNextAppointmentByDoctorId = async (doctorId) => {
       LEFT JOIN elder e ON a.elder_id = e.elder_id
       WHERE a.doctor_id = $1 
       AND a.date_time >= CURRENT_TIMESTAMP
+      AND a.status = 'confirmed'
+      ORDER BY a.date_time ASC
+    `, [doctorId]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching upcoming appointments:', error);
+    throw error;
+  }
+};
+
+// Get today's appointments for a specific doctor (only confirmed appointments)
+const getTodaysAppointmentsByDoctorId = async (doctorId) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.appointment_id as id,
+        'appointment' as source,
+        a.elder_id,
+        a.doctor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        e.name as elder_name,
+        e.email as elder_email,
+        e.dob as elder_dob,
+        e.gender as elder_gender,
+        e.contact as elder_contact,
+        e.address as elder_address,
+        e.medical_conditions,
+        e.profile_photo as elder_avatar
+      FROM appointment a
+      LEFT JOIN elder e ON a.elder_id = e.elder_id
+      WHERE a.doctor_id = $1 
+      AND DATE(a.date_time) = CURRENT_DATE
+      AND a.status = 'confirmed'
+      ORDER BY a.date_time ASC
+    `, [doctorId]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching today\'s appointments:', error);
+    throw error;
+  }
+};
+
+// Get next appointment for a specific doctor (only confirmed appointments)
+const getNextAppointmentByDoctorId = async (doctorId) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.appointment_id,
+        a.elder_id,
+        a.doctor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        e.name as elder_name,
+        e.email as elder_email,
+        e.dob as elder_dob,
+        e.gender as elder_gender,
+        e.contact as elder_contact,
+        e.address as elder_address,
+        e.medical_conditions,
+        e.profile_photo as elder_avatar
+      FROM appointment a
+      LEFT JOIN elder e ON a.elder_id = e.elder_id
+      WHERE a.doctor_id = $1 
+      AND a.date_time >= CURRENT_TIMESTAMP
+      AND a.status = 'confirmed'
       ORDER BY a.date_time ASC
       LIMIT 1
     `, [doctorId]);
     return result.rows[0] || null;
   } catch (error) {
     console.error('Error fetching next appointment:', error);
+    throw error;
+  }
+};
+
+// Get next few appointments for a specific doctor (only confirmed appointments)
+const getNextAppointmentsByDoctorId = async (doctorId, limit = 5) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.appointment_id,
+        a.elder_id,
+        a.doctor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        e.name as elder_name,
+        e.email as elder_email,
+        e.dob as elder_dob,
+        e.gender as elder_gender,
+        e.contact as elder_contact,
+        e.address as elder_address,
+        e.medical_conditions,
+        e.profile_photo as elder_avatar
+      FROM appointment a
+      LEFT JOIN elder e ON a.elder_id = e.elder_id
+      WHERE a.doctor_id = $1 
+      AND a.date_time >= CURRENT_TIMESTAMP
+      AND a.status = 'confirmed'
+      ORDER BY a.date_time ASC
+      LIMIT $2
+    `, [doctorId, limit]);
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching next appointments:', error);
     throw error;
   }
 };
@@ -306,6 +283,7 @@ module.exports = {
   getUpcomingAppointmentsByDoctorId,
   getTodaysAppointmentsByDoctorId,
   getNextAppointmentByDoctorId,
+  getNextAppointmentsByDoctorId,
   updateAppointmentStatus,
   getDoctorByUserId,
   updateDoctorProfile

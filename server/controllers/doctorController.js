@@ -88,11 +88,13 @@ const getDoctorDashboard = async (req, res) => {
     const [
       todaysAppointments,
       upcomingAppointments,
-      nextAppointment
+      nextAppointment,
+      nextAppointments
     ] = await Promise.all([
       doctorModel.getTodaysAppointmentsByDoctorId(doctorId),
       doctorModel.getUpcomingAppointmentsByDoctorId(doctorId),
-      doctorModel.getNextAppointmentByDoctorId(doctorId)
+      doctorModel.getNextAppointmentByDoctorId(doctorId),
+      doctorModel.getNextAppointmentsByDoctorId(doctorId, 5)
     ]);
 
     res.json({
@@ -100,6 +102,7 @@ const getDoctorDashboard = async (req, res) => {
         todaysAppointments: todaysAppointments || [],
         upcomingAppointments: upcomingAppointments || [],
         nextAppointment: nextAppointment || null,
+        nextAppointments: nextAppointments || [],
         counts: {
           todaysAppointments: todaysAppointments ? todaysAppointments.length : 0,
           upcomingAppointments: upcomingAppointments ? upcomingAppointments.length : 0
