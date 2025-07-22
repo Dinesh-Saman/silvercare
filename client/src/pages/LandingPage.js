@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
+import logoSilver from '../components/images/logo_silver.png'; // ✅ Import your custom logo
+
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -87,10 +89,14 @@ const LandingPage = () => {
       {/* Navigation Header */}
       <nav className={styles.navbar}>
         <div className={styles.navContainer}>
-          <div className={styles.logo}>
-            <span className={styles.logoIcon}>🩺</span>
-            <span className={styles.logoText}>SilverCare</span>
-          </div>
+          {/* Logo */}
+                  <div className={styles.navLogo} >
+                    <img 
+                      src={logoSilver} 
+                      alt="SilverCare Logo" 
+                      className={styles.logoImage}
+                    />
+                  </div>
           <div className={styles.navLinks}>
             <button onClick={() => scrollToSection('features')} className={styles.navLink}>
               Features
@@ -146,11 +152,6 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
-          <div className={styles.heroImage}>
-            <div className={styles.heroImagePlaceholder}>
-              <span className={styles.heroEmoji}>🌿👵👴</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -203,17 +204,6 @@ const LandingPage = () => {
                 <div className={styles.aboutFeature}>
                   <span className={styles.aboutFeatureIcon}>💬</span>
                   <span>Secure Communication</span>
-                </div>
-              </div>
-            </div>
-            <div className={styles.aboutImage}>
-              <div className={styles.techStack}>
-                <h3>🛠️ Tech Stack</h3>
-                <div className={styles.techItems}>
-                  <span className={styles.techItem}>React.js</span>
-                  <span className={styles.techItem}>Node.js</span>
-                  <span className={styles.techItem}>PostgreSQL</span>
-                  <span className={styles.techItem}>JWT Auth</span>
                 </div>
               </div>
             </div>

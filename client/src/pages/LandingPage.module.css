@@ -1,4 +1,7 @@
 /* Add missing main container and section classes for LandingPage */
+body {
+    padding-top: 0px;
+}
 .landingPage {
   background: #f7f9f7;
   min-height: 100vh;
@@ -8,7 +11,7 @@
 .navbar {
   background: #fff;
   box-shadow: 0 2px 8px rgba(44,85,48,0.07);
-  padding: 1.5rem 0;
+  padding:  0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -19,17 +22,20 @@
   align-items: center;
   justify-content: space-between;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  margin: 0 ;
+  padding: 0 ;
+  height: 70px;
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.7rem;
-  font-weight: bold;
-  color: #2c5530;
+  height: 260px; /* Increased from 40px */
+  width: auto;
+  max-width: 250px; /* Increased from 150px */
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+  margin-left: -200px;
+  padding: 200px;
 }
 
 .logoIcon {
@@ -42,7 +48,7 @@
 
 .navLinks {
   display: flex;
-  align-items: center;
+  align-items: right;
   gap: 1.5rem;
 }
 
@@ -91,7 +97,12 @@
 }
 
 .hero {
-  background: linear-gradient(135deg, #eaf4ea 60%, #f7f9f7 100%);
+  background-image: 
+    /* linear-gradient(135deg, #eaf4ea 60%, #f7f9f7 100%), */
+    url('../components/images/banner.jpg');
+  background-size: cover; /* Adjusts image to cover the section */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents image repeating */
   padding: 60px 0 40px 0;
 }
 
@@ -114,15 +125,15 @@
 .heroTitle {
   font-size: 3rem;
   font-weight: 800;
-  color: #2c5530;
+  color: #fff;
   margin-bottom: 1rem;
 }
 .highlight {
-  color: #4a7c59;
+  color: #fff;
 }
 .heroSubtitle {
   font-size: 1.3rem;
-  color: #4a7c59;
+  color: #fff;
   margin-bottom: 2rem;
 }
 .heroButtons {
@@ -130,9 +141,9 @@
   gap: 1rem;
 }
 .primaryBtn {
-  background: #2c5530;
+  background: #007bff;
   color: #fff;
-  border: none;
+  border: 2px solid #fff;
   border-radius: 30px;
   padding: 1rem 2rem;
   font-size: 1.1rem;
@@ -141,12 +152,12 @@
   transition: background 0.3s;
 }
 .primaryBtn:hover {
-  background: #4a7c59;
+  background: #0056b3;
 }
 .secondaryBtn {
   background: none;
-  color: #2c5530;
-  border: 2px solid #2c5530;
+  color: #007bff;
+  border: 2px solid #fff;
   border-radius: 30px;
   padding: 1rem 2rem;
   font-size: 1.1rem;
@@ -155,7 +166,7 @@
   transition: background 0.3s, color 0.3s;
 }
 .secondaryBtn:hover {
-  background: #2c5530;
+  background: #0007bfff;
   color: #fff;
 }
 .heroStats {
@@ -171,10 +182,10 @@
 .statNumber {
   font-size: 2rem;
   font-weight: 700;
-  color: #2c5530;
+  color: #fff;
 }
 .statLabel {
-  color: #4a7c59;
+  color: #fff;
   font-size: 1rem;
 }
 .heroImage {
