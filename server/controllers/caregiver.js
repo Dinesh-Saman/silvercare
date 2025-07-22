@@ -175,6 +175,9 @@ const fetchCareRequests = async (req, res) => {
   try {
     // Auto-update expired requests using the service
     await StatusUpdateService.updateExpiredRequestsForCaregiver(caregiverId);
+    
+    // Update caregiver availability
+    await StatusUpdateService.updateCaregiverAvailability(caregiverId);
 
     let query = `
       SELECT 
@@ -307,6 +310,9 @@ const updateCaregiverProfile = async (req, res) => {
       
       console.log('Caregiver profile updated successfully');
       
+      // Update caregiver availability based on current assignments
+      await StatusUpdateService.updateCaregiverAvailability(caregiverId);
+      
       res.json({
         success: true,
         message: 'Profile updated successfully',
@@ -413,6 +419,9 @@ const getUpcomingShifts = async (req, res) => {
   try {
     // Auto-update expired requests using the service
     await StatusUpdateService.updateExpiredRequestsForCaregiver(caregiverId);
+    
+    // Update caregiver availability
+    await StatusUpdateService.updateCaregiverAvailability(caregiverId);
     
     let query;
     let queryParams;
@@ -686,24 +695,28 @@ const getWeeklyReports = async (req, res) => {
   try {
     console.log('Fetching weekly reports for caregiver:', caregiverId, 'from', startDate, 'to', endDate);
     
-    // First, get all care assignments for the caregiver in the date range
+    // Update caregiver availability before fetching reports
+    await StatusUpdateService.updateCaregiverAvailability(caregiverId);
+    
+    // First, get all care assignments for the caregiver in the date range (confirmed status only)
     const assignmentQuery = `
       SELECT DISTINCT
         cr.elder_id,
         e.name as elder_name,
         cr.start_date,
-        cr.end_date
+        cr.end_date,
+        cr.status
       FROM carerequest cr
       JOIN elder e ON cr.elder_id = e.elder_id
       WHERE cr.caregiver_id = $1
-        AND cr.status IN ('confirmed', 'approved')
+        AND cr.status = 'confirmed'
         AND cr.start_date <= $3::date 
         AND cr.end_date >= $2::date
       ORDER BY e.name;
     `;
     
     const assignmentResult = await pool.query(assignmentQuery, [caregiverId, startDate, endDate]);
-    console.log('Found assignments:', assignmentResult.rows);
+    console.log('Found confirmed assignments:', assignmentResult.rows);
     
     // Get existing reports for the date range
     const reportsQuery = `
@@ -770,7 +783,7 @@ const getWeeklyReports = async (req, res) => {
       }
       
       if (dayAssignment) {
-        // There's an assignment for this day
+        // There's a confirmed assignment for this day
         const elderId = dayAssignment.elder_id;
         const reportData = reportsByDate[dateKey] && reportsByDate[dateKey][elderId];
         
@@ -782,11 +795,11 @@ const getWeeklyReports = async (req, res) => {
           existingReport: reportData ? reportData.existingReport : null
         });
       } else {
-        // No assignment for this day
+        // No confirmed assignment for this day
         weeklyReports.push({
           date: dateKey,
           elder_id: null,
-          elder_name: 'No Assignment',
+          elder_name: 'No care today',
           hasReport: false,
           existingReport: null
         });

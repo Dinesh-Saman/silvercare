@@ -1022,8 +1022,8 @@ const CaregiverDashboard = () => {
                       fontWeight: 500,
                       lineHeight: '1.3'
                     }}>
-                      {dayReport.elder_name === 'No Assignment' ? (
-                        <span style={{color: '#a0aec0', fontStyle: 'italic'}}>No caregiver</span>
+                      {dayReport.elder_name === 'No care today' ? (
+                        <span style={{color: '#a0aec0', fontStyle: 'italic'}}>No care today</span>
                       ) : (
                         dayReport.elder_name
                       )}
