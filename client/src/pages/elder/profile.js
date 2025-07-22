@@ -252,18 +252,10 @@ const ElderProfile = () => {
         {/* Modern Professional Header */}
         <div className={styles.header}>
           <div className={styles.headerContent}>
-            <button 
-              className={styles.backBtn}
-            onClick={handleBackToDashboard}
-            >
-              ← Back to Dashboard
-            </button>
-            
             <div className={styles.headerInfo}>
               <h1>My Profile</h1>
               <p>Manage your personal information and settings</p>
             </div>
-
             <div className={styles.headerActions}>
               <button 
                 className={styles.editBtn}
@@ -279,6 +271,13 @@ const ElderProfile = () => {
                 Logout
               </button>
             </div>
+            <button 
+              className={styles.backBtn}
+              onClick={handleBackToDashboard}
+              style={{ marginLeft: 'auto' }}
+            >
+              ← Back to Dashboard
+            </button>
           </div>
         </div>
 

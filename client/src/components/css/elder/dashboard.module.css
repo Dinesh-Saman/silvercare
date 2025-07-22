@@ -1078,7 +1078,7 @@
 
 .dayCard {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 2px solid #e2e8f0;
+  /* border: 2px solid #e2e8f0; */
   border-radius: 12px;
   padding: 16px;
   min-height: 120px;
