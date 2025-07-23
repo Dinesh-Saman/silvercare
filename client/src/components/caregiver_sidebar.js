@@ -38,14 +38,11 @@ const CaregiverSidebar = ({ onItemClick }) => {
       case 'requests':
         navigate('/caregiver/care-requests');
         break;
-      case 'messages':
-        navigate('/caregiver/messages');
+      case 'carelogs':
+        navigate('/caregiver/carelog');
         break;
       case 'profile':
         navigate('/caregiver/profile');
-        break;
-      case 'settings':
-        navigate('/caregiver/settings');
         break;
       default:
         console.log('Navigation not implemented for:', item.key);
@@ -77,22 +74,16 @@ const CaregiverSidebar = ({ onItemClick }) => {
       path: '/caregiver/care-requests'
     },
     {
-      key: 'messages',
-      label: 'Messages',
-      icon: '💬',
-      path: '/caregiver/messages'
+      key: 'carelogs',
+      label: 'Carelogs',
+      icon: '📝',
+      path: '/caregiver/carelog'
     },
     {
       key: 'profile',
       label: 'Profile',
       icon: '👤',
       path: '/caregiver/profile'
-    },
-    {
-      key: 'settings',
-      label: 'Settings',
-      icon: '⚙️',
-      path: '/caregiver/settings'
     }
   ];
 

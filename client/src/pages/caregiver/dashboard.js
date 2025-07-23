@@ -6,200 +6,8 @@ import styles from "../../components/css/caregiver/dashboard.module.css";
 import CaregiverLayout from '../../components/CaregiverLayout';
 import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
-
-// Daily Report Form Component
-const DailyReportForm = ({ onSubmit, elderName, existingReport }) => {
-  const [formData, setFormData] = useState({
-    notes: existingReport?.notes || '',
-    mood: existingReport?.mood || '',
-    health_status: existingReport?.health_status || '',
-    medications_given: existingReport?.medications_given || '',
-    activities: existingReport?.activities || '',
-    concerns: existingReport?.concerns || ''
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
-  return (
-    <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          General Notes:
-        </label>
-        <textarea
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          required
-          rows={3}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-          placeholder="Describe the elder's overall condition and activities today..."
-        />
-      </div>
-
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          Mood:
-        </label>
-        <select
-          name="mood"
-          value={formData.mood}
-          onChange={handleChange}
-          required
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px'
-          }}
-        >
-          <option value="">Select mood...</option>
-          <option value="excellent">Excellent</option>
-          <option value="good">Good</option>
-          <option value="fair">Fair</option>
-          <option value="poor">Poor</option>
-          <option value="anxious">Anxious</option>
-          <option value="confused">Confused</option>
-        </select>
-      </div>
-
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          Health Status:
-        </label>
-        <textarea
-          name="health_status"
-          value={formData.health_status}
-          onChange={handleChange}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-          placeholder="Any health concerns, symptoms, or improvements..."
-        />
-      </div>
-
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          Medications Given:
-        </label>
-        <textarea
-          name="medications_given"
-          value={formData.medications_given}
-          onChange={handleChange}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-          placeholder="List medications administered today..."
-        />
-      </div>
-
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          Activities:
-        </label>
-        <textarea
-          name="activities"
-          value={formData.activities}
-          onChange={handleChange}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-          placeholder="Activities performed, exercises, social interactions..."
-        />
-      </div>
-
-      <div>
-        <label style={{display: 'block', marginBottom: '8px', fontWeight: 600, color: '#4a5568'}}>
-          Concerns:
-        </label>
-        <textarea
-          name="concerns"
-          value={formData.concerns}
-          onChange={handleChange}
-          rows={2}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            fontSize: '14px',
-            resize: 'vertical'
-          }}
-          placeholder="Any concerns or issues that need attention..."
-        />
-      </div>
-
-      <div style={{display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px'}}>
-        <button
-          type="button"
-          onClick={() => {}}
-          style={{
-            padding: '12px 24px',
-            border: '2px solid #e2e8f0',
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            color: '#4a5568',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          style={{
-            padding: '12px 24px',
-            border: 'none',
-            borderRadius: '8px',
-            backgroundColor: '#667eea',
-            color: 'white',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Submit Report
-        </button>
-      </div>
-    </form>
-  );
-};
-
+import DailyCareReportModal from '../../components/DailyCareReportModal';
+import SuccessNotification from '../../components/SuccessNotification';
 
 const CaregiverDashboard = () => {
   const { user } = useAuth(); // <-- pulls from logged-in context
@@ -224,6 +32,9 @@ const CaregiverDashboard = () => {
   const [loadingReports, setLoadingReports] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReportDay, setSelectedReportDay] = useState(null);
+  const [reportSubmissionLoading, setReportSubmissionLoading] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Helper to show time left in days/hours/minutes
   const getTimeLeft = (startDate) => {
@@ -522,6 +333,12 @@ const CaregiverDashboard = () => {
         end.toISOString().split('T')[0]
       );
       console.log(`Week ${weekOffset} reports data:`, data);
+      
+      // Log today's specific data for debugging
+      const today = new Date().toISOString().split('T')[0];
+      const todayData = data.find(report => report.date === today);
+      console.log(`Today (${today}) report data:`, todayData);
+      
       setWeeklyReports(data);
     } catch (error) {
       console.error('Error fetching weekly reports:', error);
@@ -534,28 +351,106 @@ const CaregiverDashboard = () => {
   // Handle daily report submission
   const handleReportSubmit = async (reportData) => {
     try {
-      await caregiverApi.submitDailyReport(user.caregiver_id, selectedReportDay.elder_id, {
+      setReportSubmissionLoading(true);
+      
+      // Format the date to ensure it's stored correctly - avoid timezone issues
+      console.log('=== FRONTEND DATE DEBUG ===');
+      console.log('Original selectedReportDay.date:', selectedReportDay.date);
+      console.log('Type of selectedReportDay.date:', typeof selectedReportDay.date);
+      
+      // Check if this is a past date
+      const submissionDate = new Date(selectedReportDay.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      submissionDate.setHours(0, 0, 0, 0);
+      
+      console.log('Submission date:', submissionDate);
+      console.log('Today:', today);
+      console.log('Is past date:', submissionDate < today);
+      console.log('Date difference in days:', Math.floor((today - submissionDate) / (1000 * 60 * 60 * 24)));
+      
+      // Use the date exactly as provided without any conversion
+      const formattedDate = selectedReportDay.date;
+      
+      console.log('Final formattedDate being sent:', formattedDate);
+      console.log('Submitting report for date:', formattedDate, 'elder_id:', selectedReportDay.elder_id);
+      console.log('Report data:', reportData);
+      
+      const response = await caregiverApi.submitDailyReport(user.caregiver_id, selectedReportDay.elder_id, {
         ...reportData,
-        date: selectedReportDay.date
+        date: formattedDate
       });
       
-      // Show success message
-      alert('Report submitted successfully!');
+      console.log('Report submitted successfully, response:', response);
       
-      // Close modal and refresh reports
+      // Show success notification
+      setSuccessMessage(`Daily care report for ${formattedDate} submitted successfully! The report has been saved to the database.`);
+      setShowSuccessNotification(true);
+      
+      // Close modal first
       setShowReportModal(false);
       setSelectedReportDay(null);
-      fetchWeeklyReports(currentReportWeek);
+      
+      // Force refresh reports with a small delay to ensure backend is updated
+      setTimeout(async () => {
+        console.log('Refreshing weekly reports after submission...');
+        await fetchWeeklyReports(currentReportWeek);
+      }, 500);
+      
     } catch (error) {
-      console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again.');
+      console.error('=== ERROR SUBMITTING REPORT ===');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      // Show detailed error message
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit report. Please try again.';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setReportSubmissionLoading(false);
     }
   };
 
   // Handle opening report modal
   const handleReportBoxClick = (dayData) => {
-    setSelectedReportDay(dayData);
-    setShowReportModal(true);
+    console.log('=== REPORT BOX CLICK DEBUG ===');
+    console.log('Day data:', dayData);
+    console.log('Date:', dayData.date);
+    console.log('Elder ID:', dayData.elder_id);
+    console.log('Elder name:', dayData.elder_name);
+    console.log('Has existing report:', dayData.hasReport);
+    
+    // Check if this is a past date
+    const clickedDate = new Date(dayData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    clickedDate.setHours(0, 0, 0, 0);
+    
+    console.log('Clicked date:', clickedDate);
+    console.log('Today:', today);
+    console.log('Is past date:', clickedDate < today);
+    
+    const isPastDate = clickedDate < today;
+    
+    // Handle past dates
+    if (isPastDate) {
+      if (dayData.hasReport) {
+        // Past date with existing report - open in read-only mode
+        console.log('Opening past date report in read-only mode');
+        setSelectedReportDay({...dayData, isReadOnly: true});
+        setShowReportModal(true);
+      } else {
+        // Past date without report - show error
+        alert('Cannot upload reports for past dates. Reports must be submitted on the same day or current date.');
+        return;
+      }
+    } else {
+      // Current or future date - normal operation
+      setSelectedReportDay(dayData);
+      setShowReportModal(true);
+    }
   };
 
   // Fetch shifts when currentWeek changes
@@ -910,6 +805,21 @@ const CaregiverDashboard = () => {
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: '2px solid #e0e6ed', flexWrap: 'nowrap', overflow: 'hidden'}}>
           <h2 style={{display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: '20px', color: '#2b4c7e', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>
             <span role="img" aria-label="Daily Care Reports">📝</span> Daily Care Reports
+            <button 
+              onClick={() => fetchWeeklyReports(currentReportWeek)}
+              style={{
+                marginLeft: '10px',
+                padding: '4px 8px',
+                fontSize: '12px',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Refresh
+            </button>
           </h2>
           <div className={styles.weekNavRow} style={{display: 'flex', alignItems: 'center', gap: 3, marginBottom: 0, flexShrink: 0}}>
             <button
@@ -955,7 +865,13 @@ const CaregiverDashboard = () => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 dayDate.setHours(0, 0, 0, 0);
+                
                 const isToday = dayDate.getTime() === today.getTime();
+                const isPast = dayDate < today;
+                const isFuture = dayDate > today;
+                
+                // Only show status for today and past dates where elder_id exists
+                const shouldShowStatus = dayReport.elder_id && (isToday || isPast);
                 
                 return (
                   <div 
@@ -1029,16 +945,54 @@ const CaregiverDashboard = () => {
                       )}
                     </div>
                     
-                    {dayReport.elder_id && (
+                    {/* Only show status for dates that require reports (today and past with elder_id) */}
+                    {shouldShowStatus && (
                       <div style={{
-                        fontSize: '10px', 
+                        fontSize: '11px', 
                         fontWeight: 600, 
                         color: dayReport.hasReport ? '#065f46' : '#dc2626',
                         backgroundColor: dayReport.hasReport ? '#d1fae5' : '#fee2e2',
-                        padding: '4px 8px',
-                        borderRadius: '8px'
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        border: dayReport.hasReport ? '1px solid #10b981' : '1px solid #f87171',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}>
-                        {dayReport.hasReport ? '✓ Reported' : '✗ Not Reported'}
+                        {dayReport.hasReport ? (
+                          <>
+                            <span style={{fontSize: '10px'}}>📤</span>
+                            Uploaded
+                          </>
+                        ) : (
+                          <>
+                            <span style={{fontSize: '10px'}}>⚠️</span>
+                            Not Uploaded
+                          </>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Future dates with elder_id - show no status message */}
+                    {dayReport.elder_id && isFuture && (
+                      <div style={{
+                        fontSize: '11px', 
+                        fontWeight: 500, 
+                        color: '#6b7280',
+                        backgroundColor: '#f9fafb',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        border: '1px solid #d1d5db',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <span style={{fontSize: '10px'}}>⏳</span>
+                        Future Date
                       </div>
                     )}
                   </div>
@@ -1074,67 +1028,28 @@ const CaregiverDashboard = () => {
         {dashboardContent}
       </CaregiverLayout>
       
-      {/* Daily Report Modal */}
-      {showReportModal && selectedReportDay && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
-              <h2 style={{margin: 0, color: '#2d3748'}}>
-                Daily Care Report - {selectedReportDay.elder_name}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowReportModal(false);
-                  setSelectedReportDay(null);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#666'
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div style={{marginBottom: '16px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px'}}>
-              <strong>Date:</strong> {new Date(selectedReportDay.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </div>
+      {/* Professional Daily Care Report Modal */}
+      <DailyCareReportModal
+        isOpen={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setSelectedReportDay(null);
+        }}
+        onSubmit={handleReportSubmit}
+        elderName={selectedReportDay?.elder_name}
+        reportDate={selectedReportDay?.date}
+        existingReport={selectedReportDay?.existingReport}
+        isSubmitting={reportSubmissionLoading}
+        isReadOnly={selectedReportDay?.isReadOnly || false}
+      />
 
-            <DailyReportForm 
-              onSubmit={handleReportSubmit}
-              elderName={selectedReportDay.elder_name}
-              existingReport={selectedReportDay.existingReport}
-            />
-          </div>
-        </div>
-      )}
+      {/* Success Notification */}
+      <SuccessNotification
+        show={showSuccessNotification}
+        message={successMessage}
+        onClose={() => setShowSuccessNotification(false)}
+        duration={5000}
+      />
     </>
   );
 };

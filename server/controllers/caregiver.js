@@ -692,6 +692,14 @@ const getWeeklyReports = async (req, res) => {
   const { caregiverId } = req.params;
   const { startDate, endDate } = req.query;
   
+  // Helper function to format date without timezone issues  
+  const formatDateLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   try {
     console.log('Fetching weekly reports for caregiver:', caregiverId, 'from', startDate, 'to', endDate);
     
@@ -741,8 +749,9 @@ const getWeeklyReports = async (req, res) => {
     
     // Create reports by date map
     const reportsByDate = {};
+    
     reportsResult.rows.forEach(report => {
-      const dateKey = report.date.toISOString().split('T')[0];
+      const dateKey = formatDateLocal(report.date); // Use timezone-safe formatting
       if (!reportsByDate[dateKey]) {
         reportsByDate[dateKey] = {};
       }
@@ -766,7 +775,7 @@ const getWeeklyReports = async (req, res) => {
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startDateObj);
       currentDate.setDate(startDateObj.getDate() + i);
-      const dateKey = currentDate.toISOString().split('T')[0];
+      const dateKey = formatDateLocal(currentDate); // Use timezone-safe formatting
       
       // Find assignment for this date
       let dayAssignment = null;
@@ -818,6 +827,13 @@ const getWeeklyReports = async (req, res) => {
 const submitDailyReport = async (req, res) => {
   const { caregiverId } = req.params;
   const { elder_id, notes, mood, health_status, medications_given, activities, concerns, date } = req.body;
+  
+  console.log('=== SUBMIT DAILY REPORT DEBUG ===');
+  console.log('Received date from frontend:', date);
+  console.log('Type of date:', typeof date);
+  console.log('Date as Date object:', new Date(date));
+  console.log('Date as ISO string:', new Date(date).toISOString());
+  console.log('Date split by T[0]:', new Date(date).toISOString().split('T')[0]);
   
   try {
     // Check if report already exists for this date
