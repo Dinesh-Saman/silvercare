@@ -35,13 +35,10 @@ const getAppointmentsByDoctorId = async (doctorId) => {
 };
 
 // Get upcoming appointments for a specific doctor (only confirmed appointments)
+// Get upcoming appointments for a specific doctor (only confirmed appointments)
 const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
       SELECT 
         a.appointment_id,
         a.elder_id,
@@ -86,152 +83,6 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         a.notes,
         a.appointment_type,
         a.meeting_link,
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 
-      AND DATE(a.date_time) = CURRENT_DATE
-      AND a.status = 'confirmed'
-      ORDER BY a.date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching today\'s appointments:', error);
-    throw error;
-  }
-};
-
-// Get next appointment for a specific doctor
-const getNextAppointmentByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
->>>>>>> Stashed changes
-      SELECT 
-        a.appointment_id,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
-        a.meeting_link,
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 
-      AND a.date_time >= CURRENT_TIMESTAMP
-      AND a.status = 'confirmed'
-      ORDER BY a.date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching upcoming appointments:', error);
-    throw error;
-  }
-};
-
-// Get today's appointments for a specific doctor (only confirmed appointments)
-const getTodaysAppointmentsByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        a.appointment_id,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
-        a.meeting_link,
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 
-      AND DATE(a.date_time) = CURRENT_DATE
-      AND a.status = 'confirmed'
-      ORDER BY a.date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching today\'s appointments:', error);
-    throw error;
-  }
-};
-
-// Get next appointment for a specific doctor
-const getNextAppointmentByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
->>>>>>> Stashed changes
-      SELECT 
-        a.appointment_id as id,
-        'appointment' as source,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
-<<<<<<< Updated upstream
-=======
-        a.meeting_link,
->>>>>>> Stashed changes
-        e.name as elder_name,
-        e.email as elder_email,
-        e.dob as elder_dob,
-        e.gender as elder_gender,
-        e.contact as elder_contact,
-        e.address as elder_address,
-        e.medical_conditions,
-        e.profile_photo as elder_avatar
-      FROM appointment a
-      LEFT JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.doctor_id = $1 
-      AND a.date_time >= CURRENT_TIMESTAMP
-      AND a.status = 'confirmed'
-      ORDER BY a.date_time ASC
-    `, [doctorId]);
-    return result.rows;
-  } catch (error) {
-    console.error('Error fetching upcoming appointments:', error);
-    throw error;
-  }
-};
-
-// Get today's appointments for a specific doctor (only confirmed appointments)
-const getTodaysAppointmentsByDoctorId = async (doctorId) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        a.appointment_id as id,
-        'appointment' as source,
-        a.elder_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -266,6 +117,7 @@ const getNextAppointmentByDoctorId = async (doctorId) => {
         a.status,
         a.notes,
         a.appointment_type,
+        a.meeting_link,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -301,14 +153,7 @@ const getNextAppointmentsByDoctorId = async (doctorId, limit = 5) => {
         a.status,
         a.notes,
         a.appointment_type,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
         a.meeting_link,
->>>>>>> Stashed changes
-=======
-        a.meeting_link,
->>>>>>> Stashed changes
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,

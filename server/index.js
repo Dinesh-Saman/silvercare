@@ -28,16 +28,7 @@ const appointmentRoutes = require('./routes/appointmentRoutes'); // Add this lin
 const paymentRoutes = require('./routes/paymentRoutes');
 const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
 const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-const availabilityRoutes = require('./routes/availabilityRoutes');
->>>>>>> Stashed changes
-=======
 const meetingRoutes = require('./routes/meetingRoutes');
->>>>>>> Stashed changes
-=======
-const meetingRoutes = require('./routes/meetingRoutes');
->>>>>>> Stashed changes
 
 app.use('/api/users', userRoutes); // Mount the full route
 app.use('/api/register', registerRoutes);
@@ -53,22 +44,11 @@ app.use('/api/appointments', appointmentRoutes); // Add this line
 app.use('/api/payment', paymentRoutes);
 app.use('/api/healthprofessional', healthprofessionalRoutes);
 app.use('/api/care-assignments', careAssignmentRoutes);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-app.use('/api/availability', availabilityRoutes);
->>>>>>> Stashed changes
-=======
-=======
->>>>>>> Stashed changes
 app.use('/api/meetings', meetingRoutes);
 
 // Start meeting scheduler
 const meetingScheduler = require('./jobs/meetingScheduler');
 meetingScheduler.start();
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
