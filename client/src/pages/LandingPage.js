@@ -186,16 +186,6 @@ const LandingPage = () => {
                 </div>
               </div>
             </div>
-            <div className={styles.aboutContent}>
-              <img
-                  src={aboutImage}
-                  alt="About SilverCare"
-                  className={styles.aboutImage}
-              />
-              <p className={styles.aboutText}>
-                  At SilverCare, we are dedicated to revolutionizing elder care with innovative tools and compassionate support. Our platform connects families, caregivers, and healthcare professionals to ensure the best care for seniors.
-              </p>  
-            </div>
 
           </div>
         </div>
