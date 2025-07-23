@@ -61,6 +61,8 @@
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
+  position: relative;
+  z-index: 10;
 }
 
 .searchInput, .filterSelect {
@@ -86,6 +88,33 @@
 
 .filterSelect {
   min-width: 150px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 3rem;
+  color: #2d3748;
+  position: relative;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filterSelect option {
+  background: white;
+  color: #2d3748;
+  padding: 0.5rem;
+  cursor: pointer;
+  border: none;
 }
 
 .clearButton {
@@ -118,6 +147,30 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   text-align: center;
   min-width: 120px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+  border-color: #e2e8f0;
+}
+
+.statCardActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
+}
+
+.statCardActive .statNumber {
+  color: white;
+}
+
+.statCardActive .statLabel {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .statNumber {
@@ -189,23 +242,33 @@
 }
 
 .statusApproved {
-  background: #d1fae5;
+  background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
   color: #065f46;
+  border: 1px solid #10b981;
 }
 
 .statusPending {
-  background: #fef3c7;
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
   color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.statusConfirmed {
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  color: #1e40af;
+  border: 1px solid #3b82f6;
 }
 
 .statusCompleted {
-  background: #dbeafe;
-  color: #1e40af;
+  background: linear-gradient(135deg, #e9d5ff 0%, #ddd6fe 100%);
+  color: #7c3aed;
+  border: 1px solid #8b5cf6;
 }
 
 .statusOngoing {
-  background: #f3e8ff;
+  background: linear-gradient(135deg, #f3e8ff 0%, #ddd6fe 100%);
   color: #7c3aed;
+  border: 1px solid #8b5cf6;
 }
 
 .elderDetails {

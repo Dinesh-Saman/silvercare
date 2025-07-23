@@ -95,15 +95,54 @@ const CareRequestDetails = () => {
     const now = new Date();
     const start = new Date(startDate);
     const diffMs = start - now;
-    if (diffMs <= 0) return 'Started';
+    
+    // Get today's date without time for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDateOnly = new Date(start);
+    startDateOnly.setHours(0, 0, 0, 0);
+    
+    // If start date equals today, show "Started"
+    if (startDateOnly.getTime() === today.getTime()) {
+      return 'Started';
+    }
+    
+    // If start date is before today (overdue), show hours/minutes overdue
+    if (startDateOnly < today) {
+      const overdueDiffMs = Math.abs(diffMs);
+      const overdueHours = Math.floor(overdueDiffMs / (1000 * 60 * 60));
+      const overdueMinutes = Math.floor((overdueDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      let overdueResult = '';
+      if (overdueHours > 0) overdueResult += `${overdueHours} hour${overdueHours !== 1 ? 's' : ''} `;
+      if (overdueMinutes > 0) overdueResult += `${overdueMinutes} min${overdueMinutes !== 1 ? 's' : ''}`;
+      
+      return `${overdueResult.trim()}`;
+    }
+    
+    // Future date - show normal countdown
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
     let result = '';
-    if (diffDays > 0) result += `${diffDays} day${diffDays > 1 ? 's' : ''} `;
-    if (diffHours > 0) result += `${diffHours} hour${diffHours > 1 ? 's' : ''} `;
-    if (diffMinutes > 0 && diffDays === 0) result += `${diffMinutes} min${diffMinutes > 1 ? 's' : ''}`;
-    return result.trim();
+    
+    // Always show days (even if 0) when there are hours remaining
+    if (diffDays > 0 || diffHours > 0) {
+      result += `${diffDays} day${diffDays !== 1 ? 's' : ''} `;
+    }
+    
+    // Show hours if there are any, or if days is 0 and we have time left
+    if (diffHours > 0 || (diffDays === 0 && diffMs > 0)) {
+      result += `${diffHours} hour${diffHours !== 1 ? 's' : ''} `;
+    }
+    
+    // Only show minutes if less than 1 day and no hours
+    if (diffDays === 0 && diffHours === 0 && diffMinutes > 0) {
+      result += `${diffMinutes} min${diffMinutes !== 1 ? 's' : ''}`;
+    }
+    
+    return result.trim() || '0 mins';
   };
 
   if (loading) {
@@ -173,16 +212,25 @@ const CareRequestDetails = () => {
                     <span>{formatDate(careRequest?.end_date)}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <label>Duration:</label>
+                    <label>Duration: </label>
                     <span>{careRequest?.duration} days</span>
                   </div>
-                  {/* Show time left only for pending requests */}
-                  {(careRequest?.status === 'pending') || (careRequest?.status === 'approved') && (
+                  {/* Show time left only for pending and approved requests */}
+                  {(careRequest?.status === 'pending' || careRequest?.status === 'approved') && (
                     <div className={styles.infoItem}>
                       <label>Time Left:</label>
-                      <span className={
-                        (new Date(careRequest.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText)
-                      }>
+                      <span className={(() => {
+                        const timeLeft = getTimeLeft(careRequest.start_date);
+                        if (careRequest.status === 'approved' && timeLeft === 'Started') {
+                          return styles.greenText;
+                        }
+                        // Show red for overdue requests
+                        if (timeLeft.includes('Overdue:')) {
+                          return styles.redText;
+                        }
+                        // Existing color logic for other cases
+                        return (new Date(careRequest.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText);
+                      })()}>
                         {getTimeLeft(careRequest.start_date)}
                       </span>
                     </div>

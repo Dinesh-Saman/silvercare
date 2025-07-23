@@ -336,12 +336,7 @@ const FamilyMemberElders = () => {
 
         {/* Back to Dashboard */}
         <div className={styles.backSection}>
-          <button 
-            className={styles.backButton}
-            onClick={() => navigate('/family-member/dashboard')}
-          >
-            ← Back to Dashboard
-          </button>
+
         </div>
       </div>
       </FamilyMemberLayout>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/navbar';
 import HealthProfessionalSidebar from '../../components/HealthProfessionalSidebar';
@@ -34,6 +34,12 @@ const HealthProfessionalDashboard = () => {
   // Placeholder next patient
   const nextPatient = null;
 
+  // Placeholder assigned elderly users
+  const assignedElders = [
+    { id: 1, name: 'Elderly User 1', age: 75, lastConsult: '2024-06-01', status: 'Stable' },
+    { id: 2, name: 'Elderly User 2', age: 80, lastConsult: '2024-05-28', status: 'Needs Attention' },
+  ];
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -66,7 +72,7 @@ const HealthProfessionalDashboard = () => {
           <div className={styles.welcomeCard}>
             <div className={styles.welcomeContent}>
               <h1 className={styles.welcomeTitle}>Welcome, {currentUser.name}!</h1>
-              <p className={styles.welcomeSubtitle}>Manage your patients and appointments from your dashboard</p>
+              <p className={styles.welcomeSubtitle}>Manage your mental health practice and elderly users from your dashboard</p>
               <div className={styles.userInfo}>
                 <span className={styles.userEmail}>📧 {currentUser.email}</span>
                 <span className={styles.userRole}>🧑‍⚕️ {currentUser.role.replace('_', ' ').toUpperCase()}</span>
@@ -100,8 +106,8 @@ const HealthProfessionalDashboard = () => {
             <div className={styles.statCard}>
               <div className={styles.statIcon}>👥</div>
               <div className={styles.statContent}>
-                <h3 className={styles.statNumber}>0</h3>
-                <p className={styles.statLabel}>Total Patients</p>
+                <h3 className={styles.statNumber}>{assignedElders.length}</h3>
+                <p className={styles.statLabel}>Assigned Elders</p>
               </div>
             </div>
             <div className={styles.statCard}>
@@ -119,16 +125,26 @@ const HealthProfessionalDashboard = () => {
           {/* Next Patient & Tasks Section - Left Half */}
           <div className={styles.leftContentContainer}>
             <div className={styles.contentCard}>
-              <h2 className={styles.sectionTitle}>🏥 Next Patient</h2>
-              {nextPatient ? (
-                <div className={styles.nextPatientCard}>
-                  {/* ...next patient details... */}
+              <h2 className={styles.sectionTitle}>👴 Assigned Elderly Users</h2>
+              {assignedElders.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyStateIcon}>👴</div>
+                  <h3>No Assigned Elders</h3>
+                  <p>You have no assigned elderly users.</p>
                 </div>
               ) : (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyStateIcon}>📅</div>
-                  <h3>No Next Patient</h3>
-                  <p>You have no upcoming appointments scheduled.</p>
+                <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                  {assignedElders.map((elder) => (
+                    <div key={elder.id} style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12, padding: 8, borderRadius: 8, background: '#f8f9fa' }}>
+                      <span style={{ fontSize: 28 }}>👵</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600 }}>{elder.name} <span style={{ color: '#888', fontWeight: 400 }}>({elder.age} yrs)</span></div>
+                        <div style={{ fontSize: 13, color: '#888' }}>Last Consult: {elder.lastConsult}</div>
+                        <div style={{ fontSize: 13, color: elder.status === 'Needs Attention' ? '#e74c3c' : '#27ae60' }}>{elder.status}</div>
+                      </div>
+                      <button style={{ background: '#6a82fb', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 600, cursor: 'pointer' }}>View Records</button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -151,48 +167,38 @@ const HealthProfessionalDashboard = () => {
             </div>
           </div>
 
-          {/* Upcoming Consultations & Calendar Section - Right Half */}
+          {/* Right Half: Session Management, Consultations, Communication, Resources */}
           <div className={styles.rightContentContainer}>
+            {/* Session Management */}
             <div className={styles.contentCard}>
-              <h2 className={styles.sectionTitle}>📊 Upcoming Consultations</h2>
-              {consultations.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyStateIcon}>📅</div>
-                  <h3>No Upcoming Consultations</h3>
-                  <p>Your schedule is clear for now.</p>
-                </div>
-              ) : (
-                <div className={styles.consultationsList}>
-                  {/* ...consultation items... */}
-                </div>
-              )}
+              <h2 className={styles.sectionTitle}>🗓️ Manage Sessions</h2>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button style={{ background: '#27ae60', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Approve</button>
+                <button style={{ background: '#f39c12', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Reschedule</button>
+                <button style={{ background: '#e74c3c', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              </div>
+              <div style={{ marginTop: 12, color: '#888', fontSize: 14 }}>Manage mental health session requests and appointments.</div>
             </div>
 
-            {/* Today's Appointments */}
+            {/* Consultations */}
             <div className={styles.contentCard}>
-              <h2 className={styles.sectionTitle}>📅 Today's Schedule</h2>
-              <div className={styles.appointmentsList}>
-                {dashboardData.todaysAppointments.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <div className={styles.emptyStateIcon}>📅</div>
-                    <h3>No Appointments Today</h3>
-                    <p>You have a free day!</p>
-                  </div>
-                ) : (
-                  dashboardData.todaysAppointments.map((app, idx) => (
-                    <div key={idx} className={styles.appointmentItem}>
-                      <div className={styles.appointmentTime}>
-                        <span className={styles.timeLabel}>--:--</span>
-                      </div>
-                      <div className={styles.appointmentDetails}>
-                        <h4 className={styles.appointmentPatient}>Patient Name</h4>
-                        <p className={styles.appointmentType}>Consultation</p>
-                      </div>
-                      <button className={styles.appointmentAction}>Join</button>
-                    </div>
-                  ))
-                )}
+              <h2 className={styles.sectionTitle}>💬 Conduct Consultations</h2>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button style={{ background: '#6a82fb', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Start Virtual</button>
+                <button style={{ background: '#fc5c7d', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Start In-Person</button>
               </div>
+              <div style={{ marginTop: 12, color: '#888', fontSize: 14 }}>Conduct virtual or in-person mental health consultations.</div>
+            </div>
+
+            {/* Communication */}
+            <div className={styles.contentCard}>
+              <h2 className={styles.sectionTitle}>📞 Communication</h2>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button style={{ background: '#6a82fb', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Message Family</button>
+                <button style={{ background: '#fc5c7d', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Message Caregiver</button>
+                <button style={{ background: '#43c6ac', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>Message Doctor</button>
+              </div>
+              <div style={{ marginTop: 12, color: '#888', fontSize: 14 }}>Communicate with family members, caregivers, and doctors regarding elderly users’ mental wellness.</div>
             </div>
           </div>
         </div>
