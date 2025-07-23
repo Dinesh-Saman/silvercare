@@ -193,11 +193,14 @@ const DoctorDashboard = () => {
         }
         setDashboardData(dashboard.data);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         setCurrentPatientIndex(0); // Reset to first patient when data loads
         console.log('Dashboard data loaded:', dashboard.data);
         console.log('nextAppointments:', dashboard.data.nextAppointments);
         console.log('nextAppointment:', dashboard.data.nextAppointment);
 =======
+=======
+>>>>>>> Stashed changes
         
         // Debug meeting functionality
         console.log('🔍 Dashboard data loaded for doctor:', doctorId);
@@ -236,6 +239,9 @@ const DoctorDashboard = () => {
             console.log('');
           });
         }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       } catch (err) {
         // Try to parse error if it's HTML

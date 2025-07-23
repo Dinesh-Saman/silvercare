@@ -768,6 +768,7 @@
 }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 /* Next Patient Navigation Styles */
 .nextPatientHeader {
   display: flex;
@@ -849,6 +850,8 @@
   }
 }
 =======
+=======
+>>>>>>> Stashed changes
 /* Join Meeting Button Styles */
 .joinBtn {
   background: linear-gradient(135deg, #48bb78, #38a169) !important;
@@ -872,4 +875,7 @@
     box-shadow: 0 0 0 0 rgba(72, 187, 120, 0);
   }
 } 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
