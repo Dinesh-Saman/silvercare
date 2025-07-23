@@ -775,7 +775,7 @@ const CaregiverDashboard = () => {
                         <span className={styles.shiftDate}>
                           {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
                         </span>
-                        <span className={styles.shiftTime}>{shift.duration} days</span>
+                        <span className={styles.shiftTime}>{shift.duration}</span>
                       </div>
                       <div className={styles.shiftDetails}>
                         <span className={styles.label}>Location:</span>
