@@ -35,7 +35,6 @@ const getAppointmentsByDoctorId = async (doctorId) => {
 };
 
 // Get upcoming appointments for a specific doctor (only confirmed appointments)
-// Get upcoming appointments for a specific doctor (only confirmed appointments)
 const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
   try {
     const result = await pool.query(`
