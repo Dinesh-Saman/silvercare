@@ -25,7 +25,9 @@ const {
   addCarelog,
   getElderDetails,
   getElderCarelogs,
-  addElderReport
+  addElderReport,
+  getWeeklyReports,
+  submitDailyReport
 } = require('../controllers/caregiver');
 
 // Get all caregivers
@@ -87,5 +89,9 @@ router.post('/:id/carelogs', addCarelog);
 router.get('/elder/:elderId/details', getElderDetails);
 router.get('/:caregiverId/elder/:elderId/carelogs', getElderCarelogs);
 router.post('/:caregiverId/elder/:elderId/report', addElderReport);
+
+// Daily reports routes
+router.get('/:caregiverId/weekly-reports', getWeeklyReports);
+router.post('/:caregiverId/daily-report', submitDailyReport);
 
 module.exports = router;

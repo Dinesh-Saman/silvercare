@@ -1,3 +1,114 @@
+/* Daily Care Reports Section */
+.dailyCareReports {
+  background: #fff;
+  padding: 28px 24px 24px 24px;
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(102, 126, 234, 0.09);
+  margin-bottom: 32px;
+}
+
+.dailyCareReports h2 {
+  font-size: 22px;
+  color: #2b4c7e;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e0e6ed;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.reportsList {
+  margin-top: 20px;
+}
+
+.reportDayBox {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  opacity: 1;
+}
+
+.reportDayBox:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.12);
+  border-color: #667eea;
+}
+
+.reportDayBox.hasReport {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #10b981;
+}
+
+.reportDayBox.noReport {
+  background: linear-gradient(135deg, #fefcfc 0%, #fef2f2 100%);
+  border-color: #f87171;
+}
+
+.reportDayBox.today {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 3px solid #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+}
+
+/* Week Navigation Row for Upcoming Shifts */
+.weekNavRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.weekNavBtn {
+  background: #667eea;
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 120px;
+  text-align: center;
+  transition: background 0.2s, color 0.2s, opacity 0.2s;
+}
+.weekNavBtn:disabled {
+  background: #ccc;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.weekNavLabel {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  min-width: 180px;
+  text-align: center;
+  display: inline-block;
+  letter-spacing: 0.5px;
+  margin: 0 16px;
+}
+
+.upcomingShiftsTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 /* Performance Stats Section */
 .performanceStats {
   background: #fff;
@@ -275,28 +386,39 @@ section {
 }
 
 .statusBadge.pending {
-  background: #fef3c7;
-  color: #d97706;
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
 }
 
 .statusBadge.approved {
-  background: #d1fae5;
-  color: #059669;
+  background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+  color: #065f46;
+  border: 1px solid #10b981;
+}
+
+.statusBadge.confirmed {
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  color: #1e40af;
+  border: 1px solid #3b82f6;
 }
 
 .statusBadge.ongoing {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+  color: #1e40af;
+  border: 1px solid #3b82f6;
 }
 
 .statusBadge.completed {
-  background: #f3e8ff;
+  background: linear-gradient(135deg, #e9d5ff 0%, #ddd6fe 100%);
   color: #7c3aed;
+  border: 1px solid #8b5cf6;
 }
 
-.statusBadge.rejected {
-  background: #fecaca;
+.statusBadge.rejected, .statusBadge.cancelled {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
   color: #dc2626;
+  border: 1px solid #ef4444;
 }
 
 .careRequestDetails {
@@ -763,20 +885,39 @@ section {
 }
 
 .elderDetail .value.urgent {
-  color: #e53e3e;
+  color: #ef4444 !important;
+  font-weight: 700;
 }
 
 .elderDetail .value.completed {
-  color: #38a169;
+  color: #8b5cf6 !important;
+  font-weight: 700;
 }
 
 /* New Status Colors */
 .elderDetail .value.completedStatus {
-  color: #e53e3e; /* Green */
+  color: #8b5cf6 !important;
+  font-weight: 700;
 }
 
 .elderDetail .value.approvedStatus {
-  color: #38a169; /* Orange (you had yellow, but orange often preferred for 'ongoing') */
+  color: #10b981 !important;
+  font-weight: 700;
+}
+
+.elderDetail .value.confirmedStatus {
+  color: #3b82f6 !important;
+  font-weight: 700;
+}
+
+.elderDetail .value.pendingStatus {
+  color: #f59e0b !important;
+  font-weight: 700;
+}
+
+.elderDetail .value.cancelledStatus {
+  color: #ef4444 !important;
+  font-weight: 700;
 }
 
 .recentmessages h2,

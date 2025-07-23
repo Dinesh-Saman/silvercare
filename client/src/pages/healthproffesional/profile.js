@@ -78,7 +78,6 @@ const HealthProfessionalProfile = () => {
       <HealthProfessionalSidebar onToggleCollapse={setSidebarCollapsed} />
       <div className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
         <Navbar />
-        {/* Profile Header */}
         <div className={styles.profileHeader}>
           <div className={styles.headerContent}>
             <div className={styles.avatarSection}>
@@ -119,16 +118,13 @@ const HealthProfessionalProfile = () => {
             </div>
           </div>
         </div>
-        {/* Success Message */}
         {successMessage && (
           <div className={styles.successMessage}>
             <span className={styles.successIcon}>✅</span>
             {successMessage}
           </div>
         )}
-        {/* Profile Content */}
         <div className={styles.profileContent}>
-          {/* Personal Information */}
           <div className={styles.profileSection}>
             <h2 className={styles.sectionTitle}>👤 Personal Information</h2>
             <div className={styles.infoGrid}>
@@ -190,7 +186,6 @@ const HealthProfessionalProfile = () => {
               </div>
             </div>
           </div>
-          {/* Professional Information */}
           <div className={styles.profileSection}>
             <h2 className={styles.sectionTitle}>🩺 Professional Information</h2>
             <div className={styles.infoGrid}>
@@ -271,7 +266,6 @@ const HealthProfessionalProfile = () => {
               </div>
             </div>
           </div>
-          {/* Account Information */}
           <div className={styles.profileSection}>
             <h2 className={styles.sectionTitle}>🔐 Account Information</h2>
             <div className={styles.infoGrid}>
