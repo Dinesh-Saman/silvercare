@@ -65,6 +65,7 @@ import ElderProfile from "./pages/elder/profile";
 import AdminUsers from "./pages/admin/users";
 import AdminSettings from "./pages/admin/settings"; 
 import AdminReports from "./pages/admin/reports";
+import LandingPage from './pages/LandingPage';
 
 // Optional: Create an Unauthorized component
 const Unauthorized = () => (
@@ -81,7 +82,7 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes - No authentication required */}
-          <Route path="/" element={<Roles />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
