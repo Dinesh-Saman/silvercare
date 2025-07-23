@@ -129,6 +129,25 @@ const DoctorDashboard = () => {
     return Math.abs(new Date(diff).getUTCFullYear() - 1970);
   };
 
+  // Check if appointment is within join window (15 minutes before to 2 hours after)
+  const isWithinJoinWindow = (appointmentTime) => {
+    if (!appointmentTime) {
+      console.log('⚠️ isWithinJoinWindow: No appointment time provided');
+      return false;
+    }
+    const now = new Date();
+    const appointmentDate = new Date(appointmentTime);
+    const fifteenMinutesBefore = new Date(appointmentDate.getTime() - 15 * 60 * 1000);
+    const twoHoursAfter = new Date(appointmentDate.getTime() + 2 * 60 * 60 * 1000);
+    const isWithin = now >= fifteenMinutesBefore && now <= twoHoursAfter;
+    
+    // Debug logging
+    const minutesFromNow = Math.round((appointmentDate - now) / (1000 * 60));
+    console.log(`⏰ Join window check: ${minutesFromNow > 0 ? '+' : ''}${minutesFromNow}min from now → ${isWithin ? 'JOINABLE' : 'Not joinable'}`);
+    
+    return isWithin;
+  };
+
   // Fetch with token
   const fetchWithAuth = async (url, options = {}) => {
     const headers = {
@@ -173,10 +192,51 @@ const DoctorDashboard = () => {
           return;
         }
         setDashboardData(dashboard.data);
+<<<<<<< Updated upstream
         setCurrentPatientIndex(0); // Reset to first patient when data loads
         console.log('Dashboard data loaded:', dashboard.data);
         console.log('nextAppointments:', dashboard.data.nextAppointments);
         console.log('nextAppointment:', dashboard.data.nextAppointment);
+=======
+        
+        // Debug meeting functionality
+        console.log('🔍 Dashboard data loaded for doctor:', doctorId);
+        console.log('📊 Upcoming appointments:', dashboard.data.upcomingAppointments?.length || 0);
+        
+        // Debug join button logic
+        if (dashboard.data.upcomingAppointments) {
+          console.log('🔍 Debugging upcoming appointments...');
+          dashboard.data.upcomingAppointments.slice(0, 5).forEach((apt, idx) => {
+            const isOnline = apt.appointment_type === 'online';
+            const hasLink = !!apt.meeting_link;
+            const inWindow = isWithinJoinWindow(apt.date_time);
+            const canJoin = isOnline && hasLink && inWindow;
+            console.log(`🎯 Apt ${idx + 1}: ID=${apt.appointment_id}, Type=${apt.appointment_type}, HasLink=${hasLink}, InWindow=${inWindow}, CanJoin=${canJoin}`);
+            console.log(`   📅 Time: ${apt.date_time}`);
+            if (apt.meeting_link) {
+              console.log(`   🔗 Link: ${apt.meeting_link.substring(0, 60)}...`);
+            }
+            console.log('');
+          });
+        }
+        
+        // Debug next patient logic
+        if (dashboard.data.nextAppointments) {
+          console.log('🔍 Debugging next appointments...');
+          dashboard.data.nextAppointments.slice(0, 3).forEach((apt, idx) => {
+            const isOnline = apt.appointment_type === 'online';
+            const hasLink = !!apt.meeting_link;
+            const inWindow = isWithinJoinWindow(apt.date_time);
+            const canJoin = isOnline && hasLink && inWindow;
+            console.log(`🎯 Next ${idx + 1}: ID=${apt.appointment_id}, Type=${apt.appointment_type}, HasLink=${hasLink}, InWindow=${inWindow}, CanJoin=${canJoin}`);
+            console.log(`   📅 Time: ${apt.date_time}`);
+            if (apt.meeting_link) {
+              console.log(`   🔗 Link: ${apt.meeting_link.substring(0, 60)}...`);
+            }
+            console.log('');
+          });
+        }
+>>>>>>> Stashed changes
       } catch (err) {
         // Try to parse error if it's HTML
         if (err.message && err.message.startsWith('<!DOCTYPE')) {
@@ -263,7 +323,8 @@ const DoctorDashboard = () => {
     date: formatDate(app.date_time),
     time: formatTime(app.date_time),
     avatar: app.elder_avatar,
-    appointment: app
+    appointment: app,
+    canJoin: app.appointment_type === 'online' && app.meeting_link && isWithinJoinWindow(app.date_time)
   }));
 
   // Example tasks (replace with real data if available)
@@ -410,7 +471,26 @@ const DoctorDashboard = () => {
                 </div>
                 <div className={styles.patientActions}>
                   <button className={styles.actionBtn}>📋 View Records</button>
-                  <button className={styles.actionBtn}>💬 Start Consultation</button>
+                  {nextPatient.appointment?.appointment_type === 'online' && nextPatient.appointment?.meeting_link && isWithinJoinWindow(nextPatient.appointment.date_time) ? (
+                    <button 
+                      className={`${styles.actionBtn} ${styles.joinBtn}`}
+                      onClick={() => {
+                        console.log('🎥 Join button clicked!');
+                        console.log('Meeting link:', nextPatient.appointment.meeting_link);
+                        const opened = window.open(nextPatient.appointment.meeting_link, '_blank');
+                        if (!opened) {
+                          console.error('❌ Failed to open meeting link - popup blocked?');
+                          alert('Please allow popups for this site to join meetings');
+                        } else {
+                          console.log('✅ Meeting window opened successfully');
+                        }
+                      }}
+                    >
+                      🎥 Join Meeting
+                    </button>
+                  ) : (
+                    <button className={styles.actionBtn}>💬 Start Consultation</button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -463,7 +543,26 @@ const DoctorDashboard = () => {
                       <h4 className={styles.consultationName}>{c.name}</h4>
                       <p className={styles.consultationTime}>{c.date} | {c.time}</p>
                     </div>
-                    <button className={styles.consultationBtn}>📋 View Record</button>
+                    {c.canJoin ? (
+                      <button 
+                        className={`${styles.consultationBtn} ${styles.joinBtn}`}
+                        onClick={() => {
+                          console.log('🎥 Consultation join button clicked!');
+                          console.log('Meeting link:', c.appointment.meeting_link);
+                          const opened = window.open(c.appointment.meeting_link, '_blank');
+                          if (!opened) {
+                            console.error('❌ Failed to open meeting link - popup blocked?');
+                            alert('Please allow popups for this site to join meetings');
+                          } else {
+                            console.log('✅ Meeting window opened successfully');
+                          }
+                        }}
+                      >
+                        🎥 Join
+                      </button>
+                    ) : (
+                      <button className={styles.consultationBtn}>📋 View Record</button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -490,7 +589,26 @@ const DoctorDashboard = () => {
                       <h4 className={styles.appointmentPatient}>{app.elder_name}</h4>
                       <p className={styles.appointmentType}>Regular Consultation</p>
                     </div>
-                    <button className={styles.appointmentAction}>Join</button>
+                    {app.appointment_type === 'online' && app.meeting_link && isWithinJoinWindow(app.date_time) ? (
+                      <button 
+                        className={`${styles.appointmentAction} ${styles.joinBtn}`}
+                        onClick={() => {
+                          console.log('🎥 Today\'s appointment join button clicked!');
+                          console.log('Meeting link:', app.meeting_link);
+                          const opened = window.open(app.meeting_link, '_blank');
+                          if (!opened) {
+                            console.error('❌ Failed to open meeting link - popup blocked?');
+                            alert('Please allow popups for this site to join meetings');
+                          } else {
+                            console.log('✅ Meeting window opened successfully');
+                          }
+                        }}
+                      >
+                        🎥 Join
+                      </button>
+                    ) : (
+                      <button className={styles.appointmentAction}>Join</button>
+                    )}
                   </div>
                 ))
               )}
