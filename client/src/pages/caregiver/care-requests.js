@@ -123,15 +123,54 @@ useEffect(() => {
     const now = new Date();
     const start = new Date(startDate);
     const diffMs = start - now;
-    if (diffMs <= 0) return 'Started';
+    
+    // Get today's date without time for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDateOnly = new Date(start);
+    startDateOnly.setHours(0, 0, 0, 0);
+    
+    // If start date equals today, show "Started"
+    if (startDateOnly.getTime() === today.getTime()) {
+      return 'Started';
+    }
+    
+    // If start date is before today (overdue), show hours/minutes overdue
+    if (startDateOnly < today) {
+      const overdueDiffMs = Math.abs(diffMs);
+      const overdueHours = Math.floor(overdueDiffMs / (1000 * 60 * 60));
+      const overdueMinutes = Math.floor((overdueDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      let overdueResult = '';
+      if (overdueHours > 0) overdueResult += `${overdueHours} hour${overdueHours !== 1 ? 's' : ''} `;
+      if (overdueMinutes > 0) overdueResult += `${overdueMinutes} min${overdueMinutes !== 1 ? 's' : ''}`;
+      
+      return `${overdueResult.trim()}`;
+    }
+    
+    // Future date - show normal countdown
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
     let result = '';
-    if (diffDays > 0) result += `${diffDays} day${diffDays > 1 ? 's' : ''} `;
-    if (diffHours > 0) result += `${diffHours} hour${diffHours > 1 ? 's' : ''} `;
-    if (diffMinutes > 0 && diffDays === 0) result += `${diffMinutes} min${diffMinutes > 1 ? 's' : ''}`;
-    return result.trim();
+    
+    // Always show days (even if 0) when there are hours remaining
+    if (diffDays > 0 || diffHours > 0) {
+      result += `${diffDays} day${diffDays !== 1 ? 's' : ''} `;
+    }
+    
+    // Show hours if there are any, or if days is 0 and we have time left
+    if (diffHours > 0 || (diffDays === 0 && diffMs > 0)) {
+      result += `${diffHours} hour${diffHours !== 1 ? 's' : ''} `;
+    }
+    
+    // Only show minutes if less than 1 day and no hours
+    if (diffDays === 0 && diffHours === 0 && diffMinutes > 0) {
+      result += `${diffMinutes} min${diffMinutes !== 1 ? 's' : ''}`;
+    }
+    
+    return result.trim() || '0 mins';
   };
 
   const handleViewDetails = (requestId) => {
@@ -151,6 +190,7 @@ useEffect(() => {
     { key: 'all', label: 'All Requests', count: getTabCount('all') },
     { key: 'pending', label: 'Pending', count: getTabCount('pending') },
     { key: 'approved', label: 'Approved', count: getTabCount('approved') },
+    { key: 'confirmed', label: 'Confirmed', count: getTabCount('confirmed') },
     { key: 'cancelled', label: 'Rejected', count: getTabCount('cancelled') },
     { key: 'completed', label: 'Completed', count: getTabCount('completed') }
   ];
@@ -254,16 +294,30 @@ useEffect(() => {
               </div>
             ) : (
               <div className={styles.requestsList}>
-                {currentRequests.map((request, index) => (
-                  <div key={request.request_id || index} className={styles.requestCard}>
-                    <div className={styles.requestHeader}>
-                      <div className={styles.requestInfo}>
-                        <h3 className={styles.elderName}>{request.elder_name}</h3>
+                {currentRequests.map((request, index) => {
+                  // For confirmed status, if start date < today, add green border/background
+                  let confirmedPast = false;
+                  if (request.status === 'confirmed') {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const start = new Date(request.start_date);
+                    start.setHours(0,0,0,0);
+                    if (start < today) confirmedPast = true;
+                  }
+                  return (
+                    <div
+                      key={request.request_id || index}
+                      className={styles.requestCard}
+                      style={confirmedPast ? { border: '2px solid #10b981', background: '#d1fae5' } : {}}
+                    >
+                      <div className={styles.requestHeader}>
+                        <div className={styles.requestInfo}>
+                          <h3 className={styles.elderName}>{request.elder_name}</h3>
+                        </div>
+                        <div className={`${styles.statusBadge} ${styles[request.status]}`}>
+                          {request.status}
+                        </div>
                       </div>
-                      <div className={`${styles.statusBadge} ${styles[request.status]}`}>
-                        {request.status}
-                      </div>
-                    </div>
 
                     <div className={styles.requestDetails}>
                       <div className={styles.detailRow}>
@@ -348,7 +402,8 @@ useEffect(() => {
                       
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
