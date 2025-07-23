@@ -355,14 +355,12 @@ const getElderDashboardStats = async (req, res) => {
       [elderId]
     );
 
-    // Get active caregivers count (caregivers who have approved assignments)
+    // Get active caregivers count (caregivers who have recent logs)
     const activeCaregiversResult = await pool.query(
       `
       SELECT COUNT(DISTINCT caregiver_id) as count
-      FROM carerequest 
+      FROM carelog 
       WHERE elder_id = $1
-      AND status IN ('approved', 'completed')
-      AND end_date >= CURRENT_DATE
     `,
       [elderId]
     );
@@ -629,12 +627,14 @@ const getAppointmentById = async (req, res) => {
         a.status,
         a.appointment_type,
         a.created_at,
+        a.notes,
         u.name as doctor_name,
         d.specialization,
         d.license_number,
         d.current_institution,
+        d.years_experience,
         u.email as doctor_email,
-        u.phone as doctor_phone,
+        u.phone as doctor_contact,
         e.name as elder_name,
         e.contact as elder_contact
       FROM appointment a
