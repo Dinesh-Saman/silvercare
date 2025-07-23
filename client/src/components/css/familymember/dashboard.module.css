@@ -117,32 +117,36 @@
 }
 
 .statCard {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
-  padding: 30px;
+  padding: 28px 24px;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
-
 .statCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
 }
-
 .statIcon {
   font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   border-radius: 50%;
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
+  color: #667eea;
 }
 
 .statNumber {
@@ -181,10 +185,10 @@
 }
 
 .quickActionsCard, .activityCard {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   backdrop-filter: blur(10px);
   height: fit-content;
 }
@@ -197,7 +201,7 @@
 }
 
 .quickActionCard {
-  background: #EDEDFC;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
@@ -209,16 +213,14 @@
   text-align: center;
   min-height: 160px;
   justify-content: center;
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  border: 2px solid #e2e8f0;
 }
-
 .quickActionCard:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(102, 126, 234, 0.2);
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  border-color: #8b5cf6;
 }
-
 .quickActionIcon {
   font-size: 2.2rem;
   width: 60px;
@@ -324,9 +326,10 @@
 /* Updated Elders Section - Now in Grid */
 .eldersSection {
   padding: 15px 20px 15px 20px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   backdrop-filter: blur(10px);
   font-size: 5px;
 }
@@ -507,7 +510,7 @@
 }
 
 .viewAllButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
     border: none;
   padding: 12px 30px;
@@ -516,21 +519,21 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
-
 .viewAllButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
 }
 
 /* Upcoming Appointments Section */
 .appointmentsSection {
   padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
   backdrop-filter: blur(10px);
 }
 
@@ -708,7 +711,7 @@
 }
 
 .viewAllAppointmentsButton {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -717,13 +720,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
 }
-
 .viewAllAppointmentsButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
-  background: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
 }
 
 .noAppointments {
@@ -1234,6 +1236,82 @@
 .viewAllButton:focus-visible, .viewAllAppointmentsButton:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 2px;
+}
+
+/* Responsive Button Styles */
+.viewAllButton, .viewAllAppointmentsButton {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+.viewAllButton:hover, .viewAllAppointmentsButton:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+/* For any other action buttons, match the elder dashboard style */
+.actionBtn, .primaryBtn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.actionBtn:hover, .primaryBtn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.secondaryBtn {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: 12px 32px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+.secondaryBtn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+@media (max-width: 480px) {
+  .viewAllButton, .viewAllAppointmentsButton, .secondaryBtn {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
 }
 
 

@@ -607,12 +607,18 @@ const FamilyMemberDashboard = () => {
                           </div>
                         </div>
                         <div className={styles.appointmentRight}>
-                          <div 
-                            className={`${styles.appointmentStatus} ${styles[appointment.status]}`}
-                            style={{ backgroundColor: getStatusColor(appointment.status) }}
-                          >
-                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                          </div>
+                          {appointment.status === 'confirmed' ? (
+                            <button className={styles.secondaryBtn} style={{pointerEvents: 'none'}}>
+                              Confirmed
+                            </button>
+                          ) : (
+                            <div 
+                              className={`${styles.appointmentStatus} ${styles[appointment.status]}`}
+                              style={{ backgroundColor: getStatusColor(appointment.status) }}
+                            >
+                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            </div>
+                          )}
                           <div className={styles.appointmentArrow}>
                             <span>→</span>
                           </div>
