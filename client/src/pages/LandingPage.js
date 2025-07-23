@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
 import logoSilver from '../components/images/logo_silver.png'; // ✅ Import your custom logo
+import familyMemberIcon from '../components/images/family-member1.png'; // ✅ Import your custom icon
+import elderMemberIcon from '../components/images/family_member.png'; // ✅ Import your custom icon
+import doctorIcon from '../components/images/doctor.png'; // ✅ Import your custom icon
+import aboutImage from '../components/images/banner.jpg'; // ✅ Import your custom icon
+
 
 
 const LandingPage = () => {
@@ -10,35 +15,20 @@ const LandingPage = () => {
 
   const features = [
     {
-      icon: '👨‍👩‍👧‍👦',
+      icon: familyMemberIcon, // Replace with your actual icon component or image
       title: 'Family Member Portal',
       description: 'Register and manage elderly relatives, book appointments, and receive real-time emergency alerts.'
     },
     {
-      icon: '👴',
+      icon: elderMemberIcon,
       title: 'Elderly Support',
       description: 'Maintain medical history, receive reminders, and join virtual consultations with ease.'
     },
     {
-      icon: '🧑‍⚕️',
+      icon: doctorIcon,
       title: 'Doctor Dashboard',
       description: 'Manage professional profiles, approve appointments, and provide medical advice.'
     },
-    {
-      icon: '🧑‍💼',
-      title: 'Caregiver Tools',
-      description: 'View schedules, log medication administration, and support during consultations.'
-    },
-    {
-      icon: '🧠',
-      title: 'Mental Health Integration',
-      description: 'Access counselors for therapy sessions and mental health support.'
-    },
-    {
-      icon: '🛡️',
-      title: 'Admin Features',
-      description: 'Monitor platform activity, manage users, and handle emergency alerts.'
-    }
   ];
 
   const testimonials = [
@@ -70,7 +60,7 @@ const LandingPage = () => {
   }, [testimonials.length]);
 
   const handleGetStarted = () => {
-    navigate('/register-options');
+    navigate('/roles');
   };
 
   const handleLogin = () => {
@@ -137,20 +127,7 @@ const LandingPage = () => {
                 Learn More
               </button>
             </div>
-            <div className={styles.heroStats}>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>1000+</span>
-                <span className={styles.statLabel}>Families Served</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>500+</span>
-                <span className={styles.statLabel}>Healthcare Professionals</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statNumber}>24/7</span>
-                <span className={styles.statLabel}>Emergency Support</span>
-              </div>
-            </div>
+        
           </div>
         </div>
       </section>
@@ -159,7 +136,7 @@ const LandingPage = () => {
       <section id="features" className={styles.features}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>🌟 Key Features</h2>
+            <h2 className={styles.sectionTitle}>Our Services</h2>
             <p className={styles.sectionSubtitle}>
               Comprehensive tools designed to support every aspect of elder care
             </p>
@@ -167,7 +144,13 @@ const LandingPage = () => {
           <div className={styles.featuresGrid}>
             {features.map((feature, index) => (
               <div key={index} className={styles.featureCard}>
-                <div className={styles.featureIcon}>{feature.icon}</div>
+               <div className={styles.featureIcon}>
+        {typeof feature.icon === 'string' && feature.icon.startsWith('data') || feature.icon.endsWith('.png') ? (
+          <img src={feature.icon} alt={feature.title} className={styles.iconImage} />
+        ) : (
+          feature.icon
+        )}
+      </div>
                 <h3 className={styles.featureTitle}>{feature.title}</h3>
                 <p className={styles.featureDescription}>{feature.description}</p>
               </div>
@@ -198,15 +181,22 @@ const LandingPage = () => {
                   <span>Secure Data Management</span>
                 </div>
                 <div className={styles.aboutFeature}>
-                  <span className={styles.aboutFeatureIcon}>🚨</span>
-                  <span>Emergency Alert System</span>
-                </div>
-                <div className={styles.aboutFeature}>
                   <span className={styles.aboutFeatureIcon}>💬</span>
                   <span>Secure Communication</span>
                 </div>
               </div>
             </div>
+            <div className={styles.aboutContent}>
+              <img
+                  src={aboutImage}
+                  alt="About SilverCare"
+                  className={styles.aboutImage}
+              />
+              <p className={styles.aboutText}>
+                  At SilverCare, we are dedicated to revolutionizing elder care with innovative tools and compassionate support. Our platform connects families, caregivers, and healthcare professionals to ensure the best care for seniors.
+              </p>  
+            </div>
+
           </div>
         </div>
       </section>
