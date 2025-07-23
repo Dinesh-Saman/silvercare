@@ -8,6 +8,7 @@ import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
 import DailyCareReportModal from '../../components/DailyCareReportModal';
 import SuccessNotification from '../../components/SuccessNotification';
+import ErrorModal from '../../components/ErrorModal';
 
 const CaregiverDashboard = () => {
   const { user } = useAuth(); // <-- pulls from logged-in context
@@ -35,6 +36,10 @@ const CaregiverDashboard = () => {
   const [reportSubmissionLoading, setReportSubmissionLoading] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Error modal state
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   // Helper to show time left in days/hours/minutes
   const getTimeLeft = (startDate) => {
@@ -384,7 +389,7 @@ const CaregiverDashboard = () => {
       console.log('Report submitted successfully, response:', response);
       
       // Show success notification
-      setSuccessMessage(`Daily care report for ${formattedDate} submitted successfully! The report has been saved to the database.`);
+      setSuccessMessage(`Daily care report for ${formattedDate} submitted successfully!`);
       setShowSuccessNotification(true);
       
       // Close modal first
@@ -442,8 +447,9 @@ const CaregiverDashboard = () => {
         setSelectedReportDay({...dayData, isReadOnly: true});
         setShowReportModal(true);
       } else {
-        // Past date without report - show error
-        alert('Cannot upload reports for past dates. Reports must be submitted on the same day or current date.');
+        // Past date without report - show error modal
+        setErrorModalMessage('Cannot upload reports for past dates. Reports must be submitted on the same day or current date.');
+        setShowErrorModal(true);
         return;
       }
     } else {
@@ -720,71 +726,84 @@ const CaregiverDashboard = () => {
               <div style={{display: 'flex', justifyContent: 'center', padding: '20px'}}>
                 <span>Loading shifts...</span>
               </div>
-            ) : weeklyShifts.length === 0 ? (
-              <div className={styles.noShifts} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(102,126,234,0.08)'}}>
-                <span style={{fontSize: '2.5rem', marginBottom: '12px'}}>📅</span>
-                <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>You have no confirmed shifts scheduled for this week.</span>
-              </div>
-            ) : (
-              weeklyShifts.map((shift, i) => {
-                const start = new Date(shift.start_date);
-                const now = new Date();
-                
-                // Get today's date without time for comparison
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const startDateOnly = new Date(start);
-                startDateOnly.setHours(0, 0, 0, 0);
-                
-                let colorClass;
-                if (startDateOnly < today) {
-                  // Overdue - red color
-                  colorClass = styles.timeLeftRed;
-                } else if (startDateOnly.getTime() === today.getTime()) {
-                  // Started today - normal color
-                  colorClass = '';
-                } else {
-                  // Future date - green or red based on days
-                  const diffMs = start - now;
-                  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                  colorClass = diffDays <= 2 ? styles.timeLeftRed : styles.timeLeftGreen;
+            ) : (() => {
+              // Filter out confirmed shifts with start date < today
+              const filteredShifts = weeklyShifts.filter(shift => {
+                if (shift.status && shift.status.toLowerCase() === 'confirmed') {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const startDateOnly = new Date(shift.start_date);
+                  startDateOnly.setHours(0, 0, 0, 0);
+                  return startDateOnly >= today; // Only show if start date is today or future
                 }
+                return true; // Show all non-confirmed shifts
+              });
 
-                
-                return (
-                  <div className={styles.shiftCard} key={i}>
-                    <div className={styles.shiftHeader}>
-                      <span className={styles.shiftDate}>
-                        {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
-                      </span>
-                      <span className={styles.shiftTime}>{shift.duration} days</span>
+              return filteredShifts.length === 0 ? (
+                <div className={styles.noShifts} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2fa 100%)', borderRadius: '12px', boxShadow: '0 2px 8px rgba(102,126,234,0.08)'}}>
+                  <span style={{fontSize: '2.5rem', marginBottom: '12px'}}>📅</span>
+                  <span style={{color: '#718096', fontSize: '1rem', marginTop: '8px'}}>No future upcoming shifts</span>
+                </div>
+              ) : (
+                filteredShifts.map((shift, i) => {
+                  const start = new Date(shift.start_date);
+                  const now = new Date();
+                  
+                  // Get today's date without time for comparison
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const startDateOnly = new Date(start);
+                  startDateOnly.setHours(0, 0, 0, 0);
+                  
+                  let colorClass;
+                  if (startDateOnly < today) {
+                    // Overdue - red color
+                    colorClass = styles.timeLeftRed;
+                  } else if (startDateOnly.getTime() === today.getTime()) {
+                    // Started today - normal color
+                    colorClass = '';
+                  } else {
+                    // Future date - green or red based on days
+                    const diffMs = start - now;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    colorClass = diffDays <= 2 ? styles.timeLeftRed : styles.timeLeftGreen;
+                  }
+
+                  return (
+                    <div className={styles.shiftCard} key={i}>
+                      <div className={styles.shiftHeader}>
+                        <span className={styles.shiftDate}>
+                          {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
+                        </span>
+                        <span className={styles.shiftTime}>{shift.duration} days</span>
+                      </div>
+                      <div className={styles.shiftDetails}>
+                        <span className={styles.label}>Location:</span>
+                        <span className={styles.value}>{shift.location}</span>
+                      </div>
+                      <div className={styles.shiftDetails}>
+                        <span className={styles.label}>Elder:</span>
+                        <span className={styles.value}>{shift.elderName}</span>
+                      </div>
+                      <div className={styles.shiftDetails}>
+                        <span className={styles.label}>Time Left:</span>
+                        <span className={colorClass}>
+                          {getTimeLeft(shift.start_date)}
+                        </span>
+                      </div>
+                      <div className={styles.careRequestActions}>
+                        <button 
+                          className={styles.viewMoreButton}
+                          onClick={() => navigate(`/caregiver/care-request/${shift.request_id}`)}
+                        >
+                          View More Details
+                        </button>
+                      </div>
                     </div>
-                    <div className={styles.shiftDetails}>
-                      <span className={styles.label}>Location:</span>
-                      <span className={styles.value}>{shift.location}</span>
-                    </div>
-                    <div className={styles.shiftDetails}>
-                      <span className={styles.label}>Elder:</span>
-                      <span className={styles.value}>{shift.elderName}</span>
-                    </div>
-                    <div className={styles.shiftDetails}>
-                      <span className={styles.label}>Time Left:</span>
-                      <span className={colorClass}>
-                        {getTimeLeft(shift.start_date)}
-                      </span>
-                    </div>
-                    <div className={styles.careRequestActions}>
-                      <button 
-                        className={styles.viewMoreButton}
-                        onClick={() => navigate(`/caregiver/care-request/${shift.request_id}`)}
-                      >
-                        View More Details
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              );
+            })()}
           </div>
             <div className={styles.viewMoreContainer}>
               <button 
@@ -805,21 +824,7 @@ const CaregiverDashboard = () => {
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: '2px solid #e0e6ed', flexWrap: 'nowrap', overflow: 'hidden'}}>
           <h2 style={{display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: '20px', color: '#2b4c7e', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0}}>
             <span role="img" aria-label="Daily Care Reports">📝</span> Daily Care Reports
-            <button 
-              onClick={() => fetchWeeklyReports(currentReportWeek)}
-              style={{
-                marginLeft: '10px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                background: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              🔄 Refresh
-            </button>
+            
           </h2>
           <div className={styles.weekNavRow} style={{display: 'flex', alignItems: 'center', gap: 3, marginBottom: 0, flexShrink: 0}}>
             <button
@@ -992,7 +997,7 @@ const CaregiverDashboard = () => {
                         gap: '4px'
                       }}>
                         <span style={{fontSize: '10px'}}>⏳</span>
-                        Future Date
+                        Future care
                       </div>
                     )}
                   </div>
@@ -1049,6 +1054,15 @@ const CaregiverDashboard = () => {
         message={successMessage}
         onClose={() => setShowSuccessNotification(false)}
         duration={5000}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Upload Restricted"
+        message={errorModalMessage}
+        icon="🚫"
       />
     </>
   );

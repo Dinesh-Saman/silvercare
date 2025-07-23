@@ -1,0 +1,160 @@
+/* Error Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15);
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+  border: 2px solid #fee2e2;
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px solid #fecaca;
+}
+
+.iconContainer {
+  margin-bottom: 12px;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  display: inline-block;
+  animation: shake 0.5s ease-in-out;
+}
+
+.modalTitle {
+  color: #dc2626;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+.modalContent {
+  padding: 24px;
+  text-align: center;
+}
+
+.message {
+  color: #374151;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.modalActions {
+  padding: 0 24px 24px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.okButton {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.okButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+
+.okButton:active {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-3px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(3px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .modal {
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+  
+  .modalHeader {
+    padding: 20px;
+  }
+  
+  .modalContent {
+    padding: 20px;
+  }
+  
+  .modalActions {
+    padding: 0 20px 20px 20px;
+  }
+  
+  .errorIcon {
+    font-size: 2.5rem;
+  }
+  
+  .modalTitle {
+    font-size: 1.3rem;
+  }
+  
+  .message {
+    font-size: 1rem;
+  }
+}
