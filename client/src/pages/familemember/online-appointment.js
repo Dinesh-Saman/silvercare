@@ -185,10 +185,12 @@ useEffect(() => {
   // Generate available time slots for online appointments (1 hour duration)
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 8; hour < 20; hour++) {
+    for (let hour = 8; hour <= 12; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
+
+    
     return slots;
   };
 
