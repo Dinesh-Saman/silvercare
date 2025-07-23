@@ -6,9 +6,9 @@ import styles from "../../components/css/caregiver/dashboard.module.css";
 import CaregiverLayout from '../../components/CaregiverLayout';
 import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
-import DailyCareReportModal from '../../components/DailyCareReportModal';
-import SuccessNotification from '../../components/SuccessNotification';
-import ErrorModal from '../../components/ErrorModal';
+import DailyCareReportModal from '../../components/DailyCareReportModal.js';
+import SuccessNotification from '../../components/SuccessNotification.js';
+import ErrorModal from '../../components/ErrorModal.js';
 
 const CaregiverDashboard = () => {
   const { user } = useAuth(); // <-- pulls from logged-in context
