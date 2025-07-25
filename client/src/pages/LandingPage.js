@@ -5,7 +5,7 @@ import logoSilver from '../components/images/logo_silver.png';
 import familyMemberIcon from '../components/images/family-member1.png';
 import elderMemberIcon from '../components/images/family_member.png';
 import doctorIcon from '../components/images/doctor.png';
-import aboutImage from '../components/images/banner-1.jpg';
+import aboutImage from '../components/images/banner.jpg';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -181,7 +181,6 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-        
       </section>
 
       {/* Testimonials Section */}
