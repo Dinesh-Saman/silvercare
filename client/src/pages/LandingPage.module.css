@@ -1,6 +1,6 @@
 /* Add missing main container and section classes for LandingPage */
 body {
-    padding-top: 0px;
+    /* padding-top: 0px; */
 }
 .landingPage {
   background: #f7f9f7;
