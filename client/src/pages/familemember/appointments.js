@@ -58,13 +58,21 @@ const Appointments = () => {
             status: filters.status,
             type: filters.type,
             limit: pagination.limit,
-            offset: pagination.offset
+            offset: pagination.offset,
+            upcoming_only: true // Add this parameter to only fetch upcoming appointments
           }),
           appointmentApi.getAppointmentStats(currentUser.user_id)
         ]);
         
         if (appointmentsResponse.success) {
-          setAppointments(appointmentsResponse.appointments);
+          // Filter appointments to only show upcoming ones on the frontend as well
+          const upcomingAppointments = appointmentsResponse.appointments.filter(appointment => {
+            const appointmentDate = new Date(appointment.date_time);
+            const currentDate = new Date();
+            return appointmentDate > currentDate;
+          });
+          
+          setAppointments(upcomingAppointments);
           setPagination(prev => ({
             ...prev,
             total: appointmentsResponse.pagination.total,
@@ -288,9 +296,9 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <h1 className={styles.title}>📅 Confirmed Appointments</h1>
+              <h1 className={styles.title}>📅 Upcoming Appointments</h1>
               <p className={styles.subtitle}>
-                Manage and view confirmed appointments for your registered elders
+                Manage and view upcoming appointments for your registered elders
               </p>
               <div className={styles.cancellationPolicy}>
                 <span className={styles.policyIcon}>ℹ️</span>
@@ -392,11 +400,11 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
             ) : filteredAppointments.length === 0 ? (
               <div className={styles.noAppointments}>
                 <div className={styles.noAppointmentsIcon}>📅</div>
-                <h2>No Confirmed Appointments Found</h2>
+                <h2>No Upcoming Appointments Found</h2>
                 <p>
                   {filters.search || filters.type !== 'all'
-                    ? 'No appointments match your current filters.'
-                    : 'You haven\'t confirmed any appointments yet.'
+                    ? 'No upcoming appointments match your current filters.'
+                    : 'You don\'t have any upcoming appointments.'
                   }
                 </p>
                 <button 
@@ -637,7 +645,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                 {/* Pagination Info */}
                 <div className={styles.paginationInfo}>
                   <p>
-                    Showing {filteredAppointments.length} of {pagination.total} confirmed appointments
+                  
                   </p>
                 </div>
               </>
