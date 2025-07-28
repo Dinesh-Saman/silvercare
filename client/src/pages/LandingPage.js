@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
-import logoSilver from '../components/images/logo_silver.png'; // ✅ Import your custom logo
-import familyMemberIcon from '../components/images/family-member1.png'; // ✅ Import your custom icon
-import elderMemberIcon from '../components/images/family_member.png'; // ✅ Import your custom icon
-import doctorIcon from '../components/images/doctor.png'; // ✅ Import your custom icon
-import aboutImage from '../components/images/banner.jpg'; // ✅ Import your custom icon
-
-
+import logoSilver from '../components/images/logo_silver.png';
+import familyMemberIcon from '../components/images/family-member1.png';
+import elderMemberIcon from '../components/images/family_member.png';
+import doctorIcon from '../components/images/doctor.png';
+import aboutImage from '../components/images/banner.jpg';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -15,7 +13,7 @@ const LandingPage = () => {
 
   const features = [
     {
-      icon: familyMemberIcon, // Replace with your actual icon component or image
+      icon: familyMemberIcon,
       title: 'Family Member Portal',
       description: 'Register and manage elderly relatives, book appointments, and receive real-time emergency alerts.'
     },
@@ -79,14 +77,13 @@ const LandingPage = () => {
       {/* Navigation Header */}
       <nav className={styles.navbar}>
         <div className={styles.navContainer}>
-          {/* Logo */}
-                  <div className={styles.navLogo} >
-                    <img 
-                      src={logoSilver} 
-                      alt="SilverCare Logo" 
-                      className={styles.logoImage}
-                    />
-                  </div>
+          <div className={styles.navLogo}>
+            <img
+              src={logoSilver}
+              alt="SilverCare Logo"
+              className={styles.logoImage}
+            />
+          </div>
           <div className={styles.navLinks}>
             <button onClick={() => scrollToSection('features')} className={styles.navLink}>
               Features
@@ -116,7 +113,7 @@ const LandingPage = () => {
               <span className={styles.highlight}> Management Platform</span>
             </h1>
             <p className={styles.heroSubtitle}>
-              Connect senior citizens with family members, doctors, caregivers, and mental health professionals. 
+              Connect senior citizens with family members, doctors, caregivers, and mental health professionals.
               Ensuring safety, comfort, and dignity for the elderly across Sri Lanka.
             </p>
             <div className={styles.heroButtons}>
@@ -127,7 +124,6 @@ const LandingPage = () => {
                 Learn More
               </button>
             </div>
-        
           </div>
         </div>
       </section>
@@ -144,13 +140,13 @@ const LandingPage = () => {
           <div className={styles.featuresGrid}>
             {features.map((feature, index) => (
               <div key={index} className={styles.featureCard}>
-               <div className={styles.featureIcon}>
-        {typeof feature.icon === 'string' && feature.icon.startsWith('data') || feature.icon.endsWith('.png') ? (
-          <img src={feature.icon} alt={feature.title} className={styles.iconImage} />
-        ) : (
-          feature.icon
-        )}
-      </div>
+                <div className={styles.featureIcon}>
+                  {typeof feature.icon === 'string' && (feature.icon.startsWith('data') || feature.icon.endsWith('.png')) ? (
+                    <img src={feature.icon} alt={feature.title} className={styles.iconImage} />
+                  ) : (
+                    feature.icon
+                  )}
+                </div>
                 <h3 className={styles.featureTitle}>{feature.title}</h3>
                 <p className={styles.featureDescription}>{feature.description}</p>
               </div>
@@ -162,41 +158,27 @@ const LandingPage = () => {
       {/* About Section */}
       <section id="about" className={styles.about}>
         <div className={styles.container}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>About SilverCare</h2>
+          </div>
           <div className={styles.aboutContent}>
-            <div className={styles.aboutText}>
-              <h2 className={styles.sectionTitle}>About SilverCare</h2>
-              <p className={styles.aboutDescription}>
-                SilverCare is a comprehensive web-based elder care management platform designed specifically 
-                for the Sri Lankan community. We bridge the gap between senior citizens and their support 
-                network, providing a centralized system for health monitoring, appointment scheduling, 
-                virtual consultations, and emergency support.
-              </p>
-              <div className={styles.aboutFeatures}>
-                <div className={styles.aboutFeature}>
-                  <span className={styles.aboutFeatureIcon}>📈</span>
-                  <span>Real-time Health Monitoring</span>
-                </div>
-                <div className={styles.aboutFeature}>
-                  <span className={styles.aboutFeatureIcon}>🔒</span>
-                  <span>Secure Data Management</span>
-                </div>
-                <div className={styles.aboutFeature}>
-                  <span className={styles.aboutFeatureIcon}>💬</span>
-                  <span>Secure Communication</span>
-                </div>
-              </div>
+            <p className={styles.aboutText}>
+              At SilverCare, we are dedicated to revolutionizing elder care with innovative tools and compassionate support. Our platform connects families, caregivers, and healthcare professionals to ensure the best care for seniors.
+            </p>
+          </div>
+          <div className={styles.aboutFeatures}>
+            <div className={styles.aboutFeature}>
+              <span className={styles.aboutFeatureIcon}>📈</span>
+              <span>Real-time Health Monitoring</span>
             </div>
-            <div className={styles.aboutContent}>
-              <img
-                  src={aboutImage}
-                  alt="About SilverCare"
-                  className={styles.aboutImage}
-              />
-              <p className={styles.aboutText}>
-                  At SilverCare, we are dedicated to revolutionizing elder care with innovative tools and compassionate support. Our platform connects families, caregivers, and healthcare professionals to ensure the best care for seniors.
-              </p>  
+            <div className={styles.aboutFeature}>
+              <span className={styles.aboutFeatureIcon}>🔒</span>
+              <span>Secure Data Management</span>
             </div>
-
+            <div className={styles.aboutFeature}>
+              <span className={styles.aboutFeatureIcon}>💬</span>
+              <span>Secure Communication</span>
+            </div>
           </div>
         </div>
       </section>
@@ -274,7 +256,7 @@ const LandingPage = () => {
                 <span className={styles.logoText}>SilverCare</span>
               </div>
               <p className={styles.footerDescription}>
-                Comprehensive elder care management platform ensuring safety, 
+                Comprehensive elder care management platform ensuring safety,
                 comfort, and dignity for the elderly across Sri Lanka.
               </p>
             </div>
@@ -306,7 +288,7 @@ const LandingPage = () => {
             </div>
           </div>
           <div className={styles.footerBottom}>
-            <p>&copy; 2024 SilverCare. All rights reserved.</p>
+            <p>© 2024 SilverCare. All rights reserved.</p>
           </div>
         </div>
       </footer>
