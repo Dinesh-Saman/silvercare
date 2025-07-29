@@ -11,6 +11,7 @@ export const appointmentApi = {
       if (filters.type && filters.type !== 'all') queryParams.append('type', filters.type);
       if (filters.limit) queryParams.append('limit', filters.limit);
       if (filters.offset) queryParams.append('offset', filters.offset);
+      if (filters.upcoming_only) queryParams.append('upcoming_only', 'true'); // Add this line
       
       const url = `${API_BASE}/family/${familyMemberId}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       const response = await fetch(url);
@@ -28,6 +29,7 @@ export const appointmentApi = {
       throw error;
     }
   },
+
 
   // Get appointment by ID
   getAppointmentById: async (appointmentId) => {

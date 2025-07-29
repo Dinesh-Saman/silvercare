@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Colombo';
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 
