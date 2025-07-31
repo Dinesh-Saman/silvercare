@@ -1,14 +1,16 @@
+process.env.TZ = 'Asia/Colombo';
 const pool = require('../db');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Get all appointments for a family member (only confirmed status)
+// Update the getAllAppointmentsByFamily function
 const getAllAppointmentsByFamily = async (req, res) => {
   const { familyMemberId } = req.params;
-  const { status, elder_id, history, type, limit, offset = 0 } = req.query;
+  const { status, elder_id, history, type, limit, offset = 0, upcoming_only } = req.query;
   
   try {
     console.log('Fetching appointments for family member:', familyMemberId);
-    console.log('Filters:', { status, elder_id, history, type, limit, offset });
+    console.log('Filters:', { status, elder_id, history, type, limit, offset, upcoming_only });
 
     // Get family_id from user_id
     const familyResult = await pool.query(
@@ -55,9 +57,9 @@ const getAllAppointmentsByFamily = async (req, res) => {
         p.payment_method,
         p.transaction_id,
         p.payment_date,
-        EXTRACT(DAY FROM (CURRENT_TIMESTAMP - a.created_at)) as days_since_created,
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 3600 as hours_since_created,
         CASE 
-          WHEN a.status = 'confirmed' AND EXTRACT(DAY FROM (CURRENT_TIMESTAMP - a.created_at)) <= 3 
+          WHEN a.status = 'confirmed' AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 3600 <= 2 
           THEN true 
           ELSE false 
         END as can_cancel,
@@ -86,6 +88,11 @@ const getAllAppointmentsByFamily = async (req, res) => {
     const queryParams = [family_id];
     let paramCount = 1;
 
+    // Add upcoming_only filter if specified
+    if (upcoming_only === 'true') {
+      query += ` AND a.date_time > CURRENT_TIMESTAMP`;
+    }
+
     // Add status filter
     if (status) {
       paramCount++;
@@ -103,8 +110,8 @@ const getAllAppointmentsByFamily = async (req, res) => {
     // Add history filter (completed or cancelled)
     if (history === 'true') {
       query += ` AND a.status IN ('completed', 'cancelled')`;
-    } else if (!status) {
-      // If no specific status and not history, show active appointments
+    } else if (!status && upcoming_only !== 'true') {
+      // If no specific status and not upcoming only, show active appointments
       query += ` AND a.status NOT IN ('completed', 'cancelled')`;
     }
 
@@ -115,7 +122,7 @@ const getAllAppointmentsByFamily = async (req, res) => {
       queryParams.push(type);
     }
 
-    query += ` ORDER BY a.date_time DESC`;
+    query += ` ORDER BY a.date_time ASC`; // Changed to ASC for upcoming appointments
 
     // Add limit if specified
     if (limit) {
@@ -135,7 +142,7 @@ const getAllAppointmentsByFamily = async (req, res) => {
 
     const result = await pool.query(query, queryParams);
 
-    // Get total count for pagination
+    // Get total count for pagination (with same filters)
     let countQuery = `
       SELECT COUNT(*) as total
       FROM appointment a
@@ -146,6 +153,10 @@ const getAllAppointmentsByFamily = async (req, res) => {
     let countParamCount = 1;
 
     // Apply same filters to count query
+    if (upcoming_only === 'true') {
+      countQuery += ` AND a.date_time > CURRENT_TIMESTAMP`;
+    }
+
     if (status) {
       countParamCount++;
       countQuery += ` AND a.status = $${countParamCount}`;
@@ -160,7 +171,7 @@ const getAllAppointmentsByFamily = async (req, res) => {
 
     if (history === 'true') {
       countQuery += ` AND a.status IN ('completed', 'cancelled')`;
-    } else if (!status) {
+    } else if (!status && upcoming_only !== 'true') {
       countQuery += ` AND a.status NOT IN ('completed', 'cancelled')`;
     }
 
@@ -548,6 +559,7 @@ const updateAppointmentStatus = async (req, res) => {
 };
 
 // Cancel appointment with refund (only if within 3 days and has payment)
+// Update the cancelAppointment function
 const cancelAppointment = async (req, res) => {
   const { appointmentId } = req.params;
   const { reason } = req.body;
@@ -555,11 +567,11 @@ const cancelAppointment = async (req, res) => {
   try {
     console.log('Attempting to cancel appointment:', appointmentId);
     
-    // First check if appointment exists, is confirmed, and within 3-day cancellation window
+    // Check if appointment exists, is confirmed, and within 2-hour cancellation window from creation time
     const appointmentCheck = await pool.query(`
       SELECT 
         a.*,
-        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 86400 as days_since_created,
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.created_at)) / 3600 as hours_since_created,
         p.payment_id,
         p.amount,
         p.transaction_id,
@@ -583,24 +595,26 @@ const cancelAppointment = async (req, res) => {
     }
     
     const appointment = appointmentCheck.rows[0];
-    const daysSinceCreated = parseFloat(appointment.days_since_created);
+    const hoursSinceCreated = parseFloat(appointment.hours_since_created);
     
     console.log('Appointment details:', {
       id: appointment.appointment_id,
       status: appointment.status,
-      daysSinceCreated: daysSinceCreated,
+      hoursSinceCreated: hoursSinceCreated,
+      createdAt: appointment.created_at,
+      appointmentDateTime: appointment.date_time,
       hasPayment: !!appointment.payment_id,
       paymentAmount: appointment.amount,
       transactionId: appointment.transaction_id
     });
     
-    // Check if within 3-day cancellation window
-    if (daysSinceCreated > 3) {
+    // Check if within 2-hour cancellation window from creation time
+    if (hoursSinceCreated > 2) {
       return res.status(400).json({
         success: false,
-        error: `Cancellation not allowed. Appointments can only be cancelled within 3 days of booking. This appointment was created ${daysSinceCreated.toFixed(1)} days ago.`,
+        error: `Cancellation not allowed. Appointments can only be cancelled within 2 hours of booking. This appointment was created ${hoursSinceCreated.toFixed(1)} hours ago.`,
         canCancel: false,
-        daysSinceCreated: daysSinceCreated
+        hoursSinceCreated: hoursSinceCreated
       });
     }
     
@@ -619,7 +633,7 @@ const cancelAppointment = async (req, res) => {
              updated_at = CURRENT_TIMESTAMP
          WHERE appointment_id = $2
          RETURNING *`,
-        [reason || 'Cancelled by family member within 3-day window', appointmentId]
+        [reason || 'Cancelled by family member (within 2-hour creation policy)', appointmentId]
       );
       
       let refundResult = null;
@@ -638,8 +652,9 @@ const cancelAppointment = async (req, res) => {
               appointment_id: appointmentId.toString(),
               elder_name: appointment.elder_name || '',
               doctor_name: appointment.doctor_name || '',
-              cancellation_reason: reason || 'Cancelled within 3-day window',
+              cancellation_reason: reason || 'Cancelled within 2-hour creation policy',
               cancelled_at: new Date().toISOString(),
+              hours_since_created: hoursSinceCreated.toString(),
               platform: 'SilverCare'
             }
           });
@@ -654,8 +669,7 @@ const cancelAppointment = async (req, res) => {
             [appointment.payment_id]
           );
           
-          // Insert refund record (you might want to create a refunds table)
-          // For now, we'll add a note to the appointment
+          // Insert refund record
           await pool.query(
             `UPDATE appointment 
              SET notes = COALESCE(notes, '') || ' | REFUND: ' || $1 || ' (Amount: Rs.' || $2 || ')'
@@ -674,7 +688,6 @@ const cancelAppointment = async (req, res) => {
           console.error('Stripe refund failed:', stripeError);
           
           // Don't fail the entire cancellation if refund fails
-          // Just log it and notify the user
           await pool.query(
             `UPDATE appointment 
              SET notes = COALESCE(notes, '') || ' | REFUND FAILED: ' || $1 || ' - Contact support'
@@ -694,6 +707,7 @@ const cancelAppointment = async (req, res) => {
       
       console.log('Appointment cancelled successfully:', {
         appointmentId,
+        hoursSinceCreated,
         refundProcessed: !!refundResult,
         refundAmount: refundResult?.amount
       });
@@ -704,7 +718,7 @@ const cancelAppointment = async (req, res) => {
         appointment: cancelResult.rows[0],
         refund: refundResult,
         cancellationInfo: {
-          daysSinceCreated: daysSinceCreated,
+          hoursSinceCreated: hoursSinceCreated,
           refundProcessed: !!refundResult && !refundResult.error,
           refundAmount: refundResult?.amount || 0,
           estimatedRefundDays: refundResult?.error ? null : '5-10 business days'
@@ -725,7 +739,7 @@ const cancelAppointment = async (req, res) => {
       details: err.message
     });
   }
-};
+}
 // Get appointment statistics for family member (only confirmed appointments)
 const getAppointmentStats = async (req, res) => {
   const { familyMemberId } = req.params;

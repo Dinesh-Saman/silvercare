@@ -17,7 +17,6 @@ const Appointments = () => {
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   const [filters, setFilters] = useState({
-    status: 'all',
     type: 'all',
     search: ''
   });
@@ -55,16 +54,24 @@ const Appointments = () => {
         // Fetch appointments and stats in parallel
         const [appointmentsResponse, statsResponse] = await Promise.all([
           appointmentApi.getAllAppointmentsByFamily(currentUser.user_id, {
-            status: filters.status,
+            status: 'confirmed', // Only fetch confirmed appointments
             type: filters.type,
             limit: pagination.limit,
-            offset: pagination.offset
+            offset: pagination.offset,
+            upcoming_only: true // Only fetch upcoming appointments
           }),
           appointmentApi.getAppointmentStats(currentUser.user_id)
         ]);
         
         if (appointmentsResponse.success) {
-          setAppointments(appointmentsResponse.appointments);
+          // Filter to only show confirmed and upcoming appointments
+          const confirmedUpcomingAppointments = appointmentsResponse.appointments.filter(appointment => {
+            const appointmentDate = new Date(appointment.date_time);
+            const currentDate = new Date();
+            return appointmentDate > currentDate && appointment.status === 'confirmed';
+          });
+          
+          setAppointments(confirmedUpcomingAppointments);
           setPagination(prev => ({
             ...prev,
             total: appointmentsResponse.pagination.total,
@@ -87,7 +94,7 @@ const Appointments = () => {
     if (currentUser && currentUser.role === 'family_member') {
       fetchAppointmentsData();
     }
-  }, [currentUser, filters.status, filters.type, pagination.limit, pagination.offset]);
+  }, [currentUser, filters.type, pagination.limit, pagination.offset]); // Removed filters.status from dependency
 
   // Filter appointments by search term
   useEffect(() => {
@@ -124,14 +131,43 @@ const Appointments = () => {
     navigate(`/family-member/appointment/${appointmentId}`);
   };
 
+  // Update the getCancellationInfo function
+  const getCancellationInfo = (appointment) => {
+    const createdAt = new Date(appointment.created_at);
+    const currentDate = new Date();
+    const hoursSinceCreated = (currentDate - createdAt) / (1000 * 60 * 60); // Convert ms to hours
+    
+    // Check if appointment was created within 2 hours
+    if (hoursSinceCreated > 2) {
+      return {
+        canCancel: false,
+        reason: `Cannot cancel (${hoursSinceCreated.toFixed(1)} hours since booking, 2-hour limit exceeded)`,
+        color: '#e74c3c'
+      };
+    }
+    
+    const remainingHours = 2 - hoursSinceCreated;
+    return {
+      canCancel: true,
+      reason: `Can cancel (${remainingHours.toFixed(1)} hours remaining from 2-hour policy)`,
+      color: remainingHours < 0.5 ? '#f39c12' : '#27ae60' // Warning color when less than 30 minutes remaining
+    };
+  };
+
   const handleCancelAppointment = async (appointment, event) => {
     event.stopPropagation(); // Prevent navigation
     
-    // Check if cancellation is allowed
-    if (!appointment.can_cancel) {
-      window.alert(`Cancellation not allowed. This appointment was created ${appointment.days_since_created} days ago. Appointments can only be cancelled within 3 days of booking.`);
+    // Check if cancellation is allowed (within 2 hours of creation)
+    const createdAt = new Date(appointment.created_at);
+    const currentDate = new Date();
+    const hoursSinceCreated = (currentDate - createdAt) / (1000 * 60 * 60);
+    
+    if (hoursSinceCreated > 2) {
+      window.alert(`Cancellation not allowed. This appointment was booked ${hoursSinceCreated.toFixed(1)} hours ago. Appointments can only be cancelled within 2 hours of booking.`);
       return;
     }
+    
+    const remainingHours = 2 - hoursSinceCreated;
     
     // Show detailed cancellation confirmation
     const confirmMessage = `Are you sure you want to cancel this appointment?
@@ -141,6 +177,12 @@ const Appointments = () => {
 • Patient: ${appointment.elder_name}
 • Date: ${new Date(appointment.date_time).toLocaleDateString()}
 • Time: ${new Date(appointment.date_time).toLocaleTimeString()}
+• Booked: ${createdAt.toLocaleDateString()} at ${createdAt.toLocaleTimeString()}
+
+⏰ Cancellation Policy:
+• Hours since booking: ${hoursSinceCreated.toFixed(1)} hours
+• Remaining time to cancel: ${remainingHours.toFixed(1)} hours
+• Must cancel within 2 hours of booking
 
 💰 Refund Information:
 ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
@@ -160,13 +202,9 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
       const response = await appointmentApi.cancelAppointment(appointment.appointment_id, reason);
       
       if (response.success) {
-        // Update appointments list
+        // Remove the cancelled appointment from the list since we only show confirmed appointments
         setAppointments(prev => 
-          prev.map(apt => 
-            apt.appointment_id === appointment.appointment_id 
-              ? { ...apt, status: 'cancelled' }
-              : apt
-          )
+          prev.filter(apt => apt.appointment_id !== appointment.appointment_id)
         );
         
         // Show success message with refund info
@@ -193,7 +231,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
       
       if (err.message.includes('not allowed')) {
         errorMessage = err.message;
-      } else if (err.message.includes('3 days')) {
+      } else if (err.message.includes('hours')) {
         errorMessage = err.message;
       } else {
         errorMessage += ' Please try again or contact support.';
@@ -236,23 +274,6 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
     return type === 'online' ? '💻' : '🏥';
   };
 
-  const getCancellationInfo = (appointment) => {
-    if (!appointment.can_cancel) {
-      return {
-        canCancel: false,
-        reason: `Created ${appointment.days_since_created} days ago (3-day limit exceeded)`,
-        color: '#e74c3c'
-      };
-    }
-    
-    const daysLeft = Math.max(0, 3 - appointment.days_since_created);
-    return {
-      canCancel: true,
-      reason: `Can cancel (${daysLeft.toFixed(1)} days left)`,
-      color: daysLeft < 1 ? '#f39c12' : '#27ae60'
-    };
-  };
-
   const loadMoreAppointments = () => {
     setPagination(prev => ({
       ...prev,
@@ -288,14 +309,14 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <h1 className={styles.title}>📅 Confirmed Appointments</h1>
+              <h1 className={styles.title}>📅 Confirmed Upcoming Appointments</h1>
               <p className={styles.subtitle}>
-                Manage and view confirmed appointments for your registered elders
+                Manage and view confirmed upcoming appointments for your registered elders
               </p>
               <div className={styles.cancellationPolicy}>
                 <span className={styles.policyIcon}>ℹ️</span>
                 <span className={styles.policyText}>
-                  Appointments can be cancelled within 3 days of booking with full refund
+                  Appointments can be cancelled within 2 hours of booking with full refund
                 </span>
               </div>
             </div>
@@ -392,11 +413,11 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
             ) : filteredAppointments.length === 0 ? (
               <div className={styles.noAppointments}>
                 <div className={styles.noAppointmentsIcon}>📅</div>
-                <h2>No Confirmed Appointments Found</h2>
+                <h2>No Confirmed Upcoming Appointments Found</h2>
                 <p>
                   {filters.search || filters.type !== 'all'
-                    ? 'No appointments match your current filters.'
-                    : 'You haven\'t confirmed any appointments yet.'
+                    ? 'No confirmed upcoming appointments match your current filters.'
+                    : 'You don\'t have any confirmed upcoming appointments.'
                   }
                 </p>
                 <button 
@@ -435,7 +456,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                               className={styles.appointmentStatus}
                               style={{ backgroundColor: getStatusColor(appointment.status) }}
                             >
-                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                              Confirmed
                             </div>
                             {/* Cancellation Status Indicator */}
                             <div 
@@ -608,7 +629,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                               <div className={styles.cannotCancelInfo}>
                                 <span className={styles.cannotCancelIcon}>🚫</span>
                                 <span className={styles.cannotCancelText}>
-                                  Cannot cancel (3-day limit exceeded)
+                                  Cannot cancel (2-hour booking limit exceeded)
                                 </span>
                               </div>
                             )}
@@ -637,7 +658,7 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                 {/* Pagination Info */}
                 <div className={styles.paginationInfo}>
                   <p>
-                    Showing {filteredAppointments.length} of {pagination.total} confirmed appointments
+                  
                   </p>
                 </div>
               </>
