@@ -232,6 +232,7 @@
   margin-bottom: 1.25rem;
   flex-wrap: wrap;
   gap: 1rem;
+  padding-right: 8rem; /* Add space for chat button */
 }
 
 .doctorName {
@@ -257,6 +258,9 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  position: relative;
+  z-index: 4;
+  flex-shrink: 0;
 }
 
 .doctorDetails {
