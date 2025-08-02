@@ -15,25 +15,42 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
   };
 
   // Fetch conversation messages
-  const fetchMessages = async () => {
+  const fetchMessages = async (isBackgroundRefresh = false) => {
     if (!currentUser?.user_id || !selectedDoctor?.doctor_id) return;
 
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not on background refreshes
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
+      
       const response = await messagesApi.getConversation(
         currentUser.user_id,
         selectedDoctor.doctor_id
       );
 
       if (response.success) {
+        // Always update messages silently - no comparison needed
         setMessages(response.messages);
-        // Mark messages as read
-        await messagesApi.markAsRead(selectedDoctor.doctor_id, currentUser.user_id);
+        
+        // Mark messages as read only if there are new unread messages
+        const hasUnreadMessages = response.messages.some(
+          msg => msg.receiver_id === currentUser.user_id && !msg.is_read
+        );
+        if (hasUnreadMessages) {
+          await messagesApi.markAsRead(selectedDoctor.doctor_id, currentUser.user_id);
+        }
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      // Only log errors on initial load, silent on background refreshes
+      if (!isBackgroundRefresh) {
+        console.error('Error fetching messages:', error);
+      }
     } finally {
-      setLoading(false);
+      // Only hide loading spinner if it was shown
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      }
     }
   };
 
@@ -42,6 +59,9 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
+    const messageToSend = newMessage.trim();
+    setNewMessage(''); // Clear input immediately for better UX
+
     try {
       setSending(true);
       const response = await messagesApi.sendMessage(
@@ -49,16 +69,31 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
         selectedDoctor.doctor_id,
         'family_member',
         'doctor',
-        newMessage.trim()
+        messageToSend
       );
 
       if (response.success) {
-        setNewMessage('');
-        // Refresh messages to show the new one
-        await fetchMessages();
+        // Immediately add the message to local state for instant feedback
+        const newMsg = {
+          message_id: response.message_id,
+          sender_id: currentUser.user_id,
+          receiver_id: selectedDoctor.doctor_id,
+          sender_type: 'family_member',
+          receiver_type: 'doctor',
+          message_text: messageToSend,
+          sent_at: new Date().toISOString(),
+          is_read: false,
+          sender_name: currentUser.name
+        };
+        setMessages(prev => [...prev, newMsg]);
+      } else {
+        // Restore message if send failed
+        setNewMessage(messageToSend);
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      // Restore message if send failed
+      setNewMessage(messageToSend);
     } finally {
       setSending(false);
     }
@@ -96,18 +131,27 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
 
   // Initial load and polling for new messages
   useEffect(() => {
-    fetchMessages();
+    // Initial load with loading spinner
+    fetchMessages(false);
     
-    // Poll for new messages every 3 seconds
-    const interval = setInterval(fetchMessages, 3000);
+    // Background polling every 5 seconds - completely invisible to user
+    const interval = setInterval(() => {
+      // Background refresh - no loading spinners or error messages
+      fetchMessages(true);
+    }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser, selectedDoctor]);
+  }, [currentUser?.user_id, selectedDoctor?.doctor_id]); // Only re-run if user/doctor changes
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Small delay to ensure DOM is updated before scrolling
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [messages.length]); // Only scroll when message count changes, not on every message update
 
   if (loading && messages.length === 0) {
     return (
