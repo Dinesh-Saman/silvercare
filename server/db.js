@@ -1,6 +1,6 @@
 process.env.TZ = 'Asia/Colombo';
 const { Pool } = require('pg');
-const cron = require('node-cron');
+//const cron = require('node-cron');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -12,6 +12,7 @@ pool.on('connect', (client) => {
   client.query('SET timezone TO "Asia/Colombo"');
 });
 
+/*
 cron.schedule('0 * * * *', async () => {
   try {
     console.log('🕐 Checking for expired appointments at:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
@@ -41,8 +42,9 @@ cron.schedule('0 * * * *', async () => {
     console.error('❌ Error updating expired appointments:', error);
   }
 });
+*/
 
-console.log('📅 Appointment status updater scheduled to run every hour');
+//console.log('📅 Appointment status updater scheduled to run every hour');
 
 
 module.exports = pool;
