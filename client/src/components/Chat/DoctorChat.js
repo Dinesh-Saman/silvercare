@@ -16,13 +16,25 @@ const DoctorChat = ({ currentUser, selectedFamilyMember, onClose }) => {
 
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
-    if (!currentUser?.user_id || !selectedFamilyMember?.user_id) return;
+    if (!currentUser?.user_id || !selectedFamilyMember?.user_id) {
+      console.log('Missing user IDs:', {
+        currentUser: currentUser?.user_id,
+        selectedFamilyMember: selectedFamilyMember?.user_id,
+        selectedFamilyMemberObject: selectedFamilyMember
+      });
+      return;
+    }
 
     try {
       // Only show loading spinner on initial load, not on background refreshes
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
+      
+      console.log('Fetching messages between:', {
+        doctor: currentUser.user_id,
+        familyMember: selectedFamilyMember.user_id
+      });
       
       const response = await messagesApi.getConversation(
         currentUser.user_id,
@@ -64,6 +76,16 @@ const DoctorChat = ({ currentUser, selectedFamilyMember, onClose }) => {
 
     try {
       setSending(true);
+      
+      console.log('Sending message:', {
+        from: currentUser.user_id,
+        to: selectedFamilyMember.user_id,
+        senderType: 'doctor',
+        receiverType: 'family_member',
+        message: messageToSend,
+        selectedFamilyMemberObject: selectedFamilyMember
+      });
+      
       const response = await messagesApi.sendMessage(
         currentUser.user_id,
         selectedFamilyMember.user_id,

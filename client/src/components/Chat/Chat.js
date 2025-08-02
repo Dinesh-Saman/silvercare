@@ -16,7 +16,15 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
 
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
-    if (!currentUser?.user_id || !selectedDoctor?.doctor_id) return;
+    if (!currentUser?.user_id || !selectedDoctor?.user_id) {
+      console.log('Missing user IDs in Chat.js:', {
+        currentUser: currentUser?.user_id,
+        selectedDoctor_user_id: selectedDoctor?.user_id,
+        selectedDoctor_doctor_id: selectedDoctor?.doctor_id,
+        selectedDoctorObject: selectedDoctor
+      });
+      return;
+    }
 
     try {
       // Only show loading spinner on initial load, not on background refreshes
@@ -24,9 +32,14 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
         setLoading(true);
       }
       
+      console.log('Chat.js - Fetching messages between:', {
+        familyMember: currentUser.user_id,
+        doctor: selectedDoctor.user_id
+      });
+      
       const response = await messagesApi.getConversation(
         currentUser.user_id,
-        selectedDoctor.doctor_id
+        selectedDoctor.user_id  // Changed from doctor_id to user_id
       );
 
       if (response.success) {
@@ -38,7 +51,7 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
           msg => msg.receiver_id === currentUser.user_id && !msg.is_read
         );
         if (hasUnreadMessages) {
-          await messagesApi.markAsRead(selectedDoctor.doctor_id, currentUser.user_id);
+          await messagesApi.markAsRead(selectedDoctor.user_id, currentUser.user_id);  // Changed from doctor_id to user_id
         }
       }
     } catch (error) {
@@ -64,9 +77,19 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
 
     try {
       setSending(true);
+      
+      console.log('Chat.js - Sending message:', {
+        from: currentUser.user_id,
+        to: selectedDoctor.user_id,  // Changed from doctor_id to user_id
+        senderType: 'family_member',
+        receiverType: 'doctor',
+        message: messageToSend,
+        selectedDoctorObject: selectedDoctor
+      });
+      
       const response = await messagesApi.sendMessage(
         currentUser.user_id,
-        selectedDoctor.doctor_id,
+        selectedDoctor.user_id,  // Changed from doctor_id to user_id
         'family_member',
         'doctor',
         messageToSend
@@ -77,7 +100,7 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
         const newMsg = {
           message_id: response.message_id,
           sender_id: currentUser.user_id,
-          receiver_id: selectedDoctor.doctor_id,
+          receiver_id: selectedDoctor.user_id,  // Changed from doctor_id to user_id
           sender_type: 'family_member',
           receiver_type: 'doctor',
           message_text: messageToSend,
@@ -141,7 +164,7 @@ const Chat = ({ currentUser, selectedDoctor, onClose }) => {
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.user_id, selectedDoctor?.doctor_id]); // Only re-run if user/doctor changes
+  }, [currentUser?.user_id, selectedDoctor?.user_id]); // Changed from doctor_id to user_id
 
   // Scroll to bottom when messages change
   useEffect(() => {
