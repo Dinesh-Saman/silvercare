@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { doctormessageApi } from '../../services/doctormessageApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
+import Chat from '../../components/Chat/Chat';
 import styles from '../../components/css/familymember/DoctorMessages.module.css';
 
 const DoctorMessages = () => {
@@ -14,6 +15,7 @@ const DoctorMessages = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [showChat, setShowChat] = useState(false);
 
   // Redirect if not authenticated or not family member
   useEffect(() => {
@@ -50,9 +52,16 @@ const DoctorMessages = () => {
     }
   }, [currentUser]);
 
-  // Fetch appointment history for selected doctor
+  // Handle doctor selection and show chat
   const handleDoctorSelect = async (doctor) => {
     setSelectedDoctor(doctor);
+    setShowChat(true);
+  };
+
+  // Handle closing chat
+  const handleCloseChat = () => {
+    setShowChat(false);
+    setSelectedDoctor(null);
   };
 
   const formatDate = (dateString) => {
@@ -181,7 +190,15 @@ const DoctorMessages = () => {
             </div>
 
             {/* Chat/History Section */}
-            {selectedDoctor && (
+            {selectedDoctor && showChat ? (
+              <div className={styles.chatSection}>
+                <Chat 
+                  currentUser={currentUser}
+                  selectedDoctor={selectedDoctor}
+                  onClose={handleCloseChat}
+                />
+              </div>
+            ) : selectedDoctor ? (
               <div className={styles.chatSection}>
                 <div className={styles.chatHeader}>
                   <h2 className={styles.sectionTitle}>
@@ -190,11 +207,16 @@ const DoctorMessages = () => {
                 </div>
 
                 <div className={styles.appointmentHistory}>
-                  {/* Future: Chat interface would go here */}
                   <div className={styles.chatInterface}>
                     <div className={styles.comingSoon}>
-                      <h4>💬 Chat Interface</h4>
-                      <p>Real-time messaging feature coming soon!</p>
+                      <h4>💬 Ready to Chat!</h4>
+                      <p>Click the chat button to start messaging Dr. {selectedDoctor.doctor_name}</p>
+                      <button 
+                        className={styles.startChatButton}
+                        onClick={() => setShowChat(true)}
+                      >
+                        Start Conversation
+                      </button>
                       <div className={styles.contactInfo}>
                         <p><strong>Contact Dr. {selectedDoctor.doctor_name}:</strong></p>
                         <p>📧 {selectedDoctor.doctor_email}</p>
@@ -204,7 +226,7 @@ const DoctorMessages = () => {
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </FamilyMemberLayout>
