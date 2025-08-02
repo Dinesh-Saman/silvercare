@@ -54,7 +54,7 @@ import { Roles } from './pages/roles';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DoctorMessages from './pages/familemember/DoctorMessages';
-
+import DoctorMessages2 from './pages/doctor/DoctorMessages';
 // Import ElderDoctors component
 import ElderDoctors from "./pages/familemember/elder-doctors";
 import CaregiverProfile from "./pages/familemember/profile";
@@ -256,6 +256,12 @@ function App() {
               <Route path="/doctor/profile" element={
             <ProtectedRoute allowedRoles={['doctor']}>
               <DoctorProfile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/doctor/messages" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorMessages2 />
             </ProtectedRoute>
           } />
           

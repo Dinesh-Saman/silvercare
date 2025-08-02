@@ -147,7 +147,7 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
         navigate('/doctor/messages');
         break;
       case 'family-chat':
-        navigate('/doctor/family-chat');
+        navigate('/doctor/messages');
         break;
       case 'caregiver-chat':
         navigate('/doctor/caregiver-chat');
