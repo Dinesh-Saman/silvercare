@@ -47,9 +47,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       case 'upcoming-appointments':
         navigate('/family-member/appointments');
         break;
-              case 'upcoming-appointments':
-        navigate('/family-member/appointments');
-        break;
+
       case 'approved-appointment':
         navigate('/family-member/Approved-appointment');
         break;
@@ -72,7 +70,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
         navigate('/family-member/messages');
         break;
       case 'doctor-chat':
-        navigate('/family-member/doctor-chat');
+        navigate('/family-member/doctor-messages');
         break;
       case 'caregiver-chat':
         navigate('/family-member/caregiver-chat');
@@ -159,7 +157,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       hasSubmenu: true,
       submenu: [
         { key: 'messages', label: 'Messages', path: '/family-member/messages' },
-        { key: 'doctor-chat', label: 'Doctor Chat', path: '/family-member/doctor-chat' },
+        { key: 'doctor-chat', label: 'Doctor Chat', path: '/family-member/doctor-messages' },
         { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/family-member/caregiver-chat' }
       ]
     },
