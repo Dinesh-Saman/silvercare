@@ -14,8 +14,6 @@ const DoctorMessages = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [appointmentHistory, setAppointmentHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Redirect if not authenticated or not family member
   useEffect(() => {
@@ -55,23 +53,6 @@ const DoctorMessages = () => {
   // Fetch appointment history for selected doctor
   const handleDoctorSelect = async (doctor) => {
     setSelectedDoctor(doctor);
-    setHistoryLoading(true);
-    
-    try {
-      const response = await doctormessageApi.getAppointmentHistoryWithDoctor(
-        currentUser.user_id, 
-        doctor.doctor_id
-      );
-      
-      if (response.success) {
-        setAppointmentHistory(response.appointments);
-      }
-    } catch (err) {
-      console.error('Error fetching appointment history:', err);
-      setError('Failed to load appointment history');
-    } finally {
-      setHistoryLoading(false);
-    }
   };
 
   const formatDate = (dateString) => {
@@ -82,17 +63,6 @@ const DoctorMessages = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'confirmed':
-        return styles.statusConfirmed;
-      case 'completed':
-        return styles.statusCompleted;
-      default:
-        return styles.statusDefault;
-    }
   };
 
   if (loading || dataLoading) {
@@ -175,10 +145,10 @@ const DoctorMessages = () => {
                         </div>
                         
                         <div className={styles.doctorDetails}>
-                          <p><strong>Institution:</strong> {doctor.current_institution}</p>
-                          <p><strong>Experience:</strong> {doctor.years_experience} years</p>
-                          <p><strong>District:</strong> {doctor.doctor_district}</p>
-                          <p><strong>Elders Treated:</strong> {doctor.elders_treated}</p>
+                          <p><strong>Institution:</strong> <span>{doctor.current_institution}</span></p>
+                          <p><strong>Experience:</strong> <span>{doctor.years_experience} years</span></p>
+                          <p><strong>District:</strong> <span>{doctor.doctor_district}</span></p>
+                          <p><strong>Elders Treated:</strong> <span>{doctor.elders_treated}</span></p>
                         </div>
                         
                         <div className={styles.appointmentStats}>
@@ -197,13 +167,13 @@ const DoctorMessages = () => {
                         </div>
                         
                         <div className={styles.lastAppointment}>
-                          <small>Last appointment: {formatDate(doctor.latest_appointment_date)}</small>
+                          Last appointment: {formatDate(doctor.latest_appointment_date)}
                         </div>
                       </div>
                       
-                      <div className={styles.chatButton}>
-                        <span>💬 Chat</span>
-                      </div>
+                      <button className={styles.chatButton}>
+                        💬 Chat
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -217,71 +187,22 @@ const DoctorMessages = () => {
                   <h2 className={styles.sectionTitle}>
                     💬 Chat with Dr. {selectedDoctor.doctor_name}
                   </h2>
-                  <p className={styles.chatSubtitle}>
-                    Appointment History & Messages
-                  </p>
                 </div>
 
-                {historyLoading ? (
-                  <div className={styles.historyLoading}>
-                    <div className={styles.loadingSpinner}></div>
-                    <p>Loading appointment history...</p>
-                  </div>
-                ) : (
-                  <div className={styles.appointmentHistory}>
-                    <h3 className={styles.historyTitle}>
-                      📋 Appointment History ({appointmentHistory.length})
-                    </h3>
-                    
-                    {appointmentHistory.length === 0 ? (
-                      <div className={styles.noHistory}>
-                        <p>No appointment history found</p>
-                      </div>
-                    ) : (
-                      <div className={styles.historyList}>
-                        {appointmentHistory.map((appointment) => (
-                          <div key={appointment.appointment_id} className={styles.historyItem}>
-                            <div className={styles.historyHeader}>
-                              <div className={styles.historyInfo}>
-                                <h4>{appointment.elder_name}</h4>
-                                <span className={styles.appointmentType}>
-                                  {appointment.appointment_type}
-                                </span>
-                              </div>
-                              <div className={styles.historyMeta}>
-                                <span className={`${styles.statusBadge} ${getStatusBadgeClass(appointment.status)}`}>
-                                  {appointment.status}
-                                </span>
-                                <span className={styles.appointmentDate}>
-                                  {formatDate(appointment.date_time)}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {appointment.notes && (
-                              <div className={styles.appointmentNotes}>
-                                <strong>Notes:</strong> {appointment.notes}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Future: Chat interface would go here */}
-                    <div className={styles.chatInterface}>
-                      <div className={styles.comingSoon}>
-                        <h4>💬 Chat Interface</h4>
-                        <p>Real-time messaging feature coming soon!</p>
-                        <div className={styles.contactInfo}>
-                          <p><strong>Contact Dr. {selectedDoctor.doctor_name}:</strong></p>
-                          <p>📧 {selectedDoctor.doctor_email}</p>
-                          <p>📞 {selectedDoctor.doctor_phone}</p>
-                        </div>
+                <div className={styles.appointmentHistory}>
+                  {/* Future: Chat interface would go here */}
+                  <div className={styles.chatInterface}>
+                    <div className={styles.comingSoon}>
+                      <h4>💬 Chat Interface</h4>
+                      <p>Real-time messaging feature coming soon!</p>
+                      <div className={styles.contactInfo}>
+                        <p><strong>Contact Dr. {selectedDoctor.doctor_name}:</strong></p>
+                        <p>📧 {selectedDoctor.doctor_email}</p>
+                        <p>📞 {selectedDoctor.doctor_phone}</p>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
