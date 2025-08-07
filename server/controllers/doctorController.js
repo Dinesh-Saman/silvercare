@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Colombo';
 const doctorModel = require('../models/doctormodel');
 
 // Get all appointments for a doctor
@@ -157,6 +158,49 @@ const updateDoctorProfile = async (req, res) => {
   }
 };
 
+
+// Get family members who have appointments with this doctor
+const getFamilyMembersWithAppointments = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    
+    const familyMembers = await doctorModel.getFamilyMembersWithAppointments(doctorId);
+    
+    res.json({
+      success: true,
+      familyMembers: familyMembers,
+      count: familyMembers.length
+    });
+  } catch (error) {
+    console.error('Error fetching family members with appointments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch family members with appointments'
+    });
+  }
+};
+
+// Get appointment history between doctor and specific family member
+const getAppointmentHistoryWithFamilyMember = async (req, res) => {
+  try {
+    const { doctorId, familyMemberId } = req.params;
+    
+    const appointments = await doctorModel.getAppointmentHistoryWithFamilyMember(doctorId, familyMemberId);
+    
+    res.json({
+      success: true,
+      appointments: appointments,
+      count: appointments.length
+    });
+  } catch (error) {
+    console.error('Error fetching appointment history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch appointment history'
+    });
+  }
+};
+
 module.exports = {
   getDoctorAppointments,
   getUpcomingAppointments,
@@ -165,5 +209,7 @@ module.exports = {
   updateAppointmentStatus,
   getDoctorDashboard,
   getDoctorByUserId,
-  updateDoctorProfile
+  updateDoctorProfile,
+  getFamilyMembersWithAppointments,
+  getAppointmentHistoryWithFamilyMember
 };

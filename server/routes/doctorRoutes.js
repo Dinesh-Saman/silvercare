@@ -35,4 +35,8 @@ router.get('/:doctorId/next', doctorController.getNextAppointment);
 router.get('/:doctorId/dashboard', doctorController.getDoctorDashboard);
 router.put('/appointments/:appointmentId/status', doctorController.updateAppointmentStatus);
 
+// Family member chat routes
+router.get('/:doctorId/family-members-with-appointments', doctorController.getFamilyMembersWithAppointments);
+router.get('/:doctorId/family-member/:familyMemberId/appointments', doctorController.getAppointmentHistoryWithFamilyMember);
+
 module.exports = router;
