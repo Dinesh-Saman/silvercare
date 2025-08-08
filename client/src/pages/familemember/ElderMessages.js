@@ -36,6 +36,7 @@ const ElderMessages = () => {
         const response = await elderChatApi.getEldersForChat(currentUser.user_id);
         
         if (response.success) {
+          console.log('Elders data:', response.elders); // Debug log
           setElders(response.elders);
         }
         
@@ -143,8 +144,8 @@ const ElderMessages = () => {
                 <div className={styles.eldersList}>
                   {elders.map((elder) => (
                     <div 
-                      key={elder.user_id} 
-                      className={`${styles.elderCard} ${selectedElder?.user_id === elder.user_id ? styles.selectedElder : ''}`}
+                      key={elder.elder_id} 
+                      className={`${styles.elderCard} ${selectedElder?.elder_id === elder.elder_id ? styles.selectedElder : ''}`}
                       onClick={() => handleElderSelect(elder)}
                     >
                       <div className={styles.elderInfo}>
