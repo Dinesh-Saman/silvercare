@@ -54,6 +54,9 @@ const {
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
 
+// Get elders for chat (family member messaging)
+router.get('/family-member/:familyMemberId/elders', getEldersByFamilyMember);
+
 // Get elder count for a specific family member
 router.get('/count/:familyMemberId', getElderCount);
 router.get('/family-member/:familyMemberId/appointments/upcoming', getUpcomingAppointmentsByFamily);
