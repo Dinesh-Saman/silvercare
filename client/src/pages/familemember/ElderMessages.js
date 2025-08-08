@@ -5,7 +5,7 @@ import ElderChat from '../../components/Chat/ElderChat';
 import { messagesApi } from '../../services/messagesApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
-import styles from './ElderMessages.module.css';
+import styles from '../../components/css/familymember/ElderMessages.module.css';
 
 const ElderMessages = () => {
   const { currentUser } = useAuth();
