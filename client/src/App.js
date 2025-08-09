@@ -53,7 +53,8 @@ import { Login } from './pages/login';
 import { Roles } from './pages/roles';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import DoctorMessages from './pages/familemember/DoctorMessages';
+import DoctorMessages2 from './pages/doctor/DoctorMessages';
 // Import ElderDoctors component
 import ElderDoctors from "./pages/familemember/elder-doctors";
 import CaregiverProfile from "./pages/familemember/profile";
@@ -65,6 +66,7 @@ import ElderProfile from "./pages/elder/profile";
 import AdminUsers from "./pages/admin/users";
 import AdminSettings from "./pages/admin/settings"; 
 import AdminReports from "./pages/admin/reports";
+import LandingPage from './pages/LandingPage';
 
 // Optional: Create an Unauthorized component
 const Unauthorized = () => (
@@ -81,7 +83,7 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes - No authentication required */}
-          <Route path="/" element={<Roles />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -254,6 +256,12 @@ function App() {
               <Route path="/doctor/profile" element={
             <ProtectedRoute allowedRoles={['doctor']}>
               <DoctorProfile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/doctor/messages" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorMessages2 />
             </ProtectedRoute>
           } />
           
@@ -470,6 +478,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+  path="/family-member/doctor-messages"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <DoctorMessages />
+    </ProtectedRoute>
+  }
+/>
 
           <Route
             path="/elder/events"

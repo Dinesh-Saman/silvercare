@@ -357,7 +357,7 @@ const DoctorDashboard = () => {
                 </div>
                 <div className={styles.patientActions}>
                   <button className={styles.actionBtn}>📋 View Records</button>
-                  <button className={styles.actionBtn}>💬 Start Consultation</button>
+                  <button className={styles.actionBtn}>💬 Join Now</button>
                 </div>
               </div>
             ) : (
@@ -411,6 +411,7 @@ const DoctorDashboard = () => {
                       <p className={styles.consultationTime}>{c.date} | {c.time}</p>
                     </div>
                     <button className={styles.consultationBtn}>📋 View Record</button>
+                    <button className={styles.consultationBtn} onClick={() => alert('Join Now clicked for ' + c.name)}>🎥 Join Now</button>
                   </div>
                 ))}
               </div>
@@ -437,7 +438,7 @@ const DoctorDashboard = () => {
                       <h4 className={styles.appointmentPatient}>{app.elder_name}</h4>
                       <p className={styles.appointmentType}>Regular Consultation</p>
                     </div>
-                    <button className={styles.appointmentAction}>Join</button>
+                    <button className={styles.appointmentAction}>Join Now</button>
                   </div>
                 ))
               )}

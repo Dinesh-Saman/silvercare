@@ -6,7 +6,7 @@ import styles from "../../components/css/caregiver/carelogs.module.css";
 import CaregiverLayout from '../../components/CaregiverLayout';
 import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
-import DailyCareReportModal from '../../components/DailyCareReportModal';
+import DailyCareReportModal from '../../components/DailyCareReportModal.js';
 
 const Carelogs = () => {
   const { user } = useAuth();

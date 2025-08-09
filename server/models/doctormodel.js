@@ -301,6 +301,74 @@ const updateDoctorProfile = async (userId, profileData) => {
   }
 };
 
+// Get family members who have appointments with this doctor
+const getFamilyMembersWithAppointments = async (doctorId) => {
+  try {
+    console.log('Querying family members for doctor ID:', doctorId);
+    
+    const result = await pool.query(`
+      SELECT DISTINCT
+        fm.user_id,
+        u.name as family_member_name,
+        u.email as family_member_email,
+        u.phone as family_member_phone,
+        fm.address as family_member_address,
+        fm.phone_fixed as family_member_fixed_phone,
+        COUNT(DISTINCT e.elder_id) as elders_count,
+        STRING_AGG(DISTINCT e.name, ', ') as elders_treated,
+        COUNT(DISTINCT a.appointment_id) as total_appointments,
+        COUNT(DISTINCT CASE WHEN a.status = 'confirmed' THEN a.appointment_id END) as confirmed_appointments,
+        COUNT(DISTINCT CASE WHEN a.status = 'completed' THEN a.appointment_id END) as completed_appointments,
+        MAX(a.date_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Colombo') as latest_appointment_date
+      FROM familymember fm
+      JOIN "User" u ON fm.user_id = u.user_id
+      JOIN elder e ON fm.family_id = e.family_id
+      JOIN appointment a ON e.elder_id = a.elder_id
+      WHERE a.doctor_id = $1 
+        AND a.status IN ('confirmed', 'completed')
+      GROUP BY fm.user_id, u.name, u.email, u.phone, fm.address, fm.phone_fixed
+      ORDER BY latest_appointment_date DESC
+    `, [doctorId]);
+    
+    console.log('Query result for doctor ID', doctorId, ':', result.rows.length, 'family members found');
+    console.log('Family members data:', result.rows);
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching family members with appointments:', error);
+    throw error;
+  }
+};
+
+// Get appointment history between doctor and specific family member
+const getAppointmentHistoryWithFamilyMember = async (doctorId, familyMemberId) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.appointment_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        e.name as elder_name,
+        e.medical_conditions,
+        e.profile_photo as elder_avatar
+      FROM appointment a
+      JOIN elder e ON a.elder_id = e.elder_id
+      JOIN familymember fm ON e.family_id = fm.family_id
+      WHERE a.doctor_id = $1 
+        AND fm.user_id = $2
+        AND a.status IN ('confirmed', 'completed')
+      ORDER BY a.date_time DESC
+    `, [doctorId, familyMemberId]);
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching appointment history:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAppointmentsByDoctorId,
   getUpcomingAppointmentsByDoctorId,
@@ -308,5 +376,7 @@ module.exports = {
   getNextAppointmentByDoctorId,
   updateAppointmentStatus,
   getDoctorByUserId,
-  updateDoctorProfile
+  updateDoctorProfile,
+  getFamilyMembersWithAppointments,
+  getAppointmentHistoryWithFamilyMember
 };

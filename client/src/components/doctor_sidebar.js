@@ -147,7 +147,7 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
         navigate('/doctor/messages');
         break;
       case 'family-chat':
-        navigate('/doctor/family-chat');
+        navigate('/doctor/messages');
         break;
       case 'caregiver-chat':
         navigate('/doctor/caregiver-chat');
@@ -271,7 +271,7 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
       {/* Sidebar Header */}
       <div className={styles.sidebarHeader}>
         <div className={styles.logo}>
-          {!sidebarCollapsed && <span className={styles.logoText}>SilverCare</span>}
+          {!sidebarCollapsed && <span className={styles.logoText}></span>}
         </div>
         <button 
           className={styles.toggleButton}
@@ -290,84 +290,6 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
           <div className={styles.userDetails}>
             <span className={styles.userName}>Doctor</span>
             <span className={styles.userRole}>Medical Professional</span>
-          </div>
-        </div>
-      )}
-
-      {/* Appointments Preview */}
-      {!sidebarCollapsed && (
-        <div className={styles.appointmentsPreview}>
-          <div className={styles.previewHeader}>
-            <span className={styles.previewTitle}>Today's Appointments</span>
-            {appointmentStats && (
-              <span className={styles.appointmentsBadge}>{appointmentStats.today}</span>
-            )}
-          </div>
-          <div className={styles.appointmentsList}>
-            {upcomingAppointments.length > 0 ? (
-              upcomingAppointments.slice(0, 3).map((appointment) => (
-                <div key={appointment.appointment_id || appointment.temp_booking_id} className={styles.appointmentItem}>
-                  <div className={styles.appointmentTime}>
-                    {new Date(appointment.date_time).toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
-                  <div className={styles.appointmentDetails}>
-                    <div className={styles.patientName}>
-                      {appointment.elder_name || appointment.patient_name}
-                    </div>
-                    <div className={styles.appointmentType}>
-                      {appointment.appointment_type || 'Consultation'}
-                    </div>
-                  </div>
-                  <div className={styles.appointmentStatus}>
-                    <span className={`${styles.statusDot} ${styles[appointment.status?.toLowerCase()]}`}></span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className={styles.noAppointments}>
-                <span>No appointments today</span>
-              </div>
-            )}
-          </div>
-          <div className={styles.previewFooter}>
-            <button 
-              className={styles.viewAllButton}
-              onClick={() => navigate('/doctor/appointments')}
-            >
-              View All Appointments
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Weekly Schedule Calendar */}
-      {!sidebarCollapsed && (
-        <div className={styles.weeklySchedule}>
-          <div className={styles.scheduleHeader}>
-            <span className={styles.scheduleTitle}>Weekly Schedule</span>
-            <button 
-              className={styles.scheduleViewButton}
-              onClick={() => navigate('/doctor/schedule')}
-            >
-              📅
-            </button>
-          </div>
-          <div className={styles.weeklyCalendar}>
-            {weeklySchedule.map((day, index) => (
-              <div 
-                key={index} 
-                className={`${styles.calendarDay} ${day.isToday ? styles.today : ''} ${day.hasAppointments ? styles.hasAppointments : ''}`}
-              >
-                <div className={styles.dayName}>{day.dayName}</div>
-                <div className={styles.dayNumber}>{day.dayNumber}</div>
-                {day.appointments > 0 && (
-                  <div className={styles.appointmentCount}>{day.appointments}</div>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       )}
