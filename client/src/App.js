@@ -62,6 +62,7 @@ import CaregiverProfile from "./pages/familemember/profile";
 import FamilyMemberProfile from "./pages/familemember/profile";
 import HealthProfessionalProfile from "./pages/healthproffesional/profile";
 import ElderProfile from "./pages/elder/profile";
+import FamilyMessages from "./pages/elder/FamilyMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -503,6 +504,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <ElderEvents />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/family-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <FamilyMessages />
               </ProtectedRoute>
             }
           />

@@ -34,7 +34,8 @@ const {
   getPastAppointments,
   getAllAppointments,
   getAppointmentById,
-  joinAppointment
+  joinAppointment,
+  getFamilyMembersForChat
 } = require('../controllers/elder');
 
 const {
@@ -84,6 +85,9 @@ router.get('/:elderId/doctors/online', getAllDoctorsForOnlineMeeting);
 
 // Get dashboard stats for an elder - MUST BE BEFORE /:elderId route
 router.get('/:elderId/dashboard-stats', getElderDashboardStats);
+
+// Get family members for chat (elder perspective) - MUST BE BEFORE /:elderId route
+router.get('/:elderId/family-members-for-chat', getFamilyMembersForChat);
 
 // Update elder profile with file upload - MUST BE BEFORE /:elderId route
 router.put('/:elderId/profile', upload.single('profile_photo'), updateElderProfile);

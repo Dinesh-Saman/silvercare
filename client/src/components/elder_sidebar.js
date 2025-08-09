@@ -160,6 +160,12 @@ const ElderSidebar = ({ onItemClick }) => {
       icon: '💡',
       path: '/elder/events'
     },
+    {
+      key: 'family-chat',
+      label: 'Family Chat',
+      icon: '💬',
+      path: '/elder/family-chat'
+    },
     { key: 'my-profile', label: 'My Profile', icon: '👤',path: '/elder/profile' },
     
     
