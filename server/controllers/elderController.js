@@ -25,25 +25,28 @@ const getEldersByFamilyMember = async (req, res) => {
     const familyId = familyMemberResult.rows[0].family_id;
     console.log('Found family_id:', familyId);
     
-    // Now get elders using the family_id - include district field
+    // Now get elders using the family_id - include district field and user_id
     const result = await pool.query(
       `SELECT 
-        elder_id,
-        family_id,
-        name,
-        email,
-        dob,
-        gender,
-        contact,
-        address,
-        nic,
-        medical_conditions,
-        profile_photo,
-        district,
-        created_at
-      FROM elder 
-      WHERE family_id = $1 
-      ORDER BY created_at DESC`,
+        e.elder_id,
+        e.family_id,
+        e.name,
+        e.email,
+        e.dob,
+        e.gender,
+        e.contact,
+        e.address,
+        e.nic,
+        e.medical_conditions,
+        e.profile_photo,
+        e.district,
+        e.created_at,
+        u.user_id,
+        EXTRACT(YEAR FROM AGE(e.dob)) as age
+      FROM elder e
+      LEFT JOIN "User" u ON e.email = u.email AND u.role = 'elder'
+      WHERE e.family_id = $1 
+      ORDER BY e.created_at DESC`,
       [familyId]
     );
     
