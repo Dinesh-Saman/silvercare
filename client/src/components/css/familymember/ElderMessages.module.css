@@ -1,0 +1,997 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  position: relative;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.content {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba(76, 175, 80, 0.15),
+    0 8px 20px rgba(76, 175, 80, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.headerContent h1 {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.backButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 16px rgba(76, 175, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.backButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.backButton:hover::before {
+  left: 100%;
+}
+
+.backButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 24px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.backButton:active {
+  transform: translateY(0);
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  min-height: 600px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.eldersSection {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.eldersSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a, #4caf50);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+.sectionTitle {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.eldersList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-height: 700px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.eldersList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.eldersList::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.eldersList::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  border-radius: 3px;
+}
+
+.noElders {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  border: 2px dashed rgba(76, 175, 80, 0.3);
+}
+
+.noEldersIcon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+  filter: grayscale(20%);
+}
+
+.noElders h3 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.noElders p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.loadingContainer, .errorContainer {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  border: 2px dashed rgba(76, 175, 80, 0.3);
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(76, 175, 80, 0.1);
+  border-top: 4px solid #4caf50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loadingContainer p, .errorContainer p {
+  color: #64748b;
+  font-size: 1.1em;
+  margin: 0;
+}
+
+.errorIcon {
+  font-size: 4em;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.errorContainer h3 {
+  color: #2d3748;
+  margin: 0 0 12px 0;
+  font-size: 1.4em;
+  font-weight: 700;
+}
+
+.retryButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 8px 16px rgba(76, 175, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  margin-top: 20px;
+}
+
+.retryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 24px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.subText {
+  font-size: 0.9em !important;
+  opacity: 0.7 !important;
+  margin-top: 8px !important;
+}
+
+.elderCard {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+  position: relative;
+  overflow: hidden;
+  min-height: 280px;
+}
+
+.elderCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.elderCard:hover::before {
+  left: 100%;
+}
+
+.elderCard:hover {
+  border-color: rgba(76, 175, 80, 0.5);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(76, 175, 80, 0.2),
+    0 0 0 1px rgba(76, 175, 80, 0.1);
+}
+
+.selectedElder {
+  border-color: #4caf50 !important;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%);
+  transform: translateY(-4px);
+  box-shadow: 
+    0 15px 30px rgba(76, 175, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.elderInfo {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.elderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-right: 8rem; /* Add space for chat button */
+}
+
+.elderName {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+
+.elderAge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  position: relative;
+  z-index: 4;
+  flex-shrink: 0;
+}
+
+.elderDetails {
+  margin: 1.25rem 0;
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.8;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.elderDetails p {
+  margin: 0.75rem 0;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.elderDetails strong {
+  color: #2d3748;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.elderDetails span {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.elderStats {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  padding: 1rem 0.75rem;
+  border-radius: 16px;
+  min-width: 85px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.statItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(76, 175, 80, 0.2);
+}
+
+.statNumber {
+  font-weight: 800;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.lastActivity {
+  color: #64748b;
+  font-style: italic;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(76, 175, 80, 0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.chatButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  font-weight: 600;
+  box-shadow: 
+    0 4px 15px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 3;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+}
+
+.chatButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.elderAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-right: 16px;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.elderInfo {
+  flex: 1;
+}
+
+.elderInfo h3 {
+  margin: 0 0 4px 0;
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.elderDetails {
+  margin: 0;
+  color: #4caf50;
+  font-size: 0.9em;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.unreadBadge {
+  background: #f44336;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  font-weight: bold;
+  position: absolute;
+  top: -4px;
+  right: 0;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.elderCardBody {
+  margin: 1.25rem 0;
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.8;
+  min-height: 80px;
+}
+
+.medicalConditions {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.1) 100%);
+  backdrop-filter: blur(10px);
+  padding: 1rem 0.75rem;
+  border-radius: 16px;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 85px;
+  flex: 1;
+}
+
+.medicalConditions:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(76, 175, 80, 0.2);
+}
+
+.conditionsLabel {
+  font-weight: 800;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 0.8rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  display: block;
+}
+
+.lastMessage {
+  color: #64748b;
+  font-style: italic;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(76, 175, 80, 0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.messageText {
+  margin: 0 0 4px 0;
+  color: #555;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.messageTime {
+  font-size: 0.8em;
+  color: #999;
+}
+
+.chatButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  font-weight: 600;
+  box-shadow: 
+    0 8px 16px rgba(76, 175, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 3;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+}
+
+.chatButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 24px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .content {
+    padding: 1.5rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .eldersGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem;
+  }
+  
+  .header {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .headerContent h1 {
+    font-size: 2rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .backButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .mainContent {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .elderCard {
+    padding: 1.5rem;
+    border-radius: 16px;
+    min-height: 240px;
+  }
+  
+  .elderCardHeader {
+    padding-right: 0;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .elderAvatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3em;
+    margin-right: 12px;
+  }
+  
+  .elderInfo h3 {
+    font-size: 1.2rem;
+  }
+  
+  .elderDetails {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .chatButton {
+    position: static;
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0.875rem 1.5rem;
+  }
+  
+  .loadingContainer, .errorContainer, .noElders {
+    padding: 3rem 1.5rem;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 0.75rem;
+  }
+  
+  .header {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-radius: 12px;
+  }
+  
+  .headerContent h1 {
+    font-size: 1.75rem;
+  }
+  
+  .mainContent {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+  
+  .elderCard {
+    padding: 1.25rem;
+    border-radius: 12px;
+    min-height: 200px;
+  }
+  
+  .elderAvatar {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2em;
+    margin-right: 10px;
+  }
+  
+  .elderInfo h3 {
+    font-size: 1.1rem;
+  }
+  
+  .chatButton {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .backButton {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .elderCard {
+    border: 3px solid #4caf50;
+  }
+  
+  .elderCard:hover {
+    border-color: #2e7d32;
+  }
+  
+  .chatButton {
+    background: #2e7d32;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .elderCard,
+  .chatButton,
+  .retryButton,
+  .backButton {
+    transition: none;
+    animation: none;
+  }
+  
+  .elderCard::before {
+    display: none;
+  }
+  
+  .mainContent::before {
+    animation: none;
+  }
+}
+
+/* Animation for cards appearing */
+.elderCard {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger animation for multiple cards */
+.elderCard:nth-child(1) { animation-delay: 0.1s; }
+.elderCard:nth-child(2) { animation-delay: 0.2s; }
+.elderCard:nth-child(3) { animation-delay: 0.3s; }
+.elderCard:nth-child(4) { animation-delay: 0.4s; }
+.elderCard:nth-child(5) { animation-delay: 0.5s; }
+.elderCard:nth-child(6) { animation-delay: 0.6s; }
+
+/* Chat Section Styles */
+.chatSection {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.chatSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a, #4caf50);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+.chatSubtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.elderHistory {
+  margin-top: 1.5rem;
+}
+
+.historyTitle {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.chatInterface {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(102, 187, 106, 0.05) 100%);
+  border-radius: 20px;
+  text-align: center;
+  border: 2px dashed rgba(76, 175, 80, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.chatInterface::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(76, 175, 80, 0.05), transparent);
+  animation: rotate 10s linear infinite;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.comingSoon {
+  position: relative;
+  z-index: 2;
+}
+
+.comingSoon h4 {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.comingSoon p {
+  color: #64748b;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.startChatButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 15px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  margin-bottom: 2rem;
+}
+
+.startChatButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.contactInfo {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.contactInfo p {
+  margin: 0.5rem 0;
+  color: #374151;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.contactInfo p:first-child {
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.contactCareButton {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 15px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.contactCareButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}

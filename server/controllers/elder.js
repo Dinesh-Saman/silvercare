@@ -723,6 +723,73 @@ const joinAppointment = async (req, res) => {
   }
 };
 
+// Get family members for chat (elder perspective)
+const getFamilyMembersForChat = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    console.log('Getting family members for elder:', elderId);
+    
+    // First, get the elder's family_id
+    const elderResult = await pool.query(
+      'SELECT family_id, name as elder_name FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+    
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+    
+    const familyId = elderResult.rows[0].family_id;
+    const elderName = elderResult.rows[0].elder_name;
+    console.log('Found family_id:', familyId);
+    
+    // Get family members from the same family
+    const result = await pool.query(
+      `SELECT 
+        fm.user_id,
+        fm.family_id,
+        fm.address,
+        fm.phone_fixed,
+        u.name as family_member_name,
+        u.email as family_member_email,
+        u.phone as family_member_phone,
+        u.created_at,
+        COUNT(DISTINCT e.elder_id) as elders_count,
+        STRING_AGG(DISTINCT e.name, ', ') as elders_names
+      FROM familymember fm
+      INNER JOIN "User" u ON fm.user_id = u.user_id
+      LEFT JOIN elder e ON fm.family_id = e.family_id
+      WHERE fm.family_id = $1
+      GROUP BY fm.user_id, fm.family_id, fm.address, fm.phone_fixed, u.name, u.email, u.phone, u.created_at
+      ORDER BY u.name ASC`,
+      [familyId]
+    );
+    
+    console.log('Found family members:', result.rows.length);
+    
+    res.json({
+      success: true,
+      familyMembers: result.rows,
+      elderInfo: {
+        elder_id: elderId,
+        elder_name: elderName,
+        family_id: familyId
+      }
+    });
+    
+  } catch (err) {
+    console.error('Error fetching family members for chat:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching family members' 
+    });
+  }
+};
+
 
 module.exports = {
   getElderDetails,
@@ -735,5 +802,6 @@ module.exports = {
   getAllAppointments,
   getAppointmentById,
   joinAppointment,
+  getFamilyMembersForChat,
 };
 
