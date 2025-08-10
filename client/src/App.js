@@ -55,12 +55,14 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DoctorMessages from './pages/familemember/DoctorMessages';
 import DoctorMessages2 from './pages/doctor/DoctorMessages';
+import ElderMessages from './pages/familemember/ElderMessages';
 // Import ElderDoctors component
 import ElderDoctors from "./pages/familemember/elder-doctors";
 import CaregiverProfile from "./pages/familemember/profile";
 import FamilyMemberProfile from "./pages/familemember/profile";
 import HealthProfessionalProfile from "./pages/healthproffesional/profile";
 import ElderProfile from "./pages/elder/profile";
+import FamilyMessages from "./pages/elder/FamilyMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -489,10 +491,28 @@ function App() {
 />
 
           <Route
+  path="/family-member/elder-messages"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <ElderMessages />
+    </ProtectedRoute>
+  }
+/>
+
+          <Route
             path="/elder/events"
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <ElderEvents />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/family-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <FamilyMessages />
               </ProtectedRoute>
             }
           />

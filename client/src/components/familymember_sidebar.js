@@ -66,8 +66,8 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       case 'wellness-updates':
         navigate('/family-member/wellness-updates');
         break;
-      case 'messages':
-        navigate('/family-member/messages');
+      case 'elder-chat':
+        navigate('/family-member/elder-messages');
         break;
       case 'doctor-chat':
         navigate('/family-member/doctor-messages');
@@ -156,7 +156,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       icon: '💬',
       hasSubmenu: true,
       submenu: [
-        { key: 'messages', label: 'Messages', path: '/family-member/messages' },
+        { key: 'elder-chat', label: 'Elder Messages', path: '/family-member/elder-messages' },
         { key: 'doctor-chat', label: 'Doctor Chat', path: '/family-member/doctor-messages' },
         { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/family-member/caregiver-chat' }
       ]
