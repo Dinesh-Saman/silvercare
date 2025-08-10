@@ -160,7 +160,18 @@ const ElderSidebar = ({ onItemClick }) => {
       icon: '💡',
       path: '/elder/events'
     },
-    { key: 'my-profile', label: 'My Profile', icon: '👤',path: '/elder/profile' },
+    {
+      key: 'messages',
+      label: 'Messages',
+      icon: '💬',
+      hasSubmenu: true,
+      submenu: [
+        { key: 'family-chat', label: 'Family Chat', path: '/elder/family-chat' },
+        { key: 'doctor-chat', label: 'Doctor Chat', path: '/elder/doctor-chat' },
+        { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/elder/caregiver-chat' }
+      ]
+    },
+    { key: 'my-profile', label: 'My Profile', icon: '👤', path: '/elder/profile' },
     
     
     
