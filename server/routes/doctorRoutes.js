@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const doctorController = require('../controllers/doctorController');
+const doctorElderChatController = require('../controllers/doctorElderChatController');
 const jwt = require('jsonwebtoken');
 
 // Integrated authentication middleware
@@ -38,5 +39,9 @@ router.put('/appointments/:appointmentId/status', doctorController.updateAppoint
 // Family member chat routes
 router.get('/:doctorId/family-members-with-appointments', doctorController.getFamilyMembersWithAppointments);
 router.get('/:doctorId/family-member/:familyMemberId/appointments', doctorController.getAppointmentHistoryWithFamilyMember);
+
+// Elder chat routes
+router.get('/:doctorId/elders-with-appointments', doctorElderChatController.getEldersWithAppointments);
+router.get('/:doctorId/elder/:elderId/appointments', doctorElderChatController.getAppointmentHistoryWithElder);
 
 module.exports = router;
