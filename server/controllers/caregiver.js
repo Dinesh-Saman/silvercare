@@ -1,5 +1,5 @@
 const pool = require('../db');
-const StatusUpdateService = require('../services/statusUpdateService');
+const StatusUpdateService = require('../services/StatusUpdateService');
 
 // Get care request details by ID(role caregiver)
 const getCareRequestById = async (req, res) => {
