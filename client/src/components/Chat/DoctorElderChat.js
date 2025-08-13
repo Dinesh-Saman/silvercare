@@ -17,7 +17,7 @@ const DoctorElderChat = ({ currentUser, selectedElder, onClose }) => {
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
     if (!currentUser?.user_id || !selectedElder?.user_id) {
-      console.log('Missing user IDs in DoctorElderChat:', {
+      console.log('Missing user IDs:', {
         currentUser: currentUser?.user_id,
         selectedElder: selectedElder?.user_id,
         selectedElderObject: selectedElder
@@ -31,7 +31,7 @@ const DoctorElderChat = ({ currentUser, selectedElder, onClose }) => {
         setLoading(true);
       }
       
-      console.log('DoctorElderChat - Fetching messages between:', {
+      console.log('Fetching messages between:', {
         doctor: currentUser.user_id,
         elder: selectedElder.user_id
       });
@@ -77,7 +77,7 @@ const DoctorElderChat = ({ currentUser, selectedElder, onClose }) => {
     try {
       setSending(true);
       
-      console.log('DoctorElderChat - Sending message:', {
+      console.log('Sending message:', {
         from: currentUser.user_id,
         to: selectedElder.user_id,
         senderType: 'doctor',
