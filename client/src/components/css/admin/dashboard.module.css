@@ -1,24 +1,45 @@
+:root {
+  --background-start: #1a1a2e;
+  --background-end: #16213e;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-hover-bg: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-primary: #e0e0e0;
+  --text-secondary: #99aab5;
+  --highlight-color: #e94560;
+  --blue-accent: #5375e2;
+  --green-accent: #20c997;
+  --red-accent: #ef4444;
+  --purple-accent: #764ba2;
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  --box-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
 .dashboardContainer {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 0;
+  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+  padding: 2rem;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
 }
 
 .headerSection {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
   backdrop-filter: blur(10px);
   padding: 2rem;
   margin-bottom: 2rem;
+  border-radius: 20px;
+  box-shadow: var(--box-shadow);
 }
 
 .welcomeCard {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
+  background: var(--card-hover-bg);
+  border-radius: 15px;
   padding: 2rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--box-shadow);
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -29,34 +50,15 @@
 
 .welcomeTitle {
   font-size: 2.5rem;
-  font-weight: 700;
-  color: #2d3748;
+  font-weight: 800;
+  color: white;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .welcomeSubtitle {
   font-size: 1.2rem;
-  color: #718096;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
-}
-
-.userInfo {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.userEmail, .userRole {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  color: #4a5568;
-  font-weight: 500;
 }
 
 .welcomeImage {
@@ -64,61 +66,67 @@
 }
 
 .avatarPlaceholder {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--highlight-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
 }
 
 .avatarIcon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: white;
 }
 
-.statsSection {
-  padding: 0 2rem;
-  margin-bottom: 2rem;
+.mainContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.statsSection, .secondaryContentGrid, .pendingApprovalsSection {
+  background: var(--card-bg);
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: var(--box-shadow);
 }
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .statCard {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
+  background: var(--card-hover-bg);
+  border-radius: 12px;
   padding: 1.5rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
 .statCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: var(--box-shadow-hover);
 }
 
+.statCard1 { background-color: rgba(83, 117, 226, 0.1); }
+.statCard2 { background-color: rgba(233, 69, 96, 0.1); }
+.statCard3 { background-color: rgba(32, 201, 151, 0.1); }
+.statCard4 { background-color: rgba(118, 75, 162, 0.1); }
+
+
 .statIcon {
-  font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  flex-shrink: 0;
+  font-size: 2rem;
+  color: var(--blue-accent);
 }
 
 .statContent {
@@ -126,43 +134,40 @@
 }
 
 .statNumber {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #2d3748;
+  color: white;
   margin: 0;
 }
 
 .statLabel {
   font-size: 0.9rem;
-  color: #718096;
+  color: var(--text-secondary);
   margin: 0.25rem 0 0 0;
   font-weight: 500;
-}
-
-.mainContentSection {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  padding: 0 2rem;
-  max-width: 1200px;
-  margin: 0 auto 2rem auto;
-}
-
-.quickActionsContainer, .recentActivityContainer {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .sectionTitle {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2d3748;
+  color: white;
   margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  border-bottom: 2px solid var(--highlight-color);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.secondaryContentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.quickActionsContainer, .recentActivityContainer {
+  background: var(--card-hover-bg);
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: var(--box-shadow);
 }
 
 .quickActionsGrid {
@@ -174,53 +179,38 @@
 .quickActionCard {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  padding: 1.5rem;
   border-radius: 12px;
-  background: rgba(102, 126, 234, 0.05);
-  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .quickActionCard:hover {
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.3);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .quickActionIcon {
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  font-size: 2rem;
+  color: var(--highlight-color);
   flex-shrink: 0;
 }
 
-.quickActionContent {
-  flex: 1;
-}
-
 .quickActionTitle {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  color: #2d3748;
+  color: white;
   margin: 0 0 0.25rem 0;
 }
 
 .quickActionDescription {
-  font-size: 0.85rem;
-  color: #718096;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
   margin: 0;
-}
-
-.activityCard {
-  height: 100%;
 }
 
 .activityList {
@@ -232,23 +222,16 @@
 .activityItem {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 1.5rem;
   padding: 1rem;
-  background: rgba(102, 126, 234, 0.05);
+  background: var(--card-hover-bg);
   border-radius: 12px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--blue-accent);
 }
 
 .activityIcon {
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  font-size: 1.5rem;
+  color: var(--blue-accent);
   flex-shrink: 0;
 }
 
@@ -257,49 +240,29 @@
 }
 
 .activityText {
-  font-size: 0.9rem;
-  color: #2d3748;
+  font-size: 1rem;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
   font-weight: 500;
 }
 
 .activityTime {
-  font-size: 0.8rem;
-  color: #718096;
-}
-
-.pendingApprovalsSection {
-  padding: 0 2rem;
-  margin-bottom: 2rem;
-}
-
-.approvalsContainer {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.approvalsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 .approvalCard {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--card-hover-bg);
   border-radius: 15px;
   padding: 1.5rem;
-  border: 2px solid rgba(102, 126, 234, 0.1);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
 .approvalCard:hover {
-  border-color: rgba(102, 126, 234, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-color: var(--highlight-color);
+  transform: translateY(-5px);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .approvalHeader {
@@ -312,13 +275,13 @@
 .approvalInfo h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #2d3748;
+  color: white;
   margin: 0 0 0.25rem 0;
 }
 
 .approvalInfo p {
   font-size: 0.9rem;
-  color: #718096;
+  color: var(--text-secondary);
   margin: 0.25rem 0;
 }
 
@@ -331,13 +294,13 @@
 }
 
 .approvalBadge.doctor {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: var(--blue-accent);
+  color: white;
 }
 
 .approvalBadge.healthprofessional {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: var(--green-accent);
+  color: white;
 }
 
 .approvalActions {
@@ -348,194 +311,30 @@
 
 .approveBtn, .rejectBtn {
   flex: 1;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border: none;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  color: white;
 }
 
 .approveBtn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
+  background: var(--green-accent);
 }
 
 .approveBtn:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-1px);
+  background: #19946d;
 }
 
 .rejectBtn {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
+  background: var(--red-accent);
 }
 
 .rejectBtn:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: translateY(-1px);
-}
-
-.recentRegistrationsSection {
-  padding: 0 2rem;
-  margin-bottom: 2rem;
-}
-
-.registrationsContainer {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.registrationsTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.registrationsTable th,
-.registrationsTable td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
-}
-
-.registrationsTable th {
-  background: rgba(102, 126, 234, 0.05);
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.registrationsTable td {
-  color: #4a5568;
-  font-size: 0.9rem;
-}
-
-.statusBadge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.statusBadge.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.statusBadge.pending {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.statusBadge.confirmed {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.statusBadge.rejected {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.loadingSpinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.errorMessage {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-  padding: 1rem;
-  border-radius: 12px;
-  margin: 1rem 2rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.accessDenied {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
-}
-
-.accessDenied h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.accessDenied p {
-  font-size: 1.1rem;
-  opacity: 0.8;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .welcomeCard {
-    flex-direction: column;
-    align-items: flex-start;
-  } 
-  .userInfo {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .userInfo p {
-    margin-bottom: 0.5rem;
-  }
-  .welcomeTitle {
-    font-size: 2rem;
-  }
-  .welcomeSubtitle {
-    font-size: 1rem;
-  }
-}
-
-/* Clickable stat card */
-.clickableCard {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.clickableCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #007bff;
+  background: #b91c1c;
 }
 
 /* Modal styles */
@@ -545,7 +344,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -554,13 +353,14 @@
 }
 
 .modalContent {
-  background: white;
+  background: var(--card-hover-bg);
   border-radius: 12px;
-  max-width: 800px;
+  max-width: 900px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
 }
 
 .modalHeader {
@@ -568,8 +368,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 30px;
-  border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--background-start);
   color: white;
   border-radius: 12px 12px 0 0;
 }
@@ -577,13 +377,14 @@
 .modalHeader h2 {
   margin: 0;
   font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .closeButton {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: white;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 5px;
   border-radius: 50%;
@@ -592,11 +393,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: rotate(90deg);
 }
 
 .modalBody {
@@ -606,110 +409,80 @@
 .modalLoading {
   text-align: center;
   padding: 40px;
+  color: var(--text-secondary);
 }
 
-.modalDoctorsList {
-  display: flex;
-  flex-direction: column;
+.modalProfessionalsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 }
 
-.modalDoctorCard {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+.professionalCard {
+  background: var(--card-bg);
+  border-radius: 12px;
   padding: 20px;
-  background: #f9f9f9;
   transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.modalDoctorCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+.professionalCard:hover {
+  box-shadow: var(--box-shadow-hover);
+  transform: translateY(-5px);
 }
 
-.modalDoctorInfo {
+.professionalInfo {
   margin-bottom: 15px;
 }
 
-.modalDoctorHeader {
+.professionalHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  margin-bottom: 10px;
 }
 
-.modalDoctorHeader h3 {
+.professionalHeader h3 {
   margin: 0;
-  color: #333;
+  color: white;
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.modalDoctorBadge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.professionalBadge {
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.modalDoctorDetails {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
+.doctorBadge { background: var(--blue-accent); color: white; }
+.healthProfessionalBadge { background: var(--green-accent); color: white; }
+.signupBadge { background: var(--purple-accent); color: white; }
 
-.modalDoctorDetails p {
-  margin: 0;
+.professionalInfo p {
+  margin: 8px 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
-.modalDoctorDetails strong {
-  color: #333;
+.professionalInfo strong {
+  color: var(--text-primary);
 }
 
-.modalDoctorActions {
+.professionalActions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
-}
-
-.modalApproveBtn,
-.modalRejectBtn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-}
-
-.modalApproveBtn {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
-}
-
-.modalApproveBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-}
-
-.modalRejectBtn {
-  background: linear-gradient(135deg, #dc3545, #fd7e14);
-  color: white;
-}
-
-.modalRejectBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  margin-top: auto;
 }
 
 .modalEmptyState {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .emptyStateIcon {
@@ -719,7 +492,7 @@
 
 .modalEmptyState h3 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .modalEmptyState p {
@@ -727,14 +500,14 @@
 }
 
 .modalEmptyState small {
-  color: #999;
+  color: #555;
   font-size: 0.8rem;
 }
 
 /* Loading spinner */
 .loadingSpinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #667eea;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid var(--highlight-color);
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -748,30 +521,43 @@
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
-  .modalContent {
-    margin: 10px;
-    max-height: 95vh;
+@media (max-width: 1024px) {
+  .secondaryContentGrid {
+    grid-template-columns: 1fr;
   }
-  
+}
+
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 1rem;
+  }
+  .welcomeCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .welcomeTitle {
+    font-size: 2rem;
+  }
+  .welcomeSubtitle {
+    font-size: 1rem;
+  }
+  .welcomeImage {
+    margin-top: 1rem;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  .modalContent {
+    max-width: 95vw;
+    margin: 10px;
+  }
   .modalHeader {
     padding: 15px 20px;
   }
-  
   .modalBody {
     padding: 20px;
   }
-  
-  .modalDoctorDetails {
+  .modalProfessionalsList {
     grid-template-columns: 1fr;
-  }
-  
-  .modalDoctorActions {
-    flex-direction: column;
-  }
-  
-  .modalApproveBtn,
-  .modalRejectBtn {
-    width: 100%;
   }
 }
