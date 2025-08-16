@@ -35,7 +35,8 @@ const {
   getAllAppointments,
   getAppointmentById,
   joinAppointment,
-  getFamilyMembersForChat
+  getFamilyMembersForChat,
+  getDoctorsWithAppointments
 } = require('../controllers/elder');
 
 const {
@@ -88,6 +89,9 @@ router.get('/:elderId/dashboard-stats', getElderDashboardStats);
 
 // Get family members for chat (elder perspective) - MUST BE BEFORE /:elderId route
 router.get('/:elderId/family-members-for-chat', getFamilyMembersForChat);
+
+// Get doctors with appointments for chat (elder perspective) - MUST BE BEFORE /:elderId route
+router.get('/:elderId/doctors-with-appointments', getDoctorsWithAppointments);
 
 // Update elder profile with file upload - MUST BE BEFORE /:elderId route
 router.put('/:elderId/profile', upload.single('profile_photo'), updateElderProfile);
