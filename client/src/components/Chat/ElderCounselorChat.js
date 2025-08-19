@@ -16,10 +16,10 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
 
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
-    if (!currentUser?.user_id || !selectedCounselor?.user_id) {
+    if (!currentUser?.elder_id || !selectedCounselor?.user_id) {
       console.log('Missing user IDs:', {
-        currentUser: currentUser?.user_id,
-        selectedCounselor: selectedCounselor?.user_id,
+        elder_id: currentUser?.elder_id,
+        counselor_user_id: selectedCounselor?.user_id,
         selectedCounselorObject: selectedCounselor
       });
       return;
@@ -32,12 +32,12 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
       }
       
       console.log('Fetching messages between:', {
-        elder: currentUser.user_id,
+        elder: currentUser.elder_id,
         counselor: selectedCounselor.user_id
       });
       
       const response = await messagesApi.getConversation(
-        currentUser.user_id,
+        currentUser.elder_id,
         selectedCounselor.user_id
       );
 
@@ -47,10 +47,10 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
         
         // Mark messages as read only if there are new unread messages
         const hasUnreadMessages = response.messages.some(
-          msg => msg.receiver_id === currentUser.user_id && !msg.is_read
+          msg => msg.receiver_id === currentUser.elder_id && !msg.is_read
         );
         if (hasUnreadMessages) {
-          await messagesApi.markAsRead(selectedCounselor.user_id, currentUser.user_id);
+          await messagesApi.markAsRead(selectedCounselor.user_id, currentUser.elder_id);
         }
       }
     } catch (error) {
@@ -78,7 +78,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
       setSending(true);
       
       console.log('Sending message:', {
-        from: currentUser.user_id,
+        from: currentUser.elder_id,
         to: selectedCounselor.user_id,
         senderType: 'elder',
         receiverType: 'counselor',
@@ -87,7 +87,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
       });
       
       const response = await messagesApi.sendMessage(
-        currentUser.user_id,
+        currentUser.elder_id,
         selectedCounselor.user_id,
         'elder',
         'counselor',
@@ -98,7 +98,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
         // Immediately add the message to local state for instant feedback
         const newMsg = {
           message_id: response.message_id,
-          sender_id: currentUser.user_id,
+          sender_id: currentUser.elder_id,
           receiver_id: selectedCounselor.user_id,
           sender_type: 'elder',
           receiver_type: 'counselor',
@@ -163,7 +163,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.user_id, selectedCounselor?.user_id]); // Only re-run if user/counselor changes
+  }, [currentUser?.elder_id, selectedCounselor?.user_id]); // Only re-run if elder/counselor changes
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -221,7 +221,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
                 <div
                   key={message.message_id}
                   className={`${styles.messageItem} ${
-                    message.sender_id === currentUser.user_id
+                    message.sender_id === currentUser.elder_id
                       ? styles.sentMessage
                       : styles.receivedMessage
                   }`}
@@ -230,7 +230,7 @@ const ElderCounselorChat = ({ currentUser, selectedCounselor, onClose }) => {
                     <p>{message.message_text}</p>
                     <span className={styles.messageTime}>
                       {formatTime(message.sent_at)}
-                      {message.sender_id === currentUser.user_id && (
+                      {message.sender_id === currentUser.elder_id && (
                         <span className={styles.readStatus}>
                           {message.is_read ? '✓✓' : '✓'}
                         </span>
