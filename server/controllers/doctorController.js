@@ -77,6 +77,76 @@ const updateAppointmentStatus = async (req, res) => {
   }
 };
 
+// Join appointment (for doctors)
+const joinAppointment = async (req, res) => {
+  const { doctorId, appointmentId } = req.params;
+
+  try {
+    // Check if appointment exists, belongs to doctor, is online, and confirmed
+    const appointmentCheck = await doctorModel.getAppointmentForJoin(appointmentId, doctorId);
+
+    if (!appointmentCheck) {
+      return res.status(404).json({
+        success: false,
+        error: "Online appointment not found or not confirmed",
+      });
+    }
+
+    const appointment = appointmentCheck;
+
+    // Check if appointment is within the allowed time window (15 minutes before to 30 minutes after)
+    const appointmentTime = new Date(appointment.date_time);
+    const now = new Date();
+    const timeDiff = appointmentTime.getTime() - now.getTime();
+    const minutesDiff = timeDiff / (1000 * 60);
+
+    if (minutesDiff > 15) {
+      return res.status(400).json({
+        success: false,
+        error: "You can only join the appointment 15 minutes before the scheduled time",
+      });
+    }
+
+    if (minutesDiff < -60) { // Allow joining up to 1 hour after start time
+      return res.status(400).json({
+        success: false,
+        error: "This appointment has ended",
+      });
+    }
+
+    // Generate or retrieve meeting link
+    let meetingLink = appointment.zoom_join_url;
+    
+    if (!meetingLink) {
+      // Generate unique meeting link
+      const meetingId = `doc-${doctorId}-apt-${appointmentId}-${Date.now()}`;
+      meetingLink = `http://localhost:3000/consultation/${meetingId}?doctor=${doctorId}&patient=${appointment.elder_id}&type=consultation`;
+      
+      // Update appointment with meeting link
+      await doctorModel.updateAppointmentMeetingLink(appointmentId, meetingLink, meetingId);
+    }
+
+    res.json({
+      success: true,
+      message: "Joining appointment",
+      meetingLink: meetingLink,
+      appointment: {
+        appointment_id: appointment.appointment_id,
+        patient_name: appointment.elder_name,
+        date_time: appointment.date_time,
+        appointment_type: appointment.appointment_type,
+        status: appointment.status
+      },
+    });
+  } catch (err) {
+    console.error("Error joining appointment:", err);
+    res.status(500).json({
+      success: false,
+      error: "Error joining appointment",
+    });
+  }
+};
+
 // Get doctor dashboard data
 const getDoctorDashboard = async (req, res) => {
   try {
@@ -211,5 +281,6 @@ module.exports = {
   getDoctorByUserId,
   updateDoctorProfile,
   getFamilyMembersWithAppointments,
-  getAppointmentHistoryWithFamilyMember
+  getAppointmentHistoryWithFamilyMember,
+  joinAppointment
 };

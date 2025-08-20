@@ -48,6 +48,11 @@ import ElderEvents from "./pages/elder/events";
 
 import DoctorDashboard from './pages/doctor/dashboard';
 import DoctorProfile from './pages/doctor/profile';
+import VirtualMeetingRoom from './pages/VirtualMeetingRoom';
+import JitsiMeetingRoom from './pages/JitsiMeetingRoom';
+import MeetingGenerator from './pages/MeetingGenerator';
+import TestMeeting from './pages/TestMeeting';
+import PatientMeetingJoin from './pages/PatientMeetingJoin';
 import ElderDashboard from './pages/elder/dashboard';
 import { Login } from './pages/login';
 import { Roles } from './pages/roles';
@@ -89,6 +94,11 @@ function App() {
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/consultation/:meetingId" element={<VirtualMeetingRoom />} />
+          <Route path="/meeting/:meetingId" element={<JitsiMeetingRoom />} />
+          <Route path="/generate-meeting" element={<MeetingGenerator />} />
+          <Route path="/test-meeting/:meetingId" element={<TestMeeting />} />
+          <Route path="/patient-join/:meetingId" element={<PatientMeetingJoin />} />
 
           {/* Registration Routes - No authentication required */}
           <Route path="/family-member/signup" element={<FamilyMemberReg />} />
