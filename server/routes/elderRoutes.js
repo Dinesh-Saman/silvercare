@@ -53,6 +53,11 @@ const {
   getCareAssignmentStats
 } = require('../controllers/carerequest');
 
+const {
+  getCounselorsWithAppointments,
+  getAppointmentHistoryWithCounselor
+} = require('../controllers/elderCounselorChatController');
+
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
 
@@ -92,6 +97,10 @@ router.get('/:elderId/family-members-for-chat', getFamilyMembersForChat);
 
 // Get doctors with appointments for chat (elder perspective) - MUST BE BEFORE /:elderId route
 router.get('/:elderId/doctors-with-appointments', getDoctorsWithAppointments);
+
+// Get counselors with appointments for chat (elder perspective) - MUST BE BEFORE /:elderId route
+router.get('/:elderId/counselors-with-appointments', getCounselorsWithAppointments);
+router.get('/:elderId/counselor/:counselorId/appointments', getAppointmentHistoryWithCounselor);
 
 // Update elder profile with file upload - MUST BE BEFORE /:elderId route
 router.put('/:elderId/profile', upload.single('profile_photo'), updateElderProfile);

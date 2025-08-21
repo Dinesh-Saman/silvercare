@@ -74,6 +74,9 @@ const ElderSidebar = ({ onItemClick }) => {
       case 'caregiver-chat':
         navigate('/elder/caregiver-chat');
         break;
+      case 'counselor-chat':
+        navigate('/elder/counselor-chat');
+        break;
       case 'caregivers':
         navigate('/elder/caregivers');
         break;
@@ -168,6 +171,7 @@ const ElderSidebar = ({ onItemClick }) => {
       submenu: [
         { key: 'family-chat', label: 'Family Chat', path: '/elder/family-chat' },
         { key: 'doctor-chat', label: 'Doctor Chat', path: '/elder/doctor-chat' },
+        { key: 'counselor-chat', label: 'Counselor Chat', path: '/elder/counselor-chat' },
         { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/elder/caregiver-chat' }
       ]
     },

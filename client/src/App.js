@@ -64,7 +64,9 @@ import HealthProfessionalProfile from "./pages/healthproffesional/profile";
 import ElderProfile from "./pages/elder/profile";
 import FamilyMessages from "./pages/elder/FamilyMessages";
 import ElderDoctorMessages from "./pages/elder/DoctorMessages";
+import CounselorMessages from "./pages/elder/CounselorMessages";
 import ElderChat from "./pages/doctor/ElderChat";
+import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -326,6 +328,15 @@ function App() {
           />
 
           <Route
+            path="/healthprofessional/messages"
+            element={
+              <ProtectedRoute allowedRoles={["healthprofessional"]}>
+                <HealthProfessionalElderMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/caregiver/dashboard"
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
@@ -530,6 +541,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <ElderDoctorMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/counselor-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <CounselorMessages />
               </ProtectedRoute>
             }
           />
