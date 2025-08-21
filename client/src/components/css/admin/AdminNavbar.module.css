@@ -1,10 +1,11 @@
 .adminNavbar {
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
   z-index: 1000;
   border-bottom: 3px solid #007bff;
+  width: 100%;
 }
 
 .navContainer {
