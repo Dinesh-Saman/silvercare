@@ -4,6 +4,8 @@ import Navbar from '../../components/navbar';
 import DoctorSidebar from '../../components/doctor_sidebar';
 import WelcomeModal from '../../components/WelcomeModal';
 import OnboardingTour from '../../components/OnboardingTour';
+import OnlineMeetingInterface from '../../components/OnlineMeetingInterface';
+import { joinAppointment } from '../../services/doctorMeetingApi';
 import styles from '../../components/css/doctor/dashboard.module.css';
 
 const API_BASE = "http://localhost:5000"; // Change if your backend runs elsewhere
@@ -29,6 +31,11 @@ const DoctorDashboard = () => {
   
   // Sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Meeting state
+  const [joinMeetingLoading, setJoinMeetingLoading] = useState({});
+  const [joinedMeetings, setJoinedMeetings] = useState({});
+  const [meetingLinks, setMeetingLinks] = useState({});
 
   // Tour steps configuration
   const tourSteps = [
@@ -243,6 +250,44 @@ const DoctorDashboard = () => {
     { id: 3, title: "Family call follow-up", time: "03:00 PM" },
   ];
 
+  // Handle joining a meeting
+  const handleJoinMeeting = async (appointment) => {
+    const appointmentId = appointment.appointment_id || appointment.id;
+    
+    try {
+      setJoinMeetingLoading(prev => ({ ...prev, [appointmentId]: true }));
+      
+      // Check if appointment has a meeting link
+      if (!appointment.meeting_link) {
+        throw new Error('No meeting link available for this appointment');
+      }
+      
+      // Get doctor information for the meeting
+      const doctorData = await fetchWithAuth(`${API_BASE}/api/doctor/user/${currentUser.user_id}`);
+      if (!doctorData?.doctor?.doctor_id) {
+        throw new Error("Doctor information not found");
+      }
+      
+      // Create meeting URL with doctor parameters for Jitsi Meet
+      const meetingUrl = new URL(appointment.meeting_link);
+      meetingUrl.searchParams.set('userInfo.displayName', `Dr. ${currentUser.name || 'Doctor'}`);
+      meetingUrl.searchParams.set('userInfo.email', currentUser.email || 'doctor@silvercare.com');
+      meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
+      
+      // Mark as joined and store the meeting link
+      setJoinedMeetings(prev => ({ ...prev, [appointmentId]: true }));
+      setMeetingLinks(prev => ({ ...prev, [appointmentId]: meetingUrl.toString() }));
+      
+      // Open meeting in new tab
+      window.open(meetingUrl.toString(), '_blank');
+    } catch (err) {
+      console.error('Error joining meeting:', err);
+      alert(err.message || 'Failed to join meeting');
+    } finally {
+      setJoinMeetingLoading(prev => ({ ...prev, [appointmentId]: false }));
+    }
+  };
+
   // Show loading while checking authentication
   if (loading) {
     return (
@@ -411,7 +456,13 @@ const DoctorDashboard = () => {
                       <p className={styles.consultationTime}>{c.date} | {c.time}</p>
                     </div>
                     <button className={styles.consultationBtn}>📋 View Record</button>
-                    <button className={styles.consultationBtn} onClick={() => alert('Join Now clicked for ' + c.name)}>🎥 Join Now</button>
+                    <button 
+                      className={styles.consultationBtn} 
+                      onClick={() => handleJoinMeeting(c.appointment)}
+                      disabled={c.appointment?.appointment_type !== 'online' || c.appointment?.status !== 'confirmed'}
+                    >
+                      🎥 Join Now
+                    </button>
                   </div>
                 ))}
               </div>
@@ -436,9 +487,31 @@ const DoctorDashboard = () => {
                     </div>
                     <div className={styles.appointmentDetails}>
                       <h4 className={styles.appointmentPatient}>{app.elder_name}</h4>
-                      <p className={styles.appointmentType}>Regular Consultation</p>
+                      <p className={styles.appointmentType}>
+                        {app.appointment_type === 'online' ? 'Online Consultation' : 'Regular Consultation'}
+                      </p>
+                      {app.appointment_type === 'online' && (
+                        <span className={styles.onlineBadge}>💻 Online</span>
+                      )}
                     </div>
-                    <button className={styles.appointmentAction}>Join Now</button>
+                    {app.appointment_type === 'online' && app.status === 'confirmed' ? (
+                      <button 
+                        className={`${styles.appointmentAction} ${styles.joinMeetingBtn}`}
+                        onClick={() => handleJoinMeeting(app)}
+                        disabled={joinMeetingLoading[app.appointment_id || app.id]}
+                      >
+                        {joinMeetingLoading[app.appointment_id || app.id] ? (
+                          <>
+                            <div className={styles.loadingSpinner}></div>
+                            Joining...
+                          </>
+                        ) : (
+                          <>🎥 Join Meeting</>
+                        )}
+                      </button>
+                    ) : (
+                      <button className={styles.appointmentAction}>View Details</button>
+                    )}
                   </div>
                 ))
               )}
@@ -446,6 +519,31 @@ const DoctorDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Online Meetings Section */}
+      {(dashboardData.todaysAppointments || []).some(app => 
+        app.appointment_type === 'online' && app.status === 'confirmed'
+      ) && (
+        <div className={styles.onlineMeetingsSection}>
+          <div className={styles.container}>
+            <h2 className={styles.sectionTitle}>💻 Online Consultations</h2>
+            <div className={styles.meetingsGrid}>
+              {(dashboardData.todaysAppointments || [])
+                .filter(app => app.appointment_type === 'online' && app.status === 'confirmed')
+                .map((appointment, idx) => (
+                  <OnlineMeetingInterface
+                    key={appointment.appointment_id || appointment.id || idx}
+                    appointment={appointment}
+                    onJoinMeeting={() => handleJoinMeeting(appointment)}
+                    isJoining={joinMeetingLoading[appointment.appointment_id || appointment.id]}
+                    hasJoined={joinedMeetings[appointment.appointment_id || appointment.id]}
+                    meetingLink={meetingLinks[appointment.appointment_id || appointment.id]}
+                  />
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions Section */}
       <div className={styles.quickActionsSection} data-tour="quick-actions">

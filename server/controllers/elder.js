@@ -685,33 +685,56 @@ const joinAppointment = async (req, res) => {
 
     const appointment = appointmentCheck.rows[0];
 
-    // Check if appointment is today and within 15 minutes of start time
+    // Check if appointment is today and within joining window
     const appointmentTime = new Date(appointment.date_time);
     const now = new Date();
     const timeDiff = appointmentTime.getTime() - now.getTime();
     const minutesDiff = timeDiff / (1000 * 60);
 
-    if (minutesDiff > 15) {
+    // Allow joining 30 minutes before and 60 minutes after for testing
+    if (minutesDiff > 30) {
       return res.status(400).json({
         success: false,
-        error: "You can only join the appointment 15 minutes before the scheduled time",
+        error: "You can only join the appointment 30 minutes before the scheduled time",
       });
     }
 
-    if (minutesDiff < -30) {
+    if (minutesDiff < -60) {
       return res.status(400).json({
         success: false,
         error: "This appointment has ended",
       });
     }
 
-    // Generate meeting link or return existing one
-    const meetingLink = `https://meet.silvercare.com/appointment/${appointmentId}`;
+    // Use the actual meeting link from the database
+    let meetingLink = appointment.meeting_link;
+    
+    // If no meeting link exists, generate one
+    if (!meetingLink) {
+      const MeetingService = require('../services/meetingService');
+      const updatedAppointment = await MeetingService.ensureMeetingLink(appointmentId);
+      meetingLink = updatedAppointment.meeting_link;
+    }
+
+    // Get elder information for the meeting
+    const elderInfo = await pool.query(
+      "SELECT name, email FROM elder WHERE elder_id = $1",
+      [elderId]
+    );
+    
+    const elderName = elderInfo.rows[0]?.name || 'Patient';
+    const elderEmail = elderInfo.rows[0]?.email || 'patient@silvercare.com';
+    
+    // Create meeting URL with elder parameters for Jitsi Meet (same as doctor does)
+    const meetingUrl = new URL(meetingLink);
+    meetingUrl.searchParams.set('userInfo.displayName', elderName);
+    meetingUrl.searchParams.set('userInfo.email', elderEmail);
+    meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
 
     res.json({
       success: true,
       message: "Joining appointment",
-      meetingLink: meetingLink,
+      meetingLink: meetingUrl.toString(),
       appointment: appointment,
     });
   } catch (err) {

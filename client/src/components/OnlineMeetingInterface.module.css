@@ -1,0 +1,320 @@
+.meetingInterface {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.meetingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.meetingType {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.typeIcon {
+  font-size: 20px;
+}
+
+.typeText {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.meetingStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.statusIndicator {
+  font-size: 14px;
+}
+
+.statusText {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.patientInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.patientAvatar {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarIcon {
+  font-size: 24px;
+}
+
+.patientDetails {
+  flex: 1;
+}
+
+.patientName {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.appointmentTime {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.medicalConditions {
+  margin: 0;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.conditionsLabel {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.meetingActions {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.joinButton {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+  min-width: 180px;
+  justify-content: center;
+}
+
+.joinButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.joinButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.joinButton.urgent {
+  background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.6);
+  }
+  100% {
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  }
+}
+
+.joinIcon {
+  font-size: 18px;
+}
+
+.loadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.meetingStarted {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.successIcon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.successMessage {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.rejoinButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.rejoinButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.rejoinIcon {
+  font-size: 14px;
+}
+
+.waitingMessage,
+.endedMessage {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.waitingIcon,
+.endedIcon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.waitingMessage p,
+.endedMessage p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.meetingTips {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.tipsTitle {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tipsList {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.tipsList li {
+  margin-bottom: 4px;
+}
+
+/* Status colors */
+.waiting {
+  color: #FFA726;
+}
+
+.ready {
+  color: #66BB6A;
+}
+
+.active {
+  color: #EF5350;
+}
+
+.ended {
+  color: #BDBDBD;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .meetingInterface {
+    padding: 16px;
+  }
+  
+  .meetingHeader {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .patientInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .patientAvatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .joinButton {
+    padding: 14px 28px;
+    font-size: 15px;
+    min-width: 160px;
+  }
+  
+  .tipsList {
+    font-size: 12px;
+  }
+}

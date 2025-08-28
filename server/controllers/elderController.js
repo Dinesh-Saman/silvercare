@@ -1,6 +1,7 @@
 process.env.TZ = 'Asia/Colombo';
 const pool = require('../db');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 // Update the getEldersByFamilyMember function to include district
 const getEldersByFamilyMember = async (req, res) => {
@@ -1594,6 +1595,14 @@ const createAppointment = async (req, res) => {
 
     console.log('Inserting appointment into database...');
 
+    // Generate meeting link for online appointments
+    let meetingLink = null;
+    if (appointmentType === 'online') {
+      const meetingId = uuidv4();
+      const roomName = `silvercare-${meetingId}`;
+      meetingLink = `https://meet.jit.si/${roomName}`;
+    }
+
     // Insert appointment into database with NULL notes
     const insertResult = await pool.query(
       `INSERT INTO appointment (
@@ -1604,9 +1613,10 @@ const createAppointment = async (req, res) => {
         status, 
         notes, 
         appointment_type,
+        meeting_link,
         created_at,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING 
         appointment_id,
         elder_id,
@@ -1616,6 +1626,7 @@ const createAppointment = async (req, res) => {
         status,
         notes,
         appointment_type,
+        meeting_link,
         created_at`,
       [
         parseInt(elderId),
@@ -1624,7 +1635,8 @@ const createAppointment = async (req, res) => {
         appointmentDateTime,
         'pending',
         null, // Set notes to null instead of the constructed string
-        appointmentType
+        appointmentType,
+        meetingLink
       ]
     );
 
@@ -1643,6 +1655,7 @@ const createAppointment = async (req, res) => {
         date_time: newAppointment.date_time,
         status: newAppointment.status,
         appointment_type: newAppointment.appointment_type,
+        meeting_link: newAppointment.meeting_link,
         created_at: newAppointment.created_at,
         elder_name: elderResult.rows[0].name,
         doctor_name: doctorResult.rows[0].doctor_name,
@@ -2152,6 +2165,19 @@ const confirmPaymentAndCreateAppointment = async (req, res) => {
     try {
       await client.query('BEGIN');
 
+      // Generate meeting link for online appointments
+      let meetingLink = null;
+      if (tempBooking.appointment_type === 'online') {
+        const MeetingService = require('../services/meetingService');
+        const meetingData = MeetingService.generateMeetingLink(
+          null, // appointmentId will be set after creation
+          tempBooking.doctor_id,
+          tempBooking.elder_id
+        );
+        meetingLink = meetingData.meetingLink;
+        console.log(`📞 Generated meeting link for new appointment: ${meetingLink}`);
+      }
+
       // Create the actual appointment
       const appointmentResult = await client.query(
         `INSERT INTO appointment (
@@ -2162,9 +2188,10 @@ const confirmPaymentAndCreateAppointment = async (req, res) => {
           status, 
           notes, 
           appointment_type,
+          meeting_link,
           created_at,
           updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         RETURNING 
           appointment_id,
           elder_id,
@@ -2174,15 +2201,17 @@ const confirmPaymentAndCreateAppointment = async (req, res) => {
           status,
           notes,
           appointment_type,
+          meeting_link,
           created_at`,
         [
           tempBooking.elder_id,
           tempBooking.family_id,
           tempBooking.doctor_id,
           tempBooking.date_time,
-          'confirmed', // Doctor needs to confirm
+          'confirmed',
           tempBooking.notes,
-          tempBooking.appointment_type
+          tempBooking.appointment_type,
+          meetingLink
         ]
       );
 

@@ -36,6 +36,9 @@ router.get('/:doctorId/next', doctorController.getNextAppointment);
 router.get('/:doctorId/dashboard', doctorController.getDoctorDashboard);
 router.put('/appointments/:appointmentId/status', doctorController.updateAppointmentStatus);
 
+// Join appointment for online meetings
+router.post('/:doctorId/appointments/:appointmentId/join', doctorController.joinAppointment);
+
 // Family member chat routes
 router.get('/:doctorId/family-members-with-appointments', doctorController.getFamilyMembersWithAppointments);
 router.get('/:doctorId/family-member/:familyMemberId/appointments', doctorController.getAppointmentHistoryWithFamilyMember);
