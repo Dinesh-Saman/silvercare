@@ -12,6 +12,11 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
+        a.zoom_meeting_id,
+        a.zoom_join_url,
+        a.zoom_host_url,
+        a.meeting_link,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -19,8 +24,7 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
+        e.profile_photo as elder_avatar
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
       WHERE a.doctor_id = $1)
@@ -33,6 +37,11 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         tb.date_time,
         'confirmed' as status,
         tb.notes,
+        tb.appointment_type,
+        null as zoom_meeting_id,
+        null as zoom_join_url,
+        null as zoom_host_url,
+        null as meeting_link,
         tb.patient_name as elder_name,
         null as elder_email,
         null as elder_dob,
@@ -40,8 +49,7 @@ const getAppointmentsByDoctorId = async (doctorId) => {
         tb.contact_number as elder_contact,
         null as elder_address,
         tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
+        null as elder_avatar
       FROM temporary_booking tb
       WHERE tb.doctor_id = $1 
       AND tb.expires_at > CURRENT_TIMESTAMP)
@@ -66,6 +74,11 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
+        a.zoom_meeting_id,
+        a.zoom_join_url,
+        a.zoom_host_url,
+        a.meeting_link,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -73,8 +86,7 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
+        e.profile_photo as elder_avatar
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
       WHERE a.doctor_id = $1 AND a.date_time >= CURRENT_TIMESTAMP)
@@ -87,6 +99,11 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
         tb.date_time,
         'confirmed' as status,
         tb.notes,
+        tb.appointment_type,
+        null as zoom_meeting_id,
+        null as zoom_join_url,
+        null as zoom_host_url,
+        null as meeting_link,
         tb.patient_name as elder_name,
         null as elder_email,
         null as elder_dob,
@@ -94,8 +111,7 @@ const getUpcomingAppointmentsByDoctorId = async (doctorId) => {
         tb.contact_number as elder_contact,
         null as elder_address,
         tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
+        null as elder_avatar
       FROM temporary_booking tb
       WHERE tb.doctor_id = $1 AND tb.date_time >= CURRENT_TIMESTAMP
       AND tb.expires_at > CURRENT_TIMESTAMP)
@@ -120,6 +136,11 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
+        a.zoom_meeting_id,
+        a.zoom_join_url,
+        a.zoom_host_url,
+        a.meeting_link,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -127,8 +148,7 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         e.contact as elder_contact,
         e.address as elder_address,
         e.medical_conditions,
-        e.profile_photo as elder_avatar,
-        'consultation' as appointment_type
+        e.profile_photo as elder_avatar
       FROM appointment a
       LEFT JOIN elder e ON a.elder_id = e.elder_id
       WHERE a.doctor_id = $1 
@@ -142,6 +162,11 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         tb.date_time,
         'confirmed' as status,
         tb.notes,
+        tb.appointment_type,
+        null as zoom_meeting_id,
+        null as zoom_join_url,
+        null as zoom_host_url,
+        null as meeting_link,
         tb.patient_name as elder_name,
         null as elder_email,
         null as elder_dob,
@@ -149,8 +174,7 @@ const getTodaysAppointmentsByDoctorId = async (doctorId) => {
         tb.contact_number as elder_contact,
         null as elder_address,
         tb.symptoms as medical_conditions,
-        null as elder_avatar,
-        tb.appointment_type
+        null as elder_avatar
       FROM temporary_booking tb
       WHERE tb.doctor_id = $1 
       AND DATE(tb.date_time) = CURRENT_DATE
@@ -175,6 +199,11 @@ const getNextAppointmentByDoctorId = async (doctorId) => {
         a.date_time,
         a.status,
         a.notes,
+        a.appointment_type,
+        a.zoom_meeting_id,
+        a.zoom_join_url,
+        a.zoom_host_url,
+        a.meeting_link,
         e.name as elder_name,
         e.email as elder_email,
         e.dob as elder_dob,
@@ -200,12 +229,38 @@ const getNextAppointmentByDoctorId = async (doctorId) => {
 // Update appointment status
 const updateAppointmentStatus = async (appointmentId, status, notes = null) => {
   try {
+    // First, get the current appointment details
+    const currentAppointment = await pool.query(
+      'SELECT * FROM appointment WHERE appointment_id = $1',
+      [appointmentId]
+    );
+
+    if (currentAppointment.rows.length === 0) {
+      throw new Error('Appointment not found');
+    }
+
+    let meetingLink = currentAppointment.rows[0].meeting_link;
+
+    // Generate meeting link if confirming an online appointment that doesn't have one
+    if (status === 'confirmed' && 
+        currentAppointment.rows[0].appointment_type === 'online' && 
+        !meetingLink) {
+      const MeetingService = require('../services/meetingService');
+      const meetingData = MeetingService.generateMeetingLink(
+        appointmentId,
+        currentAppointment.rows[0].doctor_id,
+        currentAppointment.rows[0].elder_id
+      );
+      meetingLink = meetingData.meetingLink;
+      console.log(`📞 Generated meeting link for appointment ${appointmentId}: ${meetingLink}`);
+    }
+
     const result = await pool.query(`
       UPDATE appointment 
-      SET status = $1, notes = COALESCE($2, notes)
+      SET status = $1, notes = COALESCE($2, notes), meeting_link = COALESCE($4, meeting_link), updated_at = CURRENT_TIMESTAMP
       WHERE appointment_id = $3
       RETURNING *
-    `, [status, notes, appointmentId]);
+    `, [status, notes, appointmentId, meetingLink]);
     return result.rows[0];
   } catch (error) {
     console.error('Error updating appointment status:', error);
@@ -369,6 +424,58 @@ const getAppointmentHistoryWithFamilyMember = async (doctorId, familyMemberId) =
   }
 };
 
+// Get appointment for joining (includes meeting details)
+const getAppointmentForJoin = async (appointmentId, doctorId) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.appointment_id,
+        a.elder_id,
+        a.doctor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        a.zoom_meeting_id,
+        a.zoom_join_url,
+        a.zoom_host_url,
+        e.name as elder_name,
+        e.email as elder_email,
+        e.contact as elder_contact
+      FROM appointment a
+      LEFT JOIN elder e ON a.elder_id = e.elder_id
+      WHERE a.appointment_id = $1 
+        AND a.doctor_id = $2 
+        AND a.appointment_type = 'online'
+        AND a.status = 'confirmed'
+    `, [appointmentId, doctorId]);
+    
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error fetching appointment for join:', error);
+    throw error;
+  }
+};
+
+// Update appointment with meeting link
+const updateAppointmentMeetingLink = async (appointmentId, meetingLink, meetingId) => {
+  try {
+    const result = await pool.query(`
+      UPDATE appointment 
+      SET zoom_join_url = $1, 
+          zoom_meeting_id = $2,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE appointment_id = $3
+      RETURNING *
+    `, [meetingLink, meetingId, appointmentId]);
+    
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error updating appointment meeting link:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAppointmentsByDoctorId,
   getUpcomingAppointmentsByDoctorId,
@@ -378,5 +485,7 @@ module.exports = {
   getDoctorByUserId,
   updateDoctorProfile,
   getFamilyMembersWithAppointments,
-  getAppointmentHistoryWithFamilyMember
+  getAppointmentHistoryWithFamilyMember,
+  getAppointmentForJoin,
+  updateAppointmentMeetingLink
 };

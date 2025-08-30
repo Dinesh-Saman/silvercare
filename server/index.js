@@ -31,6 +31,7 @@ const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
 const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
 const familyMemberRoutes = require('./routes/familyMemberRoutes');
 const messagesRoutes = require('./routes/messagesRoutes');
+const meetingRoutes = require('./routes/meetingRoutes'); // Add meeting routes
 
 
 app.use('/api/users', userRoutes); // Mount the full route
@@ -46,6 +47,7 @@ app.use('/api/healthprofessional', healthprofessionalRoutes);
 app.use('/api/care-assignments', careAssignmentRoutes);
 app.use('/api/family-member', familyMemberRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/meetings', meetingRoutes); // Add meeting endpoints;
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
