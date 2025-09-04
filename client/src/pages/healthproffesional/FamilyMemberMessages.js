@@ -65,14 +65,14 @@ const FamilyMemberMessages = () => {
 
   if (loading || dataLoading) {
     return (
-      <div className={styles.pageContainer}>
+      <div className={styles.container}>
         <Navbar />
-        <div className={styles.mainLayout}>
+        <div className={styles.layout}>
           <HealthProfessionalSidebar />
           <div className={styles.content}>
             <div className={styles.loadingContainer}>
               <div className={styles.loadingSpinner}></div>
-              <p>Loading family members...</p>
+              <h2>Loading family members...</h2>
             </div>
           </div>
         </div>
@@ -82,9 +82,9 @@ const FamilyMemberMessages = () => {
 
   if (error) {
     return (
-      <div className={styles.pageContainer}>
+      <div className={styles.container}>
         <Navbar />
-        <div className={styles.mainLayout}>
+        <div className={styles.layout}>
           <HealthProfessionalSidebar />
           <div className={styles.content}>
             <div className={styles.errorContainer}>
@@ -104,36 +104,54 @@ const FamilyMemberMessages = () => {
   }
 
   return (
-    <div className={styles.pageContainer}>
+    <div className={styles.container}>
       <Navbar />
-      <div className={styles.mainLayout}>
+      <div className={styles.layout}>
         <HealthProfessionalSidebar />
         <div className={styles.content}>
           <div className={styles.header}>
-            <h1 className={styles.title}>Family Member Messages</h1>
-            <p className={styles.subtitle}>
-              Chat with family members who have appointments with you
-            </p>
+            <div className={styles.headerContent}>
+              <h1 className={styles.title}>👨‍👩‍👧‍👦 Family Member Chat</h1>
+              <p className={styles.subtitle}>
+                Connect with family members of your patients
+              </p>
+            </div>
+            <button 
+              className={styles.backButton}
+              onClick={() => navigate('/healthprofessional/dashboard')}
+            >
+              ← Back to Dashboard
+            </button>
           </div>
 
-          <div className={styles.chatLayout}>
-            <div className={styles.familyMembersList}>
-              <h3 className={styles.listTitle}>Family Members ({familyMembers.length})</h3>
+          {error && (
+            <div className={styles.errorMessage}>
+              <span className={styles.errorIcon}>⚠️</span>
+              {error}
+            </div>
+          )}
+
+          <div className={styles.mainContent}>
+            {/* Family Members List */}
+            <div className={styles.familyMembersSection}>
+              <h2 className={styles.sectionTitle}>
+                👨‍👩‍👧‍👦 Available Family Members ({familyMembers.length})
+              </h2>
               
               {familyMembers.length === 0 ? (
                 <div className={styles.noFamilyMembers}>
-                  <div className={styles.noFamilyMembersIcon}>👥</div>
-                  <h4>No Family Members Available</h4>
-                  <p>You don't have any family members with confirmed or completed appointments yet.</p>
+                  <div className={styles.noFamilyMembersIcon}>👨‍👩‍👧‍�</div>
+                  <h3>No Family Members Available for Chat</h3>
+                  <p>
+                    No family members are currently available for chat. Family members appear here when you have confirmed or completed appointments with them.
+                  </p>
                 </div>
               ) : (
-                <div className={styles.familyMembersGrid}>
+                <div className={styles.familyMembersList}>
                   {familyMembers.map((familyMember) => (
-                    <div
-                      key={familyMember.user_id}
-                      className={`${styles.familyMemberCard} ${
-                        selectedFamilyMember?.user_id === familyMember.user_id ? styles.selectedCard : ''
-                      }`}
+                    <div 
+                      key={familyMember.user_id} 
+                      className={`${styles.familyMemberCard} ${selectedFamilyMember?.user_id === familyMember.user_id ? styles.selectedFamilyMember : ''}`}
                       onClick={() => handleFamilyMemberSelect(familyMember)}
                     >
                       <div className={styles.familyMemberHeader}>
@@ -152,12 +170,12 @@ const FamilyMemberMessages = () => {
                       
                       <div className={styles.familyMemberDetails}>
                         <div className={styles.detailRow}>
-                          <span className={styles.label}>Fixed Phone:</span>
-                          <span className={styles.value}>{familyMember.phone_fixed || 'Not provided'}</span>
+                          <span className={styles.detailLabel}>Fixed Phone:</span>
+                          <span className={styles.detailValue}>{familyMember.phone_fixed || 'Not provided'}</span>
                         </div>
                         <div className={styles.detailRow}>
-                          <span className={styles.label}>Mobile Phone:</span>
-                          <span className={styles.value}>{familyMember.family_member_phone}</span>
+                          <span className={styles.detailLabel}>Mobile:</span>
+                          <span className={styles.detailValue}>{familyMember.family_member_phone}</span>
                         </div>
                       </div>
 
@@ -182,17 +200,14 @@ const FamilyMemberMessages = () => {
                           {new Date(familyMember.latest_appointment_date).toLocaleDateString()}
                         </span>
                       </div>
-
-                      <button className={styles.chatButton}>
-                        💬 Start Chat
-                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className={styles.chatArea}>
+            {/* Chat Section */}
+            <div className={styles.chatSection}>
               {showChat && selectedFamilyMember ? (
                 <CounselorFamilyMemberChat
                   currentUser={currentUser}
