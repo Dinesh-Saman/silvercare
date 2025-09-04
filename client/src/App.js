@@ -6,6 +6,7 @@ import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
 import ElderSignup from "./pages/familemember/elder-signup";
 import FamilyMemberDashboard from "./pages/familemember/dashboard";
 import FamilyMemberElders from "./pages/familemember/elders";
+import FamilyMemberCounselorMessages from "./pages/familemember/CounselorMessages";
 import ElderDetails from "./pages/familemember/elder-details";
 import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
@@ -231,6 +232,16 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["family_member"]}>
                 <ElderDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Add the counselor messages route */}
+          <Route
+            path="/family-member/counselor-messages"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <FamilyMemberCounselorMessages />
               </ProtectedRoute>
             }
           />
