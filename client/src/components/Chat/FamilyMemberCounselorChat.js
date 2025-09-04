@@ -45,15 +45,8 @@ const FamilyMemberCounselorChat = ({ currentUser, selectedCounselor, onClose }) 
         // Always update messages silently - no comparison needed
         setMessages(response.messages);
         
-        // Mark messages as read only if there are new unread messages
-        const hasUnreadMessages = response.messages.some(
-          msg => msg.receiver_id === currentUser.user_id && !msg.is_read
-        );
-
-        if (hasUnreadMessages) {
-          // Mark messages as read
-          await messagesApi.markAsRead(currentUser.user_id, selectedCounselor.user_id);
-        }
+        // Only mark messages as read when initially opening the chat, not on every fetch
+        // The counselor will mark family member's messages as read when they open their chat
         
         // Scroll to bottom if not a background refresh
         if (!isBackgroundRefresh) {
@@ -108,9 +101,20 @@ const FamilyMemberCounselorChat = ({ currentUser, selectedCounselor, onClose }) 
   // Initial load and periodic refresh
   useEffect(() => {
     if (currentUser?.user_id && selectedCounselor?.user_id) {
-      fetchMessages();
+      const initializeChat = async () => {
+        await fetchMessages();
+        
+        // Mark messages as read only when initially opening the chat
+        try {
+          await messagesApi.markAsRead(currentUser.user_id, selectedCounselor.user_id);
+        } catch (error) {
+          console.error('Error marking messages as read:', error);
+        }
+      };
       
-      // Set up periodic refresh every 3 seconds
+      initializeChat();
+      
+      // Set up periodic refresh every 3 seconds (without auto-marking as read)
       const interval = setInterval(() => {
         fetchMessages(true);
       }, 3000);
