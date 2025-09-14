@@ -6,7 +6,6 @@ import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
 import ElderSignup from "./pages/familemember/elder-signup";
 import FamilyMemberDashboard from "./pages/familemember/dashboard";
 import FamilyMemberElders from "./pages/familemember/elders";
-import FamilyMemberCounselorMessages from "./pages/familemember/CounselorMessages";
 import ElderDetails from "./pages/familemember/elder-details";
 import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
@@ -73,7 +72,6 @@ import ElderDoctorMessages from "./pages/elder/DoctorMessages";
 import CounselorMessages from "./pages/elder/CounselorMessages";
 import ElderChat from "./pages/doctor/ElderChat";
 import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
-import HealthProfessionalFamilyMemberMessages from "./pages/healthproffesional/FamilyMemberMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -237,16 +235,6 @@ function App() {
             }
           />
 
-          {/* Add the counselor messages route */}
-          <Route
-            path="/family-member/counselor-messages"
-            element={
-              <ProtectedRoute allowedRoles={["family_member"]}>
-                <FamilyMemberCounselorMessages />
-              </ProtectedRoute>
-            }
-          />
-
           {/* Add the elder doctors route - THIS IS THE IMPORTANT ONE */}
 
           <Route path="/family-member/elder/:elderId/doctors" element={
@@ -354,15 +342,6 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["healthprofessional"]}>
                 <HealthProfessionalElderMessages />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/healthprofessional/family-member-messages"
-            element={
-              <ProtectedRoute allowedRoles={["healthprofessional"]}>
-                <HealthProfessionalFamilyMemberMessages />
               </ProtectedRoute>
             }
           />
