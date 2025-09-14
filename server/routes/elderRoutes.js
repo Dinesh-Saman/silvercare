@@ -8,9 +8,12 @@ const {
   createElder,
   getDoctorsByElderDistrict,
   getAllDoctorsForOnlineMeeting,
+  getHealthProfessionalsByElderDistrict,
+  getAllHealthProfessionalsForOnlineMeeting,
   getDoctorById,
   getAppointmentBookingInfo,
   createAppointment,
+  createHealthProfessionalAppointment,
   getElderAppointments,
   getUpcomingAppointmentsByFamily,
   getAppointmentCountByFamily,
@@ -19,9 +22,9 @@ const {
    createTemporaryBooking,
   confirmPaymentAndCreateAppointment,
   cancelTemporaryBooking,
-  cleanupExpiredBookings
-
- 
+  cleanupExpiredBookings,
+  createTemporaryHealthcareProfessionalBooking,
+  confirmPaymentAndCreateHealthcareProfessionalAppointment
 
 } = require('../controllers/elderController');
 
@@ -83,6 +86,12 @@ router.get('/:elderId/doctors', getDoctorsByElderDistrict);
 // Get all doctors for online meetings - MUST BE BEFORE /:elderId route
 router.get('/:elderId/doctors/online', getAllDoctorsForOnlineMeeting);
 
+// Get healthcare professionals by elder's district for physical meetings - MUST BE BEFORE /:elderId route
+router.get('/:elderId/healthcare-professionals', getHealthProfessionalsByElderDistrict);
+
+// Get all healthcare professionals for online meetings - MUST BE BEFORE /:elderId route  
+router.get('/:elderId/healthcare-professionals/online', getAllHealthProfessionalsForOnlineMeeting);
+
 // Get dashboard stats for an elder - MUST BE BEFORE /:elderId route
 router.get('/:elderId/dashboard-stats', getElderDashboardStats);
 
@@ -94,6 +103,9 @@ router.put('/:elderId/profile', upload.single('profile_photo'), updateElderProfi
 
 // Create new appointment - MUST BE BEFORE /:elderId route
 router.post('/:elderId/appointments', createAppointment);
+
+// Create healthcare professional appointment - MUST BE BEFORE /:elderId route
+router.post('/:elderId/healthcare-appointments', createHealthProfessionalAppointment);
 
 // Get elder appointments - MUST BE BEFORE /:elderId route
 router.get('/:elderId/appointments', getElderAppointments);
@@ -129,6 +141,10 @@ router.post('/', createElder);
 router.post('/:elderId/temporary-booking', createTemporaryBooking);
 router.post('/:elderId/confirm-payment', confirmPaymentAndCreateAppointment);
 router.delete('/temporary-booking/:tempBookingId', cancelTemporaryBooking);
+
+// Healthcare professional temporary booking routes
+router.post('/:elderId/healthcare-professional-temporary-booking', createTemporaryHealthcareProfessionalBooking);
+router.post('/:elderId/healthcare-professional-confirm-payment', confirmPaymentAndCreateHealthcareProfessionalAppointment);
 
 // Cleanup route (for maintenance)
 router.delete('/cleanup-expired-bookings', cleanupExpiredBookings);

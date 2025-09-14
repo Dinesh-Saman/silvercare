@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+require('dotenv').config(); // Ensure env vars are loaded
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require('jsonwebtoken');
 
@@ -60,15 +61,17 @@ router.post('/create-payment-intent', authenticate, async (req, res) => {
         tempBookingId: String(bookingData.tempBookingId || ''),
         elderId: String(bookingData.elderId || ''),
         doctorId: String(bookingData.doctorId || ''),
+        counselorId: String(bookingData.counselorId || ''),
         appointmentDate: String(bookingData.appointmentDate || ''),
         appointmentTime: String(bookingData.appointmentTime || ''),
         appointmentType: String(bookingData.appointmentType || ''),
+        provider: String(bookingData.provider || 'doctor'),
         customerName: String(billingDetails.name || ''),
         customerEmail: String(billingDetails.email || ''),
         platform: 'SilverCare',
         familyMemberId: String(req.user.userId || ''),
       },
-      description: `SilverCare Appointment - ${bookingData.doctorName || 'Doctor'}`,
+      description: `SilverCare Appointment - ${bookingData.doctorName || bookingData.counselorName || 'Healthcare Provider'}`,
     };
 
     // Add receipt_email only if email is provided and valid
