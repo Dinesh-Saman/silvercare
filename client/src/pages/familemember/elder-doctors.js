@@ -5,8 +5,6 @@ import { elderApi } from '../../services/elderApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 import styles from '../../components/css/familymember/elder-doctors.module.css';
-import {getFeedbacks} from '../../services/feedbackApi.js'
-
 
 const ElderDoctors = () => {
   const { currentUser, loading, isAuthenticated } = useAuth();
@@ -20,29 +18,6 @@ const ElderDoctors = () => {
   const [meetingType, setMeetingType] = useState(null); // 'physical' or 'online'
   const [showMeetingSelection, setShowMeetingSelection] = useState(true);
 
-  const [feedbacks, setFeedbacks] = useState([]);
-
-  useEffect(() => {
-  const fetchAllFeedbacks = async () => {
-    try {
-      const response = await getFeedbacks();
-      console.log('Feedbacks response:', response.feedbacks); // <-- Add this line
-      if (response.success) {
-        setFeedbacks(response.feedbacks);
-      }
-    } catch (err) {
-      setFeedbacks([]);
-    }
-  };
-  fetchAllFeedbacks();
-  }, []);
-
-  const getDoctorAverageRating = (doctor_id) => {
-  const doctorFeedbacks = feedbacks.filter(fb => fb.doctor_id === doctor_id && typeof fb.rating === 'number');
-  if (doctorFeedbacks.length === 0) return 'No ratings';
-  const avg = doctorFeedbacks.reduce((sum, fb) => sum + fb.rating, 0) / doctorFeedbacks.length;
-  return avg.toFixed(1);
-  };
   // Protect the route
   useEffect(() => {
     if (loading) return;
@@ -153,7 +128,6 @@ const ElderDoctors = () => {
       </div>
     );
   }
-  
 
   return (
     <div className={styles.container}>
@@ -407,16 +381,6 @@ const ElderDoctors = () => {
                           <div className={styles.detailContent}>
                             <span className={styles.detailLabel}>License</span>
                             <span className={styles.detailValue}>{doctor.license_number}</span>
-                          </div>
-                        </div>
-
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>🎓</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Rating</span>
-                            <span className={styles.detailValue}>
-                              {getDoctorAverageRating(doctor.doctor_id)} ⭐
-                            </span>
                           </div>
                         </div>
 
