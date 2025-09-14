@@ -5,6 +5,7 @@ import { elderApi } from '../../services/elderApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 import styles from '../../components/css/familymember/elder-doctors.module.css';
+import {feedbackApi} from '../../services/feedbackApi';
 
 const ElderDoctors = () => {
   const { currentUser, loading, isAuthenticated } = useAuth();
@@ -33,6 +34,46 @@ const ElderDoctors = () => {
     }
   }, [currentUser, isAuthenticated, loading, navigate]);
 
+  // ...existing code...
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  useEffect(() => {
+    const fetchAllFeedbacks = async () => {
+      try {
+        const response = await feedbackApi.getAllFeedback();
+        // Check if the response and the feedbacks array are valid
+        if (response && response.success && Array.isArray(response.feedbacks)) {
+          console.log('Feedbacks successfully fetched:', response.feedbacks);
+          setFeedbacks(response.feedbacks);
+        } else {
+          // Log a warning if the data is not what you expect
+          console.warn('Failed to receive valid feedback data:', response);
+          setFeedbacks([]);
+        }
+      } catch (err) {
+        console.error('An error occurred while fetching feedbacks:', err);
+        setFeedbacks([]);
+      }
+    };
+    fetchAllFeedbacks();
+  }, []);
+
+  const getDoctorAverageRating = (doctor_id) => {
+    // Ensure doctor_id is treated as a number for comparison
+    const doctorIdAsNumber = Number(doctor_id);
+
+    const doctorFeedbacks = feedbacks.filter(fb => 
+      Number(fb.doctor_id) === doctorIdAsNumber && !isNaN(Number(fb.rating))
+    );
+
+    if (doctorFeedbacks.length === 0) {
+      return 'No ratings';
+    }
+
+    const avg = doctorFeedbacks.reduce((sum, fb) => sum + Number(fb.rating), 0) / doctorFeedbacks.length;
+    return avg.toFixed(1);
+  };
+// ...existing code... change this
   // Fetch doctors data based on meeting type
   const fetchDoctors = async (selectedMeetingType) => {
     if (!elderId) {
@@ -381,6 +422,14 @@ const ElderDoctors = () => {
                           <div className={styles.detailContent}>
                             <span className={styles.detailLabel}>License</span>
                             <span className={styles.detailValue}>{doctor.license_number}</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailIcon}>🆔</span>
+                          <div className={styles.detailContent}>
+                            <span className={styles.detailLabel}>Rating</span>
+                            <span className={styles.detailValue}>{getDoctorAverageRating(doctor.doctor_id)}</span>
                           </div>
                         </div>
 
