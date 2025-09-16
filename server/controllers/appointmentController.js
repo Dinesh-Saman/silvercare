@@ -1,4 +1,5 @@
 process.env.TZ = 'Asia/Colombo';
+require('dotenv').config(); // Ensure env vars are loaded
 const pool = require('../db');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 

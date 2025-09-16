@@ -1142,6 +1142,137 @@ const getAllDoctorsForOnlineMeeting = async (req, res) => {
   }
 };
 
+// Get all healthcare professionals (counselors) for online meetings
+const getAllHealthProfessionalsForOnlineMeeting = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    console.log('Getting all healthcare professionals for online meeting, elder ID:', elderId);
+    
+    // First, get the elder's info
+    const elderResult = await pool.query(
+      'SELECT name FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+    
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+    
+    const elderName = elderResult.rows[0].name;
+    
+    // Get all healthcare professionals (counselors)
+    const counselorsResult = await pool.query(
+      `SELECT 
+        c.counselor_id,
+        u.name as counselor_name,
+        c.specialization as specialty,
+        u.phone,
+        u.email,
+        c.years_of_experience as years_experience,
+        c.district,
+        c.status,
+        u.created_at
+      FROM counselor c
+      JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.status = 'confirmed'
+      ORDER BY c.years_of_experience DESC, u.name ASC`
+    );
+    
+    console.log('Found healthcare professionals for online meeting:', counselorsResult.rows.length);
+    
+    res.json({
+      success: true,
+      healthProfessionals: counselorsResult.rows,
+      count: counselorsResult.rows.length,
+      elderInfo: {
+        elder_id: elderId,
+        name: elderName,
+        district: 'All Districts (Online Meeting)'
+      },
+      meetingType: 'online'
+    });
+    
+  } catch (err) {
+    console.error('Error fetching all healthcare professionals for online meeting:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching healthcare professionals data' 
+    });
+  }
+};
+
+// Get healthcare professionals in the same district (for physical meetings)
+const getHealthProfessionalsByElderDistrict = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    console.log('Getting healthcare professionals by elder district for physical meeting, elder ID:', elderId);
+    
+    // First, get the elder's info including district
+    const elderResult = await pool.query(
+      'SELECT name, district FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+    
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+    
+    const elderName = elderResult.rows[0].name;
+    const elderDistrict = elderResult.rows[0].district;
+    
+    // Get healthcare professionals in the same district with confirmed status
+    const counselorsResult = await pool.query(
+      `SELECT 
+        c.counselor_id,
+        u.name as counselor_name,
+        c.specialization as specialty,
+        u.phone,
+        u.email,
+        c.years_of_experience as years_experience,
+        c.district,
+        c.status,
+        u.created_at,
+        c.license_number,
+        c.alternative_number,
+        c.current_institution
+      FROM counselor c
+      JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.status = 'confirmed' AND c.district = $1
+      ORDER BY c.years_of_experience DESC, u.name ASC`,
+      [elderDistrict]
+    );
+    
+    console.log('Found healthcare professionals in district', elderDistrict, ':', counselorsResult.rows.length);
+    
+    res.json({
+      success: true,
+      healthProfessionals: counselorsResult.rows,
+      count: counselorsResult.rows.length,
+      elderInfo: {
+        elder_id: elderId,
+        name: elderName,
+        district: elderDistrict
+      },
+      meetingType: 'physical'
+    });
+    
+  } catch (err) {
+    console.error('Error fetching healthcare professionals by district:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching healthcare professionals data' 
+    });
+  }
+};
+
 // Get elder's emergency contacts (if you have a separate table for this)
 const getElderEmergencyContacts = async (req, res) => {
   const { elderId } = req.params;
@@ -1705,6 +1836,227 @@ const createAppointment = async (req, res) => {
   }
 };
 
+// Create healthcare professional appointment
+const createHealthProfessionalAppointment = async (req, res) => {
+  const { elderId } = req.params;
+  const { 
+    counselorId,
+    appointmentDate,
+    appointmentTime,
+    appointmentType,
+    notes,
+    patientName,
+    contactNumber,
+    emergencyContact,
+    familyId
+  } = req.body;
+
+  try {
+    console.log('Creating healthcare professional appointment:', {
+      elderId,
+      counselorId,
+      appointmentDate,
+      appointmentTime,
+      appointmentType,
+      notes,
+      patientName,
+      contactNumber,
+      emergencyContact,
+      familyId
+    });
+
+    // Validate required fields
+    if (!elderId || !counselorId || !appointmentDate || !appointmentTime) {
+      console.log('Validation failed: missing required fields');
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: elderId, counselorId, appointmentDate, and appointmentTime are required'
+      });
+    }
+
+    // Combine date and time to create appointment datetime
+    const dateTimeString = `${appointmentDate}T${appointmentTime}:00`;
+    const appointmentDateTime = new Date(dateTimeString);
+    
+    if (isNaN(appointmentDateTime.getTime())) {
+      console.log('Invalid appointment date/time format:', dateTimeString);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid appointment date/time format'
+      });
+    }
+
+    // Validate elder exists
+    const elderResult = await pool.query(
+      'SELECT elder_id, name, district FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+
+    if (elderResult.rows.length === 0) {
+      console.log('Elder not found:', elderId);
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+
+    // Validate counselor exists and is approved
+    const counselorResult = await pool.query(
+      `SELECT 
+        c.counselor_id,
+        u.name as counselor_name,
+        c.specialization as specialty,
+        c.district
+      FROM counselor c
+      JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.counselor_id = $1 AND c.status = $2`,
+      [counselorId, 'confirmed']
+    );
+
+    if (counselorResult.rows.length === 0) {
+      console.log('Healthcare professional not found or not approved:', counselorId);
+      return res.status(404).json({
+        success: false,
+        error: 'Healthcare professional not found or not approved'
+      });
+    }
+
+    // Check if the appointment time is in the future
+    const now = new Date();
+    if (appointmentDateTime <= now) {
+      console.log('Appointment time validation failed: time is in the past');
+      return res.status(400).json({
+        success: false,
+        error: 'Appointment date and time must be in the future'
+      });
+    }
+
+    // Check for conflicting appointments (same counselor, same time)
+    console.log('Checking for appointment conflicts...');
+    const conflictCheck = await pool.query(
+      `SELECT appointment_id FROM appointment 
+       WHERE counselor_id = $1 
+       AND date_time = $2 
+       AND status IN ('pending', 'approved')`,
+      [counselorId, appointmentDateTime]
+    );
+
+    if (conflictCheck.rows.length > 0) {
+      console.log('Appointment conflict found');
+      return res.status(400).json({
+        success: false,
+        error: 'This time slot is already booked with this healthcare professional'
+      });
+    }
+
+    // Generate a unique meeting link using UUID
+    const meetingId = require('crypto').randomUUID();
+    const meetingLink = `https://meet.jit.si/silvercare-${meetingId}`;
+
+    console.log('Generated meeting link:', meetingLink);
+
+    // Insert the appointment
+    console.log('Inserting healthcare professional appointment into database...');
+    const insertQuery = `
+      INSERT INTO appointment (
+        elder_id, 
+        family_id, 
+        counselor_id,
+        date_time, 
+        status, 
+        patient_name, 
+        contact_number, 
+        emergency_contact, 
+        created_at,
+        appointment_type,
+        meeting_link,
+        provider_type,
+        notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *
+    `;
+
+    const insertResult = await pool.query(insertQuery, [
+      elderId,
+      familyId,
+      counselorId,
+      appointmentDateTime,
+      'pending',
+      patientName,
+      contactNumber,
+      emergencyContact,
+      new Date(),
+      'online', // Healthcare professional appointments are always online
+      meetingLink,
+      'healthcare',
+      notes
+    ]);
+
+    const newAppointment = insertResult.rows[0];
+    console.log('Healthcare professional appointment created successfully:', newAppointment);
+
+    // Return success response with appointment details
+    res.status(201).json({
+      success: true,
+      message: 'Healthcare professional appointment booked successfully',
+      appointment: {
+        appointment_id: newAppointment.appointment_id,
+        elder_id: newAppointment.elder_id,
+        family_id: newAppointment.family_id,
+        counselor_id: newAppointment.counselor_id,
+        date_time: newAppointment.date_time,
+        status: newAppointment.status,
+        appointment_type: newAppointment.appointment_type,
+        meeting_link: newAppointment.meeting_link,
+        provider_type: newAppointment.provider_type,
+        notes: newAppointment.notes,
+        created_at: newAppointment.created_at,
+        elder_name: elderResult.rows[0].name,
+        counselor_name: counselorResult.rows[0].counselor_name,
+        counselor_specialty: counselorResult.rows[0].specialty,
+        patient_name: patientName || elderResult.rows[0].name,
+        contact_number: contactNumber,
+        emergency_contact: emergencyContact
+      }
+    });
+
+  } catch (err) {
+    console.error('Error creating healthcare professional appointment:', err);
+    console.error('Error stack:', err.stack);
+    
+    // Handle specific database errors
+    if (err.code === '23503') {
+      console.log('Foreign key constraint violation');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid elder, family, or counselor reference'
+      });
+    }
+    
+    if (err.code === '23505') {
+      console.log('Unique constraint violation');
+      return res.status(400).json({
+        success: false,
+        error: 'An appointment already exists for this time slot'
+      });
+    }
+
+    if (err.code === '22P02') {
+      console.log('Invalid data type error');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid data format provided'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Error creating healthcare professional appointment',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
 
 
 
@@ -1715,31 +2067,62 @@ const getElderAppointments = async (req, res) => {
   try {
     console.log('Getting appointments for elder ID:', elderId);
     
+    // Query for both doctor and healthcare professional appointments using UNION
     const result = await pool.query(
       `SELECT 
         a.appointment_id,
         a.elder_id,
         a.family_id,
         a.doctor_id,
+        a.counselor_id,
         a.date_time,
         a.status,
         a.notes,
         a.appointment_type,
         a.created_at,
         a.updated_at,
-        u.name as doctor_name,
+        u.name as provider_name,
         d.specialization,
         d.current_institution,
-        e.name as elder_name
-      FROM appointment a       INNER JOIN doctor d ON a.doctor_id = d.doctor_id
+        e.name as elder_name,
+        'doctor' as provider_type
+      FROM appointment a 
+      INNER JOIN doctor d ON a.doctor_id = d.doctor_id
       INNER JOIN "User" u ON d.user_id = u.user_id
       INNER JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.elder_id = $1
-      ORDER BY a.date_time DESC`,
+      WHERE a.elder_id = $1 AND a.doctor_id IS NOT NULL
+      
+      UNION ALL
+      
+      SELECT 
+        a.appointment_id,
+        a.elder_id,
+        a.family_id,
+        a.doctor_id,
+        a.counselor_id,
+        a.date_time,
+        a.status,
+        a.notes,
+        a.appointment_type,
+        a.created_at,
+        a.updated_at,
+        u.name as provider_name,
+        c.specialization,
+        c.current_institution,
+        e.name as elder_name,
+        'healthcare_professional' as provider_type
+      FROM appointment a 
+      INNER JOIN counselor c ON a.counselor_id = c.counselor_id
+      INNER JOIN "User" u ON c.user_id = u.user_id
+      INNER JOIN elder e ON a.elder_id = e.elder_id
+      WHERE a.elder_id = $1 AND a.counselor_id IS NOT NULL
+      
+      ORDER BY date_time DESC`,
       [elderId]
     );
     
     console.log('Found appointments:', result.rows.length);
+    console.log('Appointment types:', result.rows.map(row => row.provider_type));
     
     res.json({
       success: true,
@@ -1880,8 +2263,7 @@ const getBlockedTimeSlots = async (req, res) => {
         }
         
         const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMinute.toString().padStart(2, '0')}`;
-        
-        // Check for time conflicts
+                // Check for time conflicts
         const slotStartMinutes = slotHour * 60 + slotMinute;
         const slotEndMinutes = newEndHour * 60 + newEndMinute;
         const existingStartMinutes = hour * 60 + minute;
@@ -2336,6 +2718,364 @@ const cleanupExpiredBookings = async (req, res) => {
   }
 };
 
+// ==================== HEALTHCARE PROFESSIONAL APPOINTMENT SYSTEM ====================
+
+// Create temporary booking for healthcare professional (blocks slot for 10 minutes)
+const createTemporaryHealthcareProfessionalBooking = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    const {
+      counselorId,
+      appointmentDate,
+      appointmentTime,
+      appointmentType,
+      patientName,
+      contactNumber,
+      symptoms,
+      notes,
+      emergencyContact,
+      preferredPlatform
+    } = req.body;
+
+    console.log('Creating temporary healthcare professional booking with data:', {
+      elderId,
+      counselorId,
+      appointmentDate,
+      appointmentTime,
+      appointmentType
+    });
+
+    // Validate required fields
+    if (!counselorId || !appointmentDate || !appointmentTime || !appointmentType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Healthcare professional, date, time, and appointment type are required'
+      });
+    }
+
+    // Get elder information to get family_id
+    const elderResult = await pool.query(
+      'SELECT family_id, name FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+
+    const familyId = elderResult.rows[0].family_id;
+
+    // Verify healthcare professional exists and is confirmed
+    const counselorResult = await pool.query(
+      `SELECT c.counselor_id, u.name as counselor_name 
+       FROM counselor c 
+       INNER JOIN "User" u ON c.user_id = u.user_id 
+       WHERE c.counselor_id = $1 AND c.status = 'confirmed'`,
+      [counselorId]
+    );
+
+    if (counselorResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Healthcare professional not found or not approved'
+      });
+    }
+
+    // Combine date and time into a timestamp
+    const dateTimeString = `${appointmentDate} ${appointmentTime}:00`;
+    const appointmentDateTime = new Date(dateTimeString);
+
+    // Check if the appointment time is in the future
+    const now = new Date();
+    if (appointmentDateTime <= now) {
+      return res.status(400).json({
+        success: false,
+        error: 'Appointment date and time must be in the future'
+      });
+    }
+
+    // Check for conflicting appointments (same counselor, same time)
+    const conflictCheck = await pool.query(
+      `SELECT appointment_id FROM appointment 
+       WHERE counselor_id = $1 
+       AND date_time = $2 
+       AND status IN ('pending', 'confirmed')`,
+      [counselorId, appointmentDateTime]
+    );
+
+    if (conflictCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'This time slot is already booked. Please select a different time.'
+      });
+    }
+
+    // Check for existing temporary bookings that haven't expired
+    const tempBookingCheck = await pool.query(
+      `SELECT temp_booking_id FROM temporary_booking 
+       WHERE counselor_id = $1 
+       AND date_time = $2 
+       AND expires_at > CURRENT_TIMESTAMP`,
+      [counselorId, appointmentDateTime]
+    );
+
+    if (tempBookingCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'This time slot is temporarily reserved. Please select a different time.'
+      });
+    }
+
+    // Create temporary booking (expires in 10 minutes)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    const tempBookingResult = await pool.query(
+      `INSERT INTO temporary_booking (
+        elder_id, 
+        family_id, 
+        counselor_id, 
+        date_time, 
+        appointment_type,
+        patient_name,
+        contact_number,
+        symptoms,
+        notes,
+        emergency_contact,
+        preferred_platform,
+        expires_at,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
+      RETURNING 
+        temp_booking_id,
+        elder_id,
+        family_id,
+        counselor_id,
+        date_time,
+        appointment_type,
+        expires_at,
+        created_at`,
+      [
+        parseInt(elderId),
+        parseInt(familyId),
+        parseInt(counselorId),
+        appointmentDateTime,
+        appointmentType,
+        patientName || elderResult.rows[0].name,
+        contactNumber,
+        symptoms || 'Consultation requested',
+        notes,
+        emergencyContact,
+        preferredPlatform,
+        expiresAt
+      ]
+    );
+
+    const tempBooking = tempBookingResult.rows[0];
+    console.log('Temporary healthcare professional booking created:', tempBooking);
+
+    res.status(201).json({
+      success: true,
+      message: 'Temporary healthcare professional booking created successfully',
+      tempBooking: {
+        temp_booking_id: tempBooking.temp_booking_id,
+        elder_id: tempBooking.elder_id,
+        family_id: tempBooking.family_id,
+        counselor_id: tempBooking.counselor_id,
+        date_time: tempBooking.date_time,
+        appointment_type: tempBooking.appointment_type,
+        expires_at: tempBooking.expires_at,
+        created_at: tempBooking.created_at,
+        elder_name: elderResult.rows[0].name,
+        counselor_name: counselorResult.rows[0].counselor_name
+      }
+    });
+
+  } catch (err) {
+    console.error('Error creating temporary healthcare professional booking:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error creating temporary booking',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// Confirm payment and create actual healthcare professional appointment
+const confirmPaymentAndCreateHealthcareProfessionalAppointment = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    const {
+      tempBookingId,
+      paymentMethod,
+      paymentAmount,
+      transactionId,
+      paymentStatus
+    } = req.body;
+
+    console.log('Confirming payment and creating healthcare professional appointment:', {
+      elderId,
+      tempBookingId,
+      paymentMethod,
+      paymentAmount,
+      transactionId,
+      paymentStatus
+    });
+
+    // Validate required fields
+    if (!tempBookingId || !paymentMethod || !paymentAmount || !transactionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'All payment details are required'
+      });
+    }
+
+    // Get temporary booking details
+    const tempBookingResult = await pool.query(
+      `SELECT * FROM temporary_booking 
+       WHERE temp_booking_id = $1 
+       AND elder_id = $2 
+       AND expires_at > CURRENT_TIMESTAMP
+       AND counselor_id IS NOT NULL`,
+      [tempBookingId, elderId]
+    );
+
+    if (tempBookingResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Temporary healthcare professional booking not found or expired'
+      });
+    }
+
+    const tempBooking = tempBookingResult.rows[0];
+
+    // Start transaction
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Generate meeting link for online appointments
+      let meetingLink = null;
+      if (tempBooking.appointment_type === 'online') {
+        const MeetingService = require('../services/meetingService');
+        const meetingData = MeetingService.generateMeetingLink(
+          null, // appointmentId will be set after creation
+          null, // no doctor_id for healthcare professional
+          tempBooking.elder_id,
+          tempBooking.counselor_id // pass counselor_id instead
+        );
+        meetingLink = meetingData.meetingLink;
+        console.log(`📞 Generated meeting link for new healthcare professional appointment: ${meetingLink}`);
+      }
+
+      // Create the actual appointment
+      const appointmentResult = await client.query(
+        `INSERT INTO appointment (
+          elder_id, 
+          family_id, 
+          counselor_id, 
+          date_time, 
+          status, 
+          notes, 
+          appointment_type,
+          meeting_link,
+          created_at,
+          updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING 
+          appointment_id,
+          elder_id,
+          family_id,
+          counselor_id,
+          date_time,
+          status,
+          notes,
+          appointment_type,
+          meeting_link,
+          created_at`,
+        [
+          tempBooking.elder_id,
+          tempBooking.family_id,
+          tempBooking.counselor_id,
+          tempBooking.date_time,
+          'confirmed',
+          tempBooking.notes,
+          tempBooking.appointment_type,
+          meetingLink
+        ]
+      );
+
+      const newAppointment = appointmentResult.rows[0];
+
+      // Create payment record
+      const paymentResult = await client.query(
+        `INSERT INTO payment (
+          appointment_id,
+          elder_id,
+          amount,
+          payment_method,
+          transaction_id,
+          payment_status,
+          payment_date,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING payment_id, amount, payment_method, transaction_id, payment_status, payment_date`,
+        [
+          newAppointment.appointment_id,
+          elderId,
+          parseFloat(paymentAmount),
+          paymentMethod,
+          transactionId,
+          paymentStatus || 'completed'
+        ]
+      );
+
+      const payment = paymentResult.rows[0];
+
+      // Delete the temporary booking
+      await client.query(
+        'DELETE FROM temporary_booking WHERE temp_booking_id = $1',
+        [tempBookingId]
+      );
+
+      await client.query('COMMIT');
+
+      console.log('Healthcare professional appointment and payment created successfully:', {
+        appointment: newAppointment,
+        payment: payment
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Payment confirmed and healthcare professional appointment created successfully',
+        appointment: newAppointment,
+        payment: payment
+      });
+
+    } catch (transactionErr) {
+      await client.query('ROLLBACK');
+      throw transactionErr;
+    } finally {
+      client.release();
+    }
+
+  } catch (err) {
+    console.error('Error confirming payment and creating healthcare professional appointment:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error processing payment confirmation for healthcare professional',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// ==================== END HEALTHCARE PROFESSIONAL SYSTEM ====================
+
 
 
 
@@ -2429,18 +3169,23 @@ module.exports = {
   getElderEmergencyContacts,
   getDoctorsByElderDistrict,
   getAllDoctorsForOnlineMeeting,
+  getHealthProfessionalsByElderDistrict,
+  getAllHealthProfessionalsForOnlineMeeting,
   getDoctorById,           // Add this
   getAppointmentBookingInfo,
   bulkUpdateElders,
   createAppointment,        // Add this
-  getElderAppointments ,
+  createHealthProfessionalAppointment,  // Add this
+  getElderAppointments,
   getUpcomingAppointmentsByFamily,  // Add this
   getAppointmentCountByFamily,
   getBlockedTimeSlots,
    createTemporaryBooking,
   confirmPaymentAndCreateAppointment,
   cancelTemporaryBooking,
-  cleanupExpiredBookings    
+  cleanupExpiredBookings,
+  createTemporaryHealthcareProfessionalBooking,
+  confirmPaymentAndCreateHealthcareProfessionalAppointment
 };
 
 

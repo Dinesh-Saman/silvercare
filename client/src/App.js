@@ -30,12 +30,18 @@ import { DoctorRegStep2 } from "./pages/doctor/signup-step2";
 
 import PhysicalAppointment from './pages/familemember/physical-appointment';
 import OnlineAppointment from './pages/familemember/online-appointment';
+import HealthcareProfessionalAppointment from './pages/familemember/healthcare-professional-appointment';
+import PhysicalHealthcareProfessionalAppointment from './pages/familemember/physical-healthcare-professional-appointment';
+import OnlineHealthcareProfessionalAppointment from './pages/familemember/online-healthcare-professional-appointment';
+import HealthcareProfessionalBookingSummary from './pages/familemember/healthcare-professional-booking-summary';
 import Appointments from './pages/familemember/appointments';
 import CancelAppointment from "./pages/familemember/cancel-appointment";
 import AppointmentHistory from "./pages/familemember/appointment-history";
 import BookingSummary from './pages/familemember/booking-summary';
 import Payment from './pages/familemember/payment';
 import PaymentSuccess from './pages/familemember/payment-success';
+import HealthcarePayment from './pages/familemember/healthcare-payment';
+import HealthcarePaymentSuccess from './pages/familemember/healthcare-payment-success';
 
 
 
@@ -192,6 +198,43 @@ function App() {
           />
 
           <Route
+            path="/family-member/book-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <HealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* New healthcare professional appointment routes matching doctor system */}
+          <Route
+            path="/family-member/physical-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <PhysicalHealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/online-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <OnlineHealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/elder/:elderId/healthcare-booking-summary/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <HealthcareProfessionalBookingSummary />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/family-member/appointments"
             element={
               <ProtectedRoute allowedRoles={["family_member"]}>
@@ -271,6 +314,19 @@ function App() {
 <Route path="/family-member/payment-success" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <PaymentSuccess />
+  </ProtectedRoute>
+} />
+
+{/* Healthcare professional payment routes */}
+<Route path="/family-member/healthcare-payment" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <HealthcarePayment />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/healthcare-payment-success" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <HealthcarePaymentSuccess />
   </ProtectedRoute>
 } />
 

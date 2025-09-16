@@ -15,8 +15,7 @@ const ElderDoctors = () => {
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [providerType, setProviderType] = useState(null); // 'doctor' or 'healthcare'
-  const [meetingType, setMeetingType] = useState(null); // 'physical' or 'online'
+  const [meetingType, setMeetingType] = useState(null); // 'physical', 'online', or 'healthcare'
   const [showMeetingSelection, setShowMeetingSelection] = useState(true);
 
   // Protect the route
@@ -34,8 +33,8 @@ const ElderDoctors = () => {
     }
   }, [currentUser, isAuthenticated, loading, navigate]);
 
-  // Fetch providers data based on provider type and meeting type
-  const fetchProviders = async (selectedProviderType, selectedMeetingType) => {
+  // Fetch providers data based on meeting type
+  const fetchProviders = async (selectedMeetingType) => {
     if (!elderId) {
       setError('Elder ID is required');
       setDataLoading(false);
@@ -46,53 +45,31 @@ const ElderDoctors = () => {
       setDataLoading(true);
       setError(null);
       
-      console.log('Fetching providers:', {
-        elderId,
-        providerType: selectedProviderType,
-        meetingType: selectedMeetingType
-      });
+      console.log('Fetching providers for elder ID:', elderId, 'Meeting type:', selectedMeetingType);
       
       let response;
+      if (selectedMeetingType === 'physical') {
+        response = await elderApi.getDoctorsByElderDistrict(elderId);
+      } else if (selectedMeetingType === 'online') {
+        response = await elderApi.getAllDoctorsForOnlineMeeting(elderId);
+      } else if (selectedMeetingType === 'healthcare') {
+        // Fetch healthcare professionals
+        response = await elderApi.getAllHealthProfessionalsForOnlineMeeting(elderId);
+      }
       
-      if (selectedProviderType === 'doctor') {
-        // Doctor appointments
-        if (selectedMeetingType === 'physical') {
-          response = await elderApi.getDoctorsByElderDistrict(elderId);
-        } else if (selectedMeetingType === 'online') {
-          response = await elderApi.getAllDoctorsForOnlineMeeting(elderId);
-        }
-        
-        console.log('Doctor API response:', response);
-        
-        if (response && response.success) {
-          setDoctors(response.doctors || []);
-          setElderInfo(response.elderInfo);
-          setProviderType(selectedProviderType);
-          setMeetingType(selectedMeetingType);
-          setShowMeetingSelection(false);
-        } else {
-          setError(response?.error || 'Failed to load doctors data');
-        }
-      } else if (selectedProviderType === 'healthcare') {
-        // Healthcare professional appointments
-        if (selectedMeetingType === 'physical') {
-          // For physical healthcare appointments, filter by district
-          response = await elderApi.getHealthProfessionalsByElderDistrict(elderId);
-        } else if (selectedMeetingType === 'online') {
-          response = await elderApi.getAllHealthProfessionalsForOnlineMeeting(elderId);
-        }
-        
-        console.log('Healthcare professional API response:', response);
-        
-        if (response && response.success) {
+      console.log('Providers API response:', response);
+      
+      if (response.success) {
+        if (selectedMeetingType === 'healthcare') {
           setDoctors(response.healthProfessionals || []);
-          setElderInfo(response.elderInfo);
-          setProviderType(selectedProviderType);
-          setMeetingType(selectedMeetingType);
-          setShowMeetingSelection(false);
         } else {
-          setError(response?.error || 'Failed to load healthcare professionals data');
+          setDoctors(response.doctors || []);
         }
+        setElderInfo(response.elderInfo);
+        setMeetingType(selectedMeetingType);
+        setShowMeetingSelection(false);
+      } else {
+        setError(response.error || 'Failed to load providers data');
       }
       
     } catch (err) {
@@ -103,36 +80,14 @@ const ElderDoctors = () => {
     }
   };
 
-  // Handle provider type selection (Step 1)
-  const handleProviderTypeSelection = (selectedProviderType) => {
-    console.log('Provider type selected:', selectedProviderType);
-    setProviderType(selectedProviderType);
-    // Stay on meeting selection screen to choose meeting type
-  };
-
-  // Handle meeting type selection (Step 2)
-  const handleMeetingTypeSelection = (selectedMeetingType) => {
-    console.log('Meeting type selected:', selectedMeetingType, 'for provider type:', providerType);
-    if (!providerType) {
-      console.error('No provider type selected!');
-      return;
-    }
-    fetchProviders(providerType, selectedMeetingType);
-  };
-
-  // Handle back to provider type selection
-  const handleBackToProviderSelection = () => {
-    setProviderType(null);
-    setMeetingType(null);
-    setDoctors([]);
-    setElderInfo(null);
-    setError(null);
+  // Handle meeting type selection
+  const handleMeetingTypeSelection = (selectedType) => {
+    fetchProviders(selectedType);
   };
 
   // Handle back to meeting selection
   const handleBackToSelection = () => {
     setShowMeetingSelection(true);
-    setProviderType(null);
     setMeetingType(null);
     setDoctors([]);
     setElderInfo(null);
@@ -141,7 +96,7 @@ const ElderDoctors = () => {
 
   // Filter providers based on search term (works for both doctors and healthcare professionals)
   const filteredDoctors = doctors.filter(provider => {
-    if (providerType === 'healthcare') {
+    if (meetingType === 'healthcare') {
       // Filter healthcare professionals
       return (
         provider.counselor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -161,24 +116,12 @@ const ElderDoctors = () => {
 
   // Handle book appointment - navigate to specific appointment pages
   const handleBookAppointment = (providerId) => {
-    if (providerType === 'doctor') {
-      // Doctor appointments - use existing doctor appointment routes
-      if (meetingType === 'physical') {
-        const url = `/family-member/book-appointment/${elderId}/${providerId}/physical?meetingType=${meetingType}`;
-        navigate(url);
-      } else if (meetingType === 'online') {
-        const url = `/family-member/book-appointment/${elderId}/${providerId}/online?meetingType=${meetingType}`;
-        navigate(url);
-      }
-    } else if (providerType === 'healthcare') {
-      // Healthcare professional appointments - now with separate pages matching doctor system
-      if (meetingType === 'physical') {
-        const url = `/family-member/physical-healthcare-appointment/${elderId}/${providerId}`;
-        navigate(url);
-      } else if (meetingType === 'online') {
-        const url = `/family-member/online-healthcare-appointment/${elderId}/${providerId}`;
-        navigate(url);
-      }
+    if (meetingType === 'physical') {
+      navigate(`/family-member/book-appointment/${elderId}/${providerId}/physical?meetingType=${meetingType}`);
+    } else if (meetingType === 'online') {
+      navigate(`/family-member/book-appointment/${elderId}/${providerId}/online?meetingType=${meetingType}`);
+    } else if (meetingType === 'healthcare') {
+      navigate(`/family-member/book-healthcare-appointment/${elderId}/${providerId}?meetingType=${meetingType}`);
     }
   };
 
@@ -218,55 +161,76 @@ const ElderDoctors = () => {
       <Navbar />
       <FamilyMemberLayout>
         <div className={styles.elderDoctorsContainer}>
-          {/* Show provider type selection (Step 1) */}
-          {showMeetingSelection && !providerType && (
+          {/* Show meeting type selection */}
+          {showMeetingSelection && (
             <div className={styles.meetingSelectionContainer}>
               <div className={styles.selectionHeader}>
                 <h1 className={styles.pageTitle}>
-                  Choose Provider Type
+                  Choose Appointment Type
                 </h1>
                 <p className={styles.selectionSubtitle}>
-                  First, select the type of healthcare provider you want to consult
+                  Select the type of appointment you want to book for your elder
                 </p>
               </div>
 
               <div className={styles.meetingOptionsGrid}>
                 <div 
                   className={styles.meetingOption}
-                  onClick={() => handleProviderTypeSelection('doctor')}
+                  onClick={() => handleMeetingTypeSelection('physical')}
                 >
-                  <div className={styles.optionIcon}>👨‍⚕️</div>
-                  <h3 className={styles.optionTitle}>Medical Doctor</h3>
+                  <div className={styles.optionIcon}>🏥</div>
+                  <h3 className={styles.optionTitle}>Physical Meeting</h3>
                   <p className={styles.optionDescription}>
-                    Consult with qualified medical doctors for diagnosis, treatment, 
-                    and medical care of physical health conditions.
+                    Meet the doctor in person at their clinic or hospital. 
+                    Shows doctors in your district only.
                   </p>
                   <div className={styles.optionFeatures}>
-                    <span className={styles.feature}>✓ Medical diagnosis</span>
-                    <span className={styles.feature}>✓ Prescription medication</span>
+                    <span className={styles.feature}>✓ In-person consultation</span>
                     <span className={styles.feature}>✓ Physical examination</span>
-                    <span className={styles.feature}>✓ Treatment plans</span>
+                    <span className={styles.feature}>✓ Local doctors only</span>
+                    <span className={styles.feature}>✓ 2 hours duration</span>
                   </div>
                   <button className={styles.selectButton}>
-                    Select Medical Doctor
+                    Select Physical Meeting
                   </button>
                 </div>
 
                 <div 
                   className={styles.meetingOption}
-                  onClick={() => handleProviderTypeSelection('healthcare')}
+                  onClick={() => handleMeetingTypeSelection('online')}
+                >
+                  <div className={styles.optionIcon}>💻</div>
+                  <h3 className={styles.optionTitle}>Online Doctor Meeting</h3>
+                  <p className={styles.optionDescription}>
+                    Video consultation with doctors from anywhere. 
+                    Access to all available doctors.
+                  </p>
+                  <div className={styles.optionFeatures}>
+                    <span className={styles.feature}>✓ Video consultation</span>
+                    <span className={styles.feature}>✓ All doctors available</span>
+                    <span className={styles.feature}>✓ Convenient from home</span>
+                    <span className={styles.feature}>✓ 1 hour duration</span>
+                  </div>
+                  <button className={styles.selectButton}>
+                    Select Online Doctor Meeting
+                  </button>
+                </div>
+
+                <div 
+                  className={styles.meetingOption}
+                  onClick={() => handleMeetingTypeSelection('healthcare')}
                 >
                   <div className={styles.optionIcon}>🧠</div>
                   <h3 className={styles.optionTitle}>Healthcare Professional</h3>
                   <p className={styles.optionDescription}>
-                    Consult with healthcare professionals like counselors, therapists, 
-                    and mental health specialists for emotional and psychological support.
+                    Online consultation with healthcare professionals like counselors, 
+                    therapists, and mental health specialists.
                   </p>
                   <div className={styles.optionFeatures}>
                     <span className={styles.feature}>✓ Mental health support</span>
-                    <span className={styles.feature}>✓ Counseling services</span>
-                    <span className={styles.feature}>✓ Therapy sessions</span>
-                    <span className={styles.feature}>✓ Emotional guidance</span>
+                    <span className={styles.feature}>✓ Specialized counseling</span>
+                    <span className={styles.feature}>✓ Global accessibility</span>
+                    <span className={styles.feature}>✓ 1 hour duration</span>
                   </div>
                   <button className={styles.selectButton}>
                     Select Healthcare Professional
@@ -285,76 +249,6 @@ const ElderDoctors = () => {
             </div>
           )}
 
-          {/* Show meeting type selection (Step 2) */}
-          {showMeetingSelection && providerType && (
-            <div className={styles.meetingSelectionContainer}>
-              <div className={styles.selectionHeader}>
-                <button 
-                  className={styles.backToProviderButton}
-                  onClick={handleBackToProviderSelection}
-                >
-                  ← Back to Provider Type
-                </button>
-                
-                <h1 className={styles.pageTitle}>
-                  Choose Meeting Type
-                  {providerType === 'doctor' ? ' with Doctor' : ' with Healthcare Professional'}
-                </h1>
-                <p className={styles.selectionSubtitle}>
-                  Select how you want to meet with your chosen {providerType === 'doctor' ? 'doctor' : 'healthcare professional'}
-                </p>
-              </div>
-
-              <div className={styles.meetingOptionsGrid}>
-                <div 
-                  className={styles.meetingOption}
-                  onClick={() => handleMeetingTypeSelection('physical')}
-                >
-                  <div className={styles.optionIcon}>🏥</div>
-                  <h3 className={styles.optionTitle}>Physical Meeting</h3>
-                  <p className={styles.optionDescription}>
-                    {providerType === 'doctor' 
-                      ? 'Meet the doctor in person at their clinic or hospital. Shows doctors in your district only.'
-                      : 'Meet the healthcare professional in person at their clinic or office. Shows professionals in your district only.'
-                    }
-                  </p>
-                  <div className={styles.optionFeatures}>
-                    <span className={styles.feature}>✓ In-person consultation</span>
-                    <span className={styles.feature}>✓ {providerType === 'doctor' ? 'Physical examination' : 'Face-to-face therapy'}</span>
-                    <span className={styles.feature}>✓ Local {providerType === 'doctor' ? 'doctors' : 'professionals'} only</span>
-                    <span className={styles.feature}>✓ 2 hours duration</span>
-                  </div>
-                  <button className={styles.selectButton}>
-                    Select Physical Meeting
-                  </button>
-                </div>
-
-                <div 
-                  className={styles.meetingOption}
-                  onClick={() => handleMeetingTypeSelection('online')}
-                >
-                  <div className={styles.optionIcon}>💻</div>
-                  <h3 className={styles.optionTitle}>Online Meeting</h3>
-                  <p className={styles.optionDescription}>
-                    {providerType === 'doctor'
-                      ? 'Video consultation with doctors from anywhere. Access to all available doctors.'
-                      : 'Video consultation with healthcare professionals from anywhere. Access to all available professionals.'
-                    }
-                  </p>
-                  <div className={styles.optionFeatures}>
-                    <span className={styles.feature}>✓ Video consultation</span>
-                    <span className={styles.feature}>✓ All {providerType === 'doctor' ? 'doctors' : 'professionals'} available</span>
-                    <span className={styles.feature}>✓ Convenient from home</span>
-                    <span className={styles.feature}>✓ 1 hour duration</span>
-                  </div>
-                  <button className={styles.selectButton}>
-                    Select Online Meeting
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Show providers list after selection */}
           {!showMeetingSelection && (
             <div className={styles.providersListContainer}>
@@ -367,10 +261,9 @@ const ElderDoctors = () => {
                 </button>
                 
                 <h1 className={styles.pageTitle}>
-                  {providerType === 'doctor'
-                    ? (meetingType === 'physical' ? 'Physical Meeting Doctors' : 'Online Meeting Doctors')
-                    : (meetingType === 'physical' ? 'Physical Meeting Healthcare Professionals' : 'Online Meeting Healthcare Professionals')
-                  }
+                  {meetingType === 'physical' ? 'Physical Meeting Doctors' :
+                   meetingType === 'online' ? 'Online Meeting Doctors' :
+                   'Healthcare Professionals'}
                 </h1>
                 
                 {elderInfo && (
@@ -385,7 +278,7 @@ const ElderDoctors = () => {
               <div className={styles.searchSection}>
                 <input
                   type="text"
-                  placeholder={`Search ${providerType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...`}
+                  placeholder={`Search ${meetingType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={styles.searchInput}
@@ -396,7 +289,7 @@ const ElderDoctors = () => {
               {dataLoading && (
                 <div className={styles.loadingSection}>
                   <div className={styles.loadingSpinner}></div>
-                  <p>Loading {providerType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...</p>
+                  <p>Loading {meetingType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...</p>
                 </div>
               )}
 
@@ -437,13 +330,11 @@ const ElderDoctors = () => {
                   <div className={styles.doctorsGrid}>
                     {filteredDoctors.map((provider) => {
                       // Determine provider type and extract relevant data
-                      const isHealthcareProfessional = providerType === 'healthcare';
+                      const isHealthcareProfessional = meetingType === 'healthcare';
                       const providerId = isHealthcareProfessional ? provider.counselor_id : provider.doctor_id;
                       const providerName = isHealthcareProfessional ? provider.counselor_name : `Dr. ${provider.doctor_name}`;
                       const providerSpecialty = isHealthcareProfessional ? provider.specialty : provider.specialization;
-                      const providerInstitution = isHealthcareProfessional 
-                        ? (meetingType === 'physical' ? 'In-Person Consultation' : 'Online Consultation')
-                        : provider.current_institution;
+                      const providerInstitution = isHealthcareProfessional ? 'Online Consultation' : provider.current_institution;
                       const providerDistrict = provider.district;
                       const providerExperience = provider.years_experience;
                       
@@ -451,10 +342,9 @@ const ElderDoctors = () => {
                         <div key={providerId} className={styles.doctorCard}>
                           {/* Meeting Type Badge */}
                           <div className={styles.meetingTypeBadge}>
-                            {meetingType === 'physical' 
-                              ? (providerType === 'healthcare' ? '🏥 Physical Healthcare' : '🏥 Physical Doctor')
-                              : (providerType === 'healthcare' ? '💻 Online Healthcare' : '💻 Online Doctor')
-                            }
+                            {meetingType === 'physical' ? '🏥 Physical' : 
+                             meetingType === 'online' ? '💻 Online Doctor' : 
+                             '🧠 Healthcare Professional'}
                           </div>
 
                           {/* Provider Header */}
