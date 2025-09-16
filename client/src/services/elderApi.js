@@ -132,6 +132,46 @@ export const elderApi = {
     }
   },
 
+  // Get healthcare professionals by elder's district for physical meetings
+  getHealthProfessionalsByElderDistrict: async (elderId) => {
+    try {
+      console.log('API: Fetching healthcare professionals for elder ID:', elderId);
+      const response = await fetch(`${API_BASE}/${elderId}/healthcare-professionals`);
+      const data = await response.json();
+      
+      console.log('API: Healthcare professionals response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch healthcare professionals');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching healthcare professionals:', error);
+      throw error;
+    }
+  },
+
+  // Get all healthcare professionals for online meetings
+  getAllHealthProfessionalsForOnlineMeeting: async (elderId) => {
+    try {
+      console.log('API: Fetching all healthcare professionals for online meeting, elder ID:', elderId);
+      const response = await fetch(`${API_BASE}/${elderId}/healthcare-professionals/online`);
+      const data = await response.json();
+      
+      console.log('API: Healthcare professionals response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch healthcare professionals for online meeting');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching healthcare professionals for online meeting:', error);
+      throw error;
+    }
+  },
+
   // Get doctor information by ID
   getDoctorById: async (doctorId) => {
     try {
@@ -376,6 +416,32 @@ export const elderApi = {
     }
   },
 
+  // Create healthcare professional appointment
+  createHealthProfessionalAppointment: async (elderId, appointmentData) => {
+    try {
+      console.log('API: Creating healthcare professional appointment for elder:', elderId, 'with data:', appointmentData);
+      const response = await fetch(`${API_BASE}/${elderId}/healthcare-appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Create healthcare professional appointment response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create healthcare professional appointment');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error creating healthcare professional appointment:', error);
+      throw error;
+    }
+  },
+
   // Get elder appointments
   getElderAppointments: async (elderId, filters = {}) => {
     try {
@@ -586,5 +652,70 @@ export const elderApi = {
       console.error('Error updating elder photo:', error);
       throw error;
     }
+  },
+
+  // ==================== HEALTHCARE PROFESSIONAL TEMPORARY BOOKING ====================
+
+  // Create temporary healthcare professional booking (blocks slot for 10 minutes)
+  createTemporaryHealthcareProfessionalBooking: async (elderId, bookingData) => {
+    try {
+      console.log('API: Creating temporary healthcare professional booking for elder:', elderId, 'with data:', bookingData);
+      const response = await fetch(`${API_BASE}/${elderId}/healthcare-professional-temporary-booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Create temporary healthcare professional booking response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create temporary healthcare professional booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error creating temporary healthcare professional booking:', error);
+      throw error;
+    }
+  },
+
+  // Confirm payment and create healthcare professional appointment
+  confirmPaymentAndCreateHealthcareProfessionalAppointment: async (elderId, confirmationData) => {
+    try {
+      console.log('API: Confirming payment and creating healthcare professional appointment for elder:', elderId);
+      console.log('API: Confirmation data:', confirmationData);
+      
+      const headers = getAuthHeaders();
+      
+      const response = await fetch(`${API_BASE}/${elderId}/healthcare-professional-confirm-payment`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(confirmationData)
+      });
+
+      console.log('API: Confirm healthcare professional payment response status:', response.status);
+      const data = await response.json();
+      console.log('API: Confirm healthcare professional payment response:', data);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('silvercare_token');
+          localStorage.removeItem('silvercare_user');
+          localStorage.removeItem('silvercare_role');
+          throw new Error('Authentication failed. Please log in again.');
+        }
+        throw new Error(data.error || 'Failed to confirm healthcare professional payment');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('API: Error confirming healthcare professional payment:', error);
+      throw error;
+    }
   }
+
+  // ==================== END HEALTHCARE PROFESSIONAL SYSTEM ====================
 };

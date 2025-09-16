@@ -25,7 +25,7 @@ const elderRoutes = require('./routes/elderRoutes'); // Add this line
 const doctorRoutes = require('./routes/doctorRoutes'); // Indipa Added this line
 const adminRoutes = require('./routes/adminRoutes'); // Add this line by Nimal
 const caregiverRoutes = require('./routes/caregiverRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes'); // Add this line
+const appointmentRoutes = require('./routes/appointmentRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
 const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
@@ -41,7 +41,7 @@ app.use('/api/elders', elderRoutes);
 app.use('/api/doctor', doctorRoutes); // Indipa Added this line
 app.use('/api/admin', adminRoutes); // Add this line by Nimal
 app.use('/api/caregivers', caregiverRoutes);
-app.use('/api/appointments', appointmentRoutes); // Add this line
+app.use('/api/appointments', appointmentRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/healthprofessional', healthprofessionalRoutes);
 app.use('/api/care-assignments', careAssignmentRoutes);

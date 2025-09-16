@@ -72,9 +72,11 @@ const AllAppointments = () => {
     // Filter by status
     if (activeFilter !== "all") {
       if (activeFilter === "upcoming") {
-        filtered = filtered.filter(
-          (apt) => new Date(apt.date_time) > new Date() && apt.status !== "cancelled"
-        );
+        filtered = filtered.filter((apt) => {
+          const aptDate = new Date(apt.date_time);
+          const now = new Date();
+          return aptDate > now && apt.status !== "cancelled";
+        });
       } else if (activeFilter === "past") {
         filtered = filtered.filter(
           (apt) => new Date(apt.date_time) < new Date() || apt.status === "completed"
@@ -84,12 +86,12 @@ const AllAppointments = () => {
       }
     }
 
-    // Filter by search term (doctor name or specialization)
+    // Filter by search term (provider name or specialization)
     if (searchTerm) {
       filtered = filtered.filter(
         (apt) =>
-          apt.doctor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          apt.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+          (apt.provider_name && apt.provider_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (apt.specialization && apt.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -245,7 +247,11 @@ const AllAppointments = () => {
               <div className={styles.statusFilters}>
                 {[
                   { key: "all", label: "All", count: appointments.length },
-                  { key: "upcoming", label: "Upcoming", count: appointments.filter(apt => new Date(apt.date_time) > new Date() && apt.status !== "cancelled").length },
+                  { key: "upcoming", label: "Upcoming", count: appointments.filter(apt => {
+                    const aptDate = new Date(apt.date_time);
+                    const now = new Date();
+                    return aptDate > now && apt.status !== "cancelled";
+                  }).length },
                   { key: "past", label: "Past", count: appointments.filter(apt => new Date(apt.date_time) < new Date() || apt.status === "completed").length },
                   { key: "cancelled", label: "Cancelled", count: appointments.filter(apt => apt.status === "cancelled").length }
                 ].map((filter) => (
@@ -318,11 +324,18 @@ const AllAppointments = () => {
               <div key={appointment.appointment_id} className={styles.appointmentCard}>
                 <div className={styles.cardHeader}>
                   <div className={styles.doctorInfo}>
-                    <div className={styles.doctorAvatar}>👨‍⚕️</div>
+                    <div className={styles.doctorAvatar}>
+                      {appointment.provider_type === 'doctor' ? '👨‍⚕️' : '🩺'}
+                    </div>
                     <div className={styles.doctorDetails}>
-                      <h3>Dr. {appointment.doctor_name}</h3>
+                      <h3>
+                        {appointment.provider_type === 'doctor' ? 'Dr. ' : ''}{appointment.provider_name || 'Unknown Provider'}
+                      </h3>
                       <p className={styles.specialization}>{appointment.specialization}</p>
                       <p className={styles.institution}>{appointment.current_institution}</p>
+                      {appointment.provider_type === 'healthcare_professional' && (
+                        <p className={styles.providerType}>Healthcare Professional</p>
+                      )}
                     </div>
                   </div>
                   <div className={styles.statusContainer}>
