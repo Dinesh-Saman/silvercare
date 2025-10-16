@@ -110,5 +110,7 @@ function debugAppointmentsData(elderId = 1) {
   req.end();
 }
 
+
+
 // Test Elder ID 3 (anura samarasinghe with 4 upcoming appointments)
 debugAppointmentsData(3);
