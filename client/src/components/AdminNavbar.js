@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from './css/admin/AdminNavbar.module.css';
+import logoSilver from './images/logo_silver.png'; // ✅ Import your custom logo
 
 const AdminNavbar = () => {
   const { currentUser, logout } = useAuth();
@@ -62,8 +63,16 @@ const AdminNavbar = () => {
         {/* Logo Section */}
         <div className={styles.logoSection}>
           <div className={styles.logo} onClick={() => navigate('/admin/dashboard')}>
-            <span className={styles.logoIcon}>🏥</span>
-            <span className={styles.logoText}>SilverCare Admin</span>
+            <span className={styles.logoIcon}>
+              <div className={styles.navLogo} >
+                        <img 
+                          src={logoSilver} 
+                          alt="SilverCare Logo" 
+                          className={styles.logoImage}
+                        />
+                      </div>
+            </span>
+            <span className={styles.logoText}></span>
           </div>
         </div>
 

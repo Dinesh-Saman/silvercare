@@ -144,7 +144,7 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
         navigate('/doctor/diagnosis-reports');
         break;
       case 'messages':
-        navigate('/doctor/messages');
+        navigate('/doctor/elder-chat');
         break;
       case 'family-chat':
         navigate('/doctor/messages');
@@ -228,7 +228,7 @@ const DoctorSidebar = ({ onItemClick, onToggleCollapse }) => {
       icon: '💬',
       hasSubmenu: true,
       submenu: [
-        { key: 'messages', label: 'Messages', path: '/doctor/messages' },
+        { key: 'messages', label: 'Elder Chat', path: '/doctor/elder-chat' },
         { key: 'family-chat', label: 'Family Chat', path: '/doctor/family-chat' },
         { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/doctor/caregiver-chat' }
       ]

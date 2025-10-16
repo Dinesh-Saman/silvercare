@@ -74,6 +74,10 @@ import FamilyMemberProfile from "./pages/familemember/profile";
 import HealthProfessionalProfile from "./pages/healthproffesional/profile";
 import ElderProfile from "./pages/elder/profile";
 import FamilyMessages from "./pages/elder/FamilyMessages";
+import ElderDoctorMessages from "./pages/elder/DoctorMessages";
+import CounselorMessages from "./pages/elder/CounselorMessages";
+import ElderChat from "./pages/doctor/ElderChat";
+import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -332,6 +336,12 @@ function App() {
               <DoctorMessages2 />
             </ProtectedRoute>
           } />
+
+          <Route path="/doctor/elder-chat" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <ElderChat />
+            </ProtectedRoute>
+          } />
           
 
 
@@ -379,6 +389,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["healthprofessional"]}>
                 <HealthProfessionalProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/healthprofessional/messages"
+            element={
+              <ProtectedRoute allowedRoles={["healthprofessional"]}>
+                <HealthProfessionalElderMessages />
               </ProtectedRoute>
             }
           />
@@ -579,6 +598,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <FamilyMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/doctor-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderDoctorMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/counselor-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <CounselorMessages />
               </ProtectedRoute>
             }
           />
