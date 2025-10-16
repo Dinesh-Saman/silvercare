@@ -685,33 +685,56 @@ const joinAppointment = async (req, res) => {
 
     const appointment = appointmentCheck.rows[0];
 
-    // Check if appointment is today and within 15 minutes of start time
+    // Check if appointment is today and within joining window
     const appointmentTime = new Date(appointment.date_time);
     const now = new Date();
     const timeDiff = appointmentTime.getTime() - now.getTime();
     const minutesDiff = timeDiff / (1000 * 60);
 
-    if (minutesDiff > 15) {
+    // Allow joining 30 minutes before and 60 minutes after for testing
+    if (minutesDiff > 30) {
       return res.status(400).json({
         success: false,
-        error: "You can only join the appointment 15 minutes before the scheduled time",
+        error: "You can only join the appointment 30 minutes before the scheduled time",
       });
     }
 
-    if (minutesDiff < -30) {
+    if (minutesDiff < -60) {
       return res.status(400).json({
         success: false,
         error: "This appointment has ended",
       });
     }
 
-    // Generate meeting link or return existing one
-    const meetingLink = `https://meet.silvercare.com/appointment/${appointmentId}`;
+    // Use the actual meeting link from the database
+    let meetingLink = appointment.meeting_link;
+    
+    // If no meeting link exists, generate one
+    if (!meetingLink) {
+      const MeetingService = require('../services/meetingService');
+      const updatedAppointment = await MeetingService.ensureMeetingLink(appointmentId);
+      meetingLink = updatedAppointment.meeting_link;
+    }
+
+    // Get elder information for the meeting
+    const elderInfo = await pool.query(
+      "SELECT name, email FROM elder WHERE elder_id = $1",
+      [elderId]
+    );
+    
+    const elderName = elderInfo.rows[0]?.name || 'Patient';
+    const elderEmail = elderInfo.rows[0]?.email || 'patient@silvercare.com';
+    
+    // Create meeting URL with elder parameters for Jitsi Meet (same as doctor does)
+    const meetingUrl = new URL(meetingLink);
+    meetingUrl.searchParams.set('userInfo.displayName', elderName);
+    meetingUrl.searchParams.set('userInfo.email', elderEmail);
+    meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
 
     res.json({
       success: true,
       message: "Joining appointment",
-      meetingLink: meetingLink,
+      meetingLink: meetingUrl.toString(),
       appointment: appointment,
     });
   } catch (err) {
@@ -790,6 +813,59 @@ const getFamilyMembersForChat = async (req, res) => {
   }
 };
 
+// Get doctors who have confirmed or completed appointments with this elder
+const getDoctorsWithAppointments = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    console.log('Getting doctors with appointments for elder:', elderId);
+    
+    const result = await pool.query(
+      `SELECT DISTINCT
+        d.doctor_id,
+        d.specialization,
+        d.license_number,
+        d.current_institution,
+        d.years_experience,
+        d.district as doctor_district,
+        u.user_id,
+        u.name as doctor_name,
+        u.email as doctor_email,
+        u.phone as doctor_phone,
+        COUNT(a.appointment_id) as total_appointments,
+        COUNT(CASE WHEN a.status = 'confirmed' THEN 1 END) as confirmed_appointments,
+        COUNT(CASE WHEN a.status = 'completed' THEN 1 END) as completed_appointments,
+        MAX(a.date_time) as latest_appointment_date,
+        STRING_AGG(DISTINCT a.elder_id::text, ', ') as elders_treated_count
+      FROM doctor d
+      JOIN "User" u ON d.user_id = u.user_id
+      JOIN appointment a ON d.doctor_id = a.doctor_id
+      WHERE a.elder_id = $1 
+      AND a.status IN ('confirmed', 'completed')
+      AND d.status = 'confirmed'
+      GROUP BY d.doctor_id, d.specialization, d.license_number, d.current_institution, 
+               d.years_experience, d.district, u.user_id, u.name, u.email, u.phone
+      ORDER BY latest_appointment_date DESC`,
+      [elderId]
+    );
+    
+    console.log('Found doctors with appointments:', result.rows.length);
+    
+    res.json({
+      success: true,
+      doctors: result.rows,
+      count: result.rows.length
+    });
+    
+  } catch (err) {
+    console.error('Error fetching doctors with appointments:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching doctors with appointments' 
+    });
+  }
+};
+
 
 module.exports = {
   getElderDetails,
@@ -803,5 +879,6 @@ module.exports = {
   getAppointmentById,
   joinAppointment,
   getFamilyMembersForChat,
+  getDoctorsWithAppointments,
 };
 

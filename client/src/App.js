@@ -29,12 +29,18 @@ import { DoctorRegStep2 } from "./pages/doctor/signup-step2";
 
 import PhysicalAppointment from './pages/familemember/physical-appointment';
 import OnlineAppointment from './pages/familemember/online-appointment';
+import HealthcareProfessionalAppointment from './pages/familemember/healthcare-professional-appointment';
+import PhysicalHealthcareProfessionalAppointment from './pages/familemember/physical-healthcare-professional-appointment';
+import OnlineHealthcareProfessionalAppointment from './pages/familemember/online-healthcare-professional-appointment';
+import HealthcareProfessionalBookingSummary from './pages/familemember/healthcare-professional-booking-summary';
 import Appointments from './pages/familemember/appointments';
 import CancelAppointment from "./pages/familemember/cancel-appointment";
 import AppointmentHistory from "./pages/familemember/appointment-history";
 import BookingSummary from './pages/familemember/booking-summary';
 import Payment from './pages/familemember/payment';
 import PaymentSuccess from './pages/familemember/payment-success';
+import HealthcarePayment from './pages/familemember/healthcare-payment';
+import HealthcarePaymentSuccess from './pages/familemember/healthcare-payment-success';
 
 
 
@@ -48,6 +54,11 @@ import ElderEvents from "./pages/elder/events";
 
 import DoctorDashboard from './pages/doctor/dashboard';
 import DoctorProfile from './pages/doctor/profile';
+import VirtualMeetingRoom from './pages/VirtualMeetingRoom';
+import JitsiMeetingRoom from './pages/JitsiMeetingRoom';
+import MeetingGenerator from './pages/MeetingGenerator';
+import TestMeeting from './pages/TestMeeting';
+import PatientMeetingJoin from './pages/PatientMeetingJoin';
 import ElderDashboard from './pages/elder/dashboard';
 import { Login } from './pages/login';
 import { Roles } from './pages/roles';
@@ -63,6 +74,10 @@ import FamilyMemberProfile from "./pages/familemember/profile";
 import HealthProfessionalProfile from "./pages/healthproffesional/profile";
 import ElderProfile from "./pages/elder/profile";
 import FamilyMessages from "./pages/elder/FamilyMessages";
+import ElderDoctorMessages from "./pages/elder/DoctorMessages";
+import CounselorMessages from "./pages/elder/CounselorMessages";
+import ElderChat from "./pages/doctor/ElderChat";
+import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -89,6 +104,11 @@ function App() {
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/consultation/:meetingId" element={<VirtualMeetingRoom />} />
+          <Route path="/meeting/:meetingId" element={<JitsiMeetingRoom />} />
+          <Route path="/generate-meeting" element={<MeetingGenerator />} />
+          <Route path="/test-meeting/:meetingId" element={<TestMeeting />} />
+          <Route path="/patient-join/:meetingId" element={<PatientMeetingJoin />} />
 
           {/* Registration Routes - No authentication required */}
           <Route path="/family-member/signup" element={<FamilyMemberReg />} />
@@ -176,6 +196,43 @@ function App() {
           />
 
           <Route
+            path="/family-member/book-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <HealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* New healthcare professional appointment routes matching doctor system */}
+          <Route
+            path="/family-member/physical-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <PhysicalHealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/online-healthcare-appointment/:elderId/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <OnlineHealthcareProfessionalAppointment />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/elder/:elderId/healthcare-booking-summary/:counselorId"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <HealthcareProfessionalBookingSummary />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/family-member/appointments"
             element={
               <ProtectedRoute allowedRoles={["family_member"]}>
@@ -248,6 +305,19 @@ function App() {
   </ProtectedRoute>
 } />
 
+{/* Healthcare professional payment routes */}
+<Route path="/family-member/healthcare-payment" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <HealthcarePayment />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/healthcare-payment-success" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <HealthcarePaymentSuccess />
+  </ProtectedRoute>
+} />
+
           
           <Route path="/doctor/dashboard" element={
             <ProtectedRoute allowedRoles={['doctor']}>
@@ -264,6 +334,12 @@ function App() {
           <Route path="/doctor/messages" element={
             <ProtectedRoute allowedRoles={['doctor']}>
               <DoctorMessages2 />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/doctor/elder-chat" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <ElderChat />
             </ProtectedRoute>
           } />
           
@@ -313,6 +389,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["healthprofessional"]}>
                 <HealthProfessionalProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/healthprofessional/messages"
+            element={
+              <ProtectedRoute allowedRoles={["healthprofessional"]}>
+                <HealthProfessionalElderMessages />
               </ProtectedRoute>
             }
           />
@@ -513,6 +598,24 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <FamilyMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/doctor-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderDoctorMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/counselor-chat"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <CounselorMessages />
               </ProtectedRoute>
             }
           />

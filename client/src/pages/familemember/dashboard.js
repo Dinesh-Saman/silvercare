@@ -608,9 +608,27 @@ const FamilyMemberDashboard = () => {
                         </div>
                         <div className={styles.appointmentRight}>
                           {appointment.status === 'confirmed' ? (
-                            <button className={styles.secondaryBtn} style={{pointerEvents: 'none'}}>
-                              Confirmed
-                            </button>
+                            <div className={styles.appointmentActions}>
+                              {appointment.appointment_type === 'online' && appointment.meeting_link ? (
+                                <button 
+                                  className={`${styles.primaryBtn} ${styles.joinMeetingBtn}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const meetingUrl = new URL(appointment.meeting_link);
+                                    meetingUrl.searchParams.set('userInfo.displayName', appointment.elder_name || 'Patient');
+                                    meetingUrl.searchParams.set('userInfo.email', 'patient@silvercare.com');
+                                    meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
+                                    window.open(meetingUrl.toString(), '_blank');
+                                  }}
+                                >
+                                  🎥 Join Meeting
+                                </button>
+                              ) : (
+                                <button className={styles.secondaryBtn} style={{pointerEvents: 'none'}}>
+                                  Confirmed
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <div 
                               className={`${styles.appointmentStatus} ${styles[appointment.status]}`}

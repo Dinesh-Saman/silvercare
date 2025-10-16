@@ -8,9 +8,12 @@ const {
   createElder,
   getDoctorsByElderDistrict,
   getAllDoctorsForOnlineMeeting,
+  getHealthProfessionalsByElderDistrict,
+  getAllHealthProfessionalsForOnlineMeeting,
   getDoctorById,
   getAppointmentBookingInfo,
   createAppointment,
+  createHealthProfessionalAppointment,
   getElderAppointments,
   getUpcomingAppointmentsByFamily,
   getAppointmentCountByFamily,
@@ -19,9 +22,9 @@ const {
    createTemporaryBooking,
   confirmPaymentAndCreateAppointment,
   cancelTemporaryBooking,
-  cleanupExpiredBookings
-
- 
+  cleanupExpiredBookings,
+  createTemporaryHealthcareProfessionalBooking,
+  confirmPaymentAndCreateHealthcareProfessionalAppointment
 
 } = require('../controllers/elderController');
 
@@ -35,7 +38,8 @@ const {
   getAllAppointments,
   getAppointmentById,
   joinAppointment,
-  getFamilyMembersForChat
+  getFamilyMembersForChat,
+  getDoctorsWithAppointments
 } = require('../controllers/elder');
 
 const {
@@ -51,6 +55,11 @@ const {
   getDayCareAssignments,
   getCareAssignmentStats
 } = require('../controllers/carerequest');
+
+const {
+  getCounselorsWithAppointments,
+  getAppointmentHistoryWithCounselor
+} = require('../controllers/elderCounselorChatController');
 
 // Get all elders for a specific family member
 router.get('/family-member/:familyMemberId', getEldersByFamilyMember);
@@ -83,17 +92,33 @@ router.get('/:elderId/doctors', getDoctorsByElderDistrict);
 // Get all doctors for online meetings - MUST BE BEFORE /:elderId route
 router.get('/:elderId/doctors/online', getAllDoctorsForOnlineMeeting);
 
+// Get healthcare professionals by elder's district for physical meetings - MUST BE BEFORE /:elderId route
+router.get('/:elderId/healthcare-professionals', getHealthProfessionalsByElderDistrict);
+
+// Get all healthcare professionals for online meetings - MUST BE BEFORE /:elderId route  
+router.get('/:elderId/healthcare-professionals/online', getAllHealthProfessionalsForOnlineMeeting);
+
 // Get dashboard stats for an elder - MUST BE BEFORE /:elderId route
 router.get('/:elderId/dashboard-stats', getElderDashboardStats);
 
 // Get family members for chat (elder perspective) - MUST BE BEFORE /:elderId route
 router.get('/:elderId/family-members-for-chat', getFamilyMembersForChat);
 
+// Get doctors with appointments for chat (elder perspective) - MUST BE BEFORE /:elderId route
+router.get('/:elderId/doctors-with-appointments', getDoctorsWithAppointments);
+
+// Get counselors with appointments for chat (elder perspective) - MUST BE BEFORE /:elderId route
+router.get('/:elderId/counselors-with-appointments', getCounselorsWithAppointments);
+router.get('/:elderId/counselor/:counselorId/appointments', getAppointmentHistoryWithCounselor);
+
 // Update elder profile with file upload - MUST BE BEFORE /:elderId route
 router.put('/:elderId/profile', upload.single('profile_photo'), updateElderProfile);
 
 // Create new appointment - MUST BE BEFORE /:elderId route
 router.post('/:elderId/appointments', createAppointment);
+
+// Create healthcare professional appointment - MUST BE BEFORE /:elderId route
+router.post('/:elderId/healthcare-appointments', createHealthProfessionalAppointment);
 
 // Get elder appointments - MUST BE BEFORE /:elderId route
 router.get('/:elderId/appointments', getElderAppointments);
@@ -129,6 +154,10 @@ router.post('/', createElder);
 router.post('/:elderId/temporary-booking', createTemporaryBooking);
 router.post('/:elderId/confirm-payment', confirmPaymentAndCreateAppointment);
 router.delete('/temporary-booking/:tempBookingId', cancelTemporaryBooking);
+
+// Healthcare professional temporary booking routes
+router.post('/:elderId/healthcare-professional-temporary-booking', createTemporaryHealthcareProfessionalBooking);
+router.post('/:elderId/healthcare-professional-confirm-payment', confirmPaymentAndCreateHealthcareProfessionalAppointment);
 
 // Cleanup route (for maintenance)
 router.delete('/cleanup-expired-bookings', cleanupExpiredBookings);

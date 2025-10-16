@@ -599,6 +599,26 @@ ${appointment.payment_amount ? `• Amount: Rs. ${appointment.payment_amount}
                           </div>
                           
                           <div className={styles.appointmentActions}>
+                            {/* Show Join Meeting button for online confirmed appointments */}
+                            {appointment.appointment_type === 'online' && 
+                             appointment.status === 'confirmed' && 
+                             appointment.meeting_link && 
+                             isUpcoming && (
+                              <button
+                                className={`${styles.joinMeetingButton} ${styles.primaryAction}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const meetingUrl = new URL(appointment.meeting_link);
+                                  meetingUrl.searchParams.set('userInfo.displayName', appointment.elder_name || 'Patient');
+                                  meetingUrl.searchParams.set('userInfo.email', 'patient@silvercare.com');
+                                  meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
+                                  window.open(meetingUrl.toString(), '_blank');
+                                }}
+                              >
+                                🎥 Join Meeting
+                              </button>
+                            )}
+
                             {/* Show cancel button only if within 3-day window */}
                             {cancellationInfo.canCancel && isUpcoming && appointment.status === 'confirmed' && (
                               <button

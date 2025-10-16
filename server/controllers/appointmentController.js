@@ -1,4 +1,5 @@
 process.env.TZ = 'Asia/Colombo';
+require('dotenv').config(); // Ensure env vars are loaded
 const pool = require('../db');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
@@ -38,6 +39,7 @@ const getAllAppointmentsByFamily = async (req, res) => {
         a.status,
         a.notes,
         a.appointment_type,
+        a.meeting_link,
         a.created_at,
         a.updated_at,
         e.name as elder_name,
@@ -527,13 +529,42 @@ const updateAppointmentStatus = async (req, res) => {
         error: 'Invalid status'
       });
     }
+
+    // First, get the current appointment details
+    const currentAppointment = await pool.query(
+      'SELECT * FROM appointment WHERE appointment_id = $1',
+      [appointmentId]
+    );
+
+    if (currentAppointment.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+
+    let meetingLink = currentAppointment.rows[0].meeting_link;
+
+    // Generate meeting link if confirming an online appointment that doesn't have one
+    if (status === 'confirmed' && 
+        currentAppointment.rows[0].appointment_type === 'online' && 
+        !meetingLink) {
+      const MeetingService = require('../services/meetingService');
+      const meetingData = MeetingService.generateMeetingLink(
+        appointmentId,
+        currentAppointment.rows[0].doctor_id,
+        currentAppointment.rows[0].elder_id
+      );
+      meetingLink = meetingData.meetingLink;
+      console.log(`📞 Generated meeting link for appointment ${appointmentId}: ${meetingLink}`);
+    }
     
     const result = await pool.query(
       `UPDATE appointment 
-       SET status = $1, notes = COALESCE($2, notes), updated_at = CURRENT_TIMESTAMP
+       SET status = $1, notes = COALESCE($2, notes), meeting_link = COALESCE($4, meeting_link), updated_at = CURRENT_TIMESTAMP
        WHERE appointment_id = $3
        RETURNING *`,
-      [status, notes, appointmentId]
+      [status, notes, appointmentId, meetingLink]
     );
     
     if (result.rows.length === 0) {
