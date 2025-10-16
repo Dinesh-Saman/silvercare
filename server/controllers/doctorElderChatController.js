@@ -1,5 +1,6 @@
 const pool = require('../db');
 
+
 // Get elders who have confirmed or completed appointments with this doctor
 const getEldersWithAppointments = async (req, res) => {
   const { doctorId } = req.params;
