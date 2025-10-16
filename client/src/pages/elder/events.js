@@ -277,7 +277,6 @@ const ElderEvents = () => {
             <div className={styles.headerContent}>
               <div className={styles.headerInfo}>
                 <h1>Community Events</h1>
-                <p>Discover and join engaging activities in your community</p>
               </div>
               <button 
                 onClick={handleBackToDashboard}
