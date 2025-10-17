@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/navbar';
 import DoctorSidebar from '../../components/doctor_sidebar';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import styles from '../../components/css/doctor/reports.module.css';
 
 const API_BASE = 'http://localhost:5000';
@@ -92,6 +92,12 @@ const DoctorReports = () => {
       count: appointmentStats.physical,
       fill: '#82ca9d'
     }
+  ];
+
+  // Prepare data for pie chart
+  const pieData = [
+    { name: 'Online Appointments', value: appointmentStats.online || 0, fill: '#8884d8' },
+    { name: 'Physical Appointments', value: appointmentStats.physical || 0, fill: '#82ca9d' }
   ];
 
   if (loading) {
@@ -189,11 +195,12 @@ const DoctorReports = () => {
             </div>
           </div>
 
-          {/* Simple Bar Chart */}
+          {/* Charts Section */}
           <div className={styles.chartsSection}>
-            <div className={styles.chartCard} style={{gridColumn: '1 / -1'}}>
+            {/* Bar Chart */}
+            <div className={styles.chartCard}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>📊 Appointment Distribution</h2>
+                <h2 className={styles.chartTitle}>📊 Appointment Count</h2>
                 <p className={styles.chartSubtitle}>Online vs Physical Appointments</p>
               </div>
               <div className={styles.chartContainer}>
@@ -206,6 +213,35 @@ const DoctorReports = () => {
                     <Legend />
                     <Bar dataKey="count" fill="#8884d8" />
                   </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Pie Chart */}
+            <div className={styles.chartCard}>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>🥧 Appointment Distribution</h2>
+                <p className={styles.chartSubtitle}>Percentage breakdown</p>
+              </div>
+              <div className={styles.chartContainer}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={120}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
