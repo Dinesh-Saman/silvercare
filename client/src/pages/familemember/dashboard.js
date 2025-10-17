@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
 import { caregiverApi } from '../../services/caregiverApi';
 import Navbar from '../../components/navbar';
+import { getImageSrc, handleImageError } from '../../utils/imageUtils';
 import styles from '../../components/css/familymember/dashboard.module.css';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 
@@ -202,28 +203,7 @@ const FamilyMemberDashboard = () => {
     }
   };
 
-  // Function to get the correct image URL - FIXED VERSION
-  const getElderImageUrl = (profilePhoto) => {
-    if (!profilePhoto) return null;
-    
-    console.log('Profile photo path from database:', profilePhoto);
-    
-    // If the path already includes the full URL, return as is
-    if (profilePhoto.startsWith('http')) {
-      return profilePhoto;
-    }
-    
-    // Convert backslashes to forward slashes for web URLs
-    const normalizedPath = profilePhoto.replace(/\\/g, '/');
-    
-    // If the path starts with uploads/, construct the full URL
-    if (normalizedPath.startsWith('uploads/')) {
-      return `http://localhost:5000/${normalizedPath}`;
-    }
-    
-    // If it's just the filename, construct the full path
-    return `http://localhost:5000/uploads/profiles/${normalizedPath}`;
-  };
+  // Using shared image utility function
 
   // Show loading while checking authentication
   if (loading) {
@@ -442,7 +422,7 @@ const FamilyMemberDashboard = () => {
                   <div className={styles.eldersLinkList}>
                     {/* Limit to only 2 elders */}
                     {elders.slice(0, 2).map((elder, index) => {
-                      const imageUrl = getElderImageUrl(elder.profile_photo);
+                      const imageUrl = getImageSrc(elder.profile_photo, 'elder', elder.gender);
                       console.log('Elder:', elder.name, 'Image URL:', imageUrl);
                       
                       return (
@@ -466,11 +446,7 @@ const FamilyMemberDashboard = () => {
                                       onError={(e) => {
                                         console.log('Image failed to load:', imageUrl);
                                         console.log('Original path:', elder.profile_photo);
-                                        e.target.style.display = 'none';
-                                        const fallback = e.target.parentNode.querySelector('.fallback-initial');
-                                        if (fallback) {
-                                          fallback.style.display = 'flex';
-                                        }
+                                        handleImageError(e, 'elder', elder.gender);
                                       }}
                                     />
                                     <div 
