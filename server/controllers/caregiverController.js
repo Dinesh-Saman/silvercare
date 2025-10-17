@@ -923,6 +923,79 @@ const getUpcomingShifts = async (req, res) => {
   }
 };*/}
 
+// NEW: Get blocked dates for a caregiver in a specific month
+const getBlockedDates = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { year, month } = req.query;
+  
+  try {
+    console.log('Fetching blocked dates for caregiver:', caregiverId, 'year:', year, 'month:', month);
+    
+    if (!year || !month) {
+      return res.status(400).json({
+        success: false,
+        error: 'Year and month are required'
+      });
+    }
+    
+    // Create date range for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // Last day of month
+    
+    console.log('Date range:', startDate, 'to', endDate);
+    
+    // Get all care requests for this caregiver that overlap with the requested month
+    const result = await pool.query(`
+      SELECT 
+        request_id,
+        start_date,
+        end_date,
+        status
+      FROM carerequest
+      WHERE caregiver_id = $1
+        AND status IN ('pending', 'confirmed', 'approved', 'in-progress')
+        AND (
+          (start_date <= $3 AND end_date >= $2) OR
+          (start_date >= $2 AND start_date <= $3) OR
+          (end_date >= $2 AND end_date <= $3)
+        )
+      ORDER BY start_date
+    `, [caregiverId, startDate, endDate]);
+    
+    console.log('Found care requests:', result.rows.length);
+    
+    // Generate array of blocked dates from the care requests
+    const blockedDates = [];
+    result.rows.forEach(request => {
+      const start = new Date(request.start_date);
+      const end = new Date(request.end_date);
+      
+      // Add each date in the range
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        if (!blockedDates.includes(dateStr)) {
+          blockedDates.push(dateStr);
+        }
+      }
+    });
+    
+    console.log('Blocked dates:', blockedDates);
+    
+    res.json({
+      success: true,
+      blockedDates: blockedDates,
+      careRequests: result.rows
+    });
+    
+  } catch (err) {
+    console.error('Error fetching blocked dates:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching blocked dates' 
+    });
+  }
+};
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -931,7 +1004,10 @@ module.exports = {
   createCareRequest,
   getCareRequestsByFamily,
   searchCaregivers,
-  updateCareRequestStatus
+  updateCareRequestStatus,
+  
+  // NEW: Caregiver booking functions
+  getBlockedDates
   //getCareRequestById,
   //getAssignedElders,
   //getAssignedFamiliesCount,

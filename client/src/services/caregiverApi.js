@@ -345,6 +345,92 @@ export const caregiverApi = {
     }
   },*/
 
+  // NEW: Get caregivers by elder's district (for family member booking)
+  getCaregiversByElderDistrict: async (elderId) => {
+    try {
+      console.log('API: Fetching caregivers by elder district:', elderId);
+      const response = await fetch(`http://localhost:5000/api/elders/${elderId}/caregivers`);
+      const data = await response.json();
+      
+      console.log('API: Caregivers by district response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch caregivers');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching caregivers by district:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Get caregiver booking information
+  getCaregiverBookingInfo: async (elderId, caregiverId) => {
+    try {
+      console.log('API: Fetching caregiver booking info:', elderId, caregiverId);
+      const response = await fetch(`http://localhost:5000/api/elders/${elderId}/caregiver-booking/${caregiverId}`);
+      const data = await response.json();
+      
+      console.log('API: Caregiver booking info response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch booking information');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching booking info:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Get blocked dates for caregiver
+  getBlockedDates: async (caregiverId, year, month) => {
+    try {
+      console.log('API: Fetching blocked dates for caregiver:', caregiverId, year, month);
+      const response = await fetch(`${API_BASE}/${caregiverId}/blocked-dates?year=${year}&month=${month}`);
+      const data = await response.json();
+      
+      console.log('API: Blocked dates response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch blocked dates');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching blocked dates:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Create booking/care request with multiple dates
+  createBooking: async (bookingData) => {
+    try {
+      console.log('API: Creating caregiver booking:', bookingData);
+      const response = await fetch(`${API_BASE}/booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Booking response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error creating booking:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default caregiverApi;

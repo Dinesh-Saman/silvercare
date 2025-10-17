@@ -8,7 +8,8 @@ const {
   createCareRequest,
   getCareRequestsByFamily,
   searchCaregivers,
-  updateCareRequestStatus
+  updateCareRequestStatus,
+  getBlockedDates  // NEW: Get blocked dates for caregiver
 } = require('../controllers/caregiverController');
 
 const { 
@@ -44,6 +45,9 @@ router.get('/search', searchCaregivers);
 
 // Get care requests for a family member
 router.get('/requests/family/:familyMemberId', getCareRequestsByFamily);
+
+// NEW: Get blocked dates for a caregiver
+router.get('/:caregiverId/blocked-dates', getBlockedDates);
 
 // Get specific caregiver by ID
 router.get('/:caregiverId', getCaregiverById);

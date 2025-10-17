@@ -24,7 +24,11 @@ const {
   cancelTemporaryBooking,
   cleanupExpiredBookings,
   createTemporaryHealthcareProfessionalBooking,
-  confirmPaymentAndCreateHealthcareProfessionalAppointment
+  confirmPaymentAndCreateHealthcareProfessionalAppointment,
+  
+  // NEW: Caregiver booking functions
+  getCaregiversByElderDistrict,
+  getCaregiverBookingInfo
 
 } = require('../controllers/elderController');
 
@@ -144,6 +148,10 @@ router.get('/:elderId/care-assignments/month', getCareAssignmentsByMonth);
 router.get('/:elderId/care-assignments/week', getCareAssignmentsByWeek);
 router.get('/:elderId/care-assignments/day', getDayCareAssignments);
 router.get('/:elderId/care-assignments/stats', getCareAssignmentStats);
+
+// NEW: Caregiver booking routes - MUST BE BEFORE /:elderId route
+router.get('/:elderId/caregivers', getCaregiversByElderDistrict);
+router.get('/:elderId/caregiver-booking/:caregiverId', getCaregiverBookingInfo);
 
 // Get specific elder by ID
 router.get('/:elderId', getElderById);
