@@ -5,7 +5,6 @@ import { elderApi } from '../../services/elderApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 import styles from '../../components/css/familymember/elder-doctors.module.css';
-import {feedbackApi} from '../../services/feedbackApi';
 
 const ElderDoctors = () => {
   const { currentUser, loading, isAuthenticated } = useAuth();
@@ -16,6 +15,7 @@ const ElderDoctors = () => {
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [providerType, setProviderType] = useState(null); // 'doctor' or 'healthcare'
   const [meetingType, setMeetingType] = useState(null); // 'physical' or 'online'
   const [showMeetingSelection, setShowMeetingSelection] = useState(true);
 
@@ -34,48 +34,8 @@ const ElderDoctors = () => {
     }
   }, [currentUser, isAuthenticated, loading, navigate]);
 
-  // ...existing code...
-  const [feedbacks, setFeedbacks] = useState([]);
-
-  useEffect(() => {
-    const fetchAllFeedbacks = async () => {
-      try {
-        const response = await feedbackApi.getAllFeedback();
-        // Check if the response and the feedbacks array are valid
-        if (response && response.success && Array.isArray(response.feedbacks)) {
-          console.log('Feedbacks successfully fetched:', response.feedbacks);
-          setFeedbacks(response.feedbacks);
-        } else {
-          // Log a warning if the data is not what you expect
-          console.warn('Failed to receive valid feedback data:', response);
-          setFeedbacks([]);
-        }
-      } catch (err) {
-        console.error('An error occurred while fetching feedbacks:', err);
-        setFeedbacks([]);
-      }
-    };
-    fetchAllFeedbacks();
-  }, []);
-
-  const getDoctorAverageRating = (doctor_id) => {
-    // Ensure doctor_id is treated as a number for comparison
-    const doctorIdAsNumber = Number(doctor_id);
-
-    const doctorFeedbacks = feedbacks.filter(fb => 
-      Number(fb.doctor_id) === doctorIdAsNumber && !isNaN(Number(fb.rating))
-    );
-
-    if (doctorFeedbacks.length === 0) {
-      return 'No ratings';
-    }
-
-    const avg = doctorFeedbacks.reduce((sum, fb) => sum + Number(fb.rating), 0) / doctorFeedbacks.length;
-    return avg.toFixed(1);
-  };
-// ...existing code... change this
-  // Fetch doctors data based on meeting type
-  const fetchDoctors = async (selectedMeetingType) => {
+  // Fetch providers data based on provider type and meeting type
+  const fetchProviders = async (selectedProviderType, selectedMeetingType) => {
     if (!elderId) {
       setError('Elder ID is required');
       setDataLoading(false);
@@ -86,68 +46,150 @@ const ElderDoctors = () => {
       setDataLoading(true);
       setError(null);
       
-      console.log('Fetching doctors for elder ID:', elderId, 'Meeting type:', selectedMeetingType);
+      console.log('Fetching providers:', {
+        elderId,
+        providerType: selectedProviderType,
+        meetingType: selectedMeetingType
+      });
       
       let response;
-      if (selectedMeetingType === 'physical') {
-        response = await elderApi.getDoctorsByElderDistrict(elderId);
-      } else if (selectedMeetingType === 'online') {
-        response = await elderApi.getAllDoctorsForOnlineMeeting(elderId);
-      }
       
-      console.log('Doctors API response:', response);
-      
-      if (response.success) {
-        setDoctors(response.doctors || []);
-        setElderInfo(response.elderInfo);
-        setMeetingType(selectedMeetingType);
-        setShowMeetingSelection(false);
-      } else {
-        setError(response.error || 'Failed to load doctors data');
+      if (selectedProviderType === 'doctor') {
+        // Doctor appointments
+        if (selectedMeetingType === 'physical') {
+          response = await elderApi.getDoctorsByElderDistrict(elderId);
+        } else if (selectedMeetingType === 'online') {
+          response = await elderApi.getAllDoctorsForOnlineMeeting(elderId);
+        }
+        
+        console.log('Doctor API response:', response);
+        
+        if (response && response.success) {
+          setDoctors(response.doctors || []);
+          setElderInfo(response.elderInfo);
+          setProviderType(selectedProviderType);
+          setMeetingType(selectedMeetingType);
+          setShowMeetingSelection(false);
+        } else {
+          setError(response?.error || 'Failed to load doctors data');
+        }
+      } else if (selectedProviderType === 'healthcare') {
+        // Healthcare professional appointments
+        if (selectedMeetingType === 'physical') {
+          // For physical healthcare appointments, filter by district
+          response = await elderApi.getHealthProfessionalsByElderDistrict(elderId);
+        } else if (selectedMeetingType === 'online') {
+          response = await elderApi.getAllHealthProfessionalsForOnlineMeeting(elderId);
+        }
+        
+        console.log('Healthcare professional API response:', response);
+        
+        if (response && response.success) {
+          setDoctors(response.healthProfessionals || []);
+          setElderInfo(response.elderInfo);
+          setProviderType(selectedProviderType);
+          setMeetingType(selectedMeetingType);
+          setShowMeetingSelection(false);
+        } else {
+          setError(response?.error || 'Failed to load healthcare professionals data');
+        }
       }
       
     } catch (err) {
-      console.error('Error fetching doctors:', err);
-      setError(err.message || 'Failed to load doctors data');
+      console.error('Error fetching providers:', err);
+      setError(err.message || 'Failed to load providers data');
     } finally {
       setDataLoading(false);
     }
   };
 
-  // Handle meeting type selection
-  const handleMeetingTypeSelection = (selectedType) => {
-    fetchDoctors(selectedType);
+  // Handle provider type selection (Step 1)
+  const handleProviderTypeSelection = (selectedProviderType) => {
+    console.log('Provider type selected:', selectedProviderType);
+    setProviderType(selectedProviderType);
+    // Stay on meeting selection screen to choose meeting type
   };
 
-  // Handle back to meeting selection
-  const handleBackToSelection = () => {
-    setShowMeetingSelection(true);
+  // Handle meeting type selection (Step 2)
+  const handleMeetingTypeSelection = (selectedMeetingType) => {
+    console.log('Meeting type selected:', selectedMeetingType, 'for provider type:', providerType);
+    if (!providerType) {
+      console.error('No provider type selected!');
+      return;
+    }
+    fetchProviders(providerType, selectedMeetingType);
+  };
+
+  // Handle back to provider type selection
+  const handleBackToProviderSelection = () => {
+    setProviderType(null);
     setMeetingType(null);
     setDoctors([]);
     setElderInfo(null);
     setError(null);
   };
 
-  // Filter doctors based on search term
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.current_institution?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.district?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Handle back to meeting selection
+  const handleBackToSelection = () => {
+    setShowMeetingSelection(true);
+    setProviderType(null);
+    setMeetingType(null);
+    setDoctors([]);
+    setElderInfo(null);
+    setError(null);
+  };
 
-  // UPDATED: Handle book appointment - navigate to specific appointment pages
-  const handleBookAppointment = (doctorId) => {
-    if (meetingType === 'physical') {
-      navigate(`/family-member/book-appointment/${elderId}/${doctorId}/physical?meetingType=${meetingType}`);
-    } else if (meetingType === 'online') {
-      navigate(`/family-member/book-appointment/${elderId}/${doctorId}/online?meetingType=${meetingType}`);
+  // Filter providers based on search term (works for both doctors and healthcare professionals)
+  const filteredDoctors = doctors.filter(provider => {
+    if (providerType === 'healthcare') {
+      // Filter healthcare professionals
+      return (
+        provider.counselor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.specialty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.district?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    } else {
+      // Filter doctors
+      return (
+        provider.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.current_institution?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.district?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+  });
+
+  // Handle book appointment - navigate to specific appointment pages
+  const handleBookAppointment = (providerId) => {
+    if (providerType === 'doctor') {
+      // Doctor appointments - use existing doctor appointment routes
+      if (meetingType === 'physical') {
+        const url = `/family-member/book-appointment/${elderId}/${providerId}/physical?meetingType=${meetingType}`;
+        navigate(url);
+      } else if (meetingType === 'online') {
+        const url = `/family-member/book-appointment/${elderId}/${providerId}/online?meetingType=${meetingType}`;
+        navigate(url);
+      }
+    } else if (providerType === 'healthcare') {
+      // Healthcare professional appointments - now with separate pages matching doctor system
+      if (meetingType === 'physical') {
+        const url = `/family-member/physical-healthcare-appointment/${elderId}/${providerId}`;
+        navigate(url);
+      } else if (meetingType === 'online') {
+        const url = `/family-member/online-healthcare-appointment/${elderId}/${providerId}`;
+        navigate(url);
+      }
     }
   };
 
-  const handleViewDoctorProfile = (doctorId) => {
-    // Navigate to doctor profile page
-    navigate(`/family-member/doctor/${doctorId}`);
+  const handleViewProviderProfile = (providerId) => {
+    if (meetingType === 'healthcare') {
+      // Navigate to healthcare professional profile page (to be created)
+      navigate(`/family-member/healthcare-professional/${providerId}`);
+    } else {
+      // Navigate to doctor profile page
+      navigate(`/family-member/doctor/${providerId}`);
+    }
   };
 
   // Show loading while checking authentication
@@ -156,6 +198,7 @@ const ElderDoctors = () => {
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner}></div>
         <h2>Loading...</h2>
+        <p>Checking authentication...</p>
       </div>
     );
   }
@@ -171,60 +214,62 @@ const ElderDoctors = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div>
       <Navbar />
       <FamilyMemberLayout>
-        <div className={styles.content}>
-          {/* Meeting Type Selection */}
-          {showMeetingSelection && (
-            <div className={styles.meetingSelection}>
+        <div className={styles.elderDoctorsContainer}>
+          {/* Show provider type selection (Step 1) */}
+          {showMeetingSelection && !providerType && (
+            <div className={styles.meetingSelectionContainer}>
               <div className={styles.selectionHeader}>
-                <h1 className={styles.title}>Choose Meeting Type</h1>
-                <p className={styles.subtitle}>
-                  How would you like to meet with the doctor?
+                <h1 className={styles.pageTitle}>
+                  Choose Provider Type
+                </h1>
+                <p className={styles.selectionSubtitle}>
+                  First, select the type of healthcare provider you want to consult
                 </p>
               </div>
-              
-              <div className={styles.meetingOptions}>
+
+              <div className={styles.meetingOptionsGrid}>
                 <div 
                   className={styles.meetingOption}
-                  onClick={() => handleMeetingTypeSelection('physical')}
+                  onClick={() => handleProviderTypeSelection('doctor')}
                 >
-                  <div className={styles.optionIcon}>🏥</div>
-                  <h3 className={styles.optionTitle}>Physical Meeting</h3>
+                  <div className={styles.optionIcon}>👨‍⚕️</div>
+                  <h3 className={styles.optionTitle}>Medical Doctor</h3>
                   <p className={styles.optionDescription}>
-                    Meet the doctor in person at their clinic or hospital. 
-                    Shows doctors in your district only.
+                    Consult with qualified medical doctors for diagnosis, treatment, 
+                    and medical care of physical health conditions.
                   </p>
                   <div className={styles.optionFeatures}>
-                    <span className={styles.feature}>✓ In-person consultation</span>
+                    <span className={styles.feature}>✓ Medical diagnosis</span>
+                    <span className={styles.feature}>✓ Prescription medication</span>
                     <span className={styles.feature}>✓ Physical examination</span>
-                    <span className={styles.feature}>✓ Local doctors only</span>
-                    <span className={styles.feature}>✓ 2 hours duration</span>
+                    <span className={styles.feature}>✓ Treatment plans</span>
                   </div>
                   <button className={styles.selectButton}>
-                    Select Physical Meeting
+                    Select Medical Doctor
                   </button>
                 </div>
 
                 <div 
                   className={styles.meetingOption}
-                  onClick={() => handleMeetingTypeSelection('online')}
+                  onClick={() => handleProviderTypeSelection('healthcare')}
                 >
-                  <div className={styles.optionIcon}>💻</div>
-                  <h3 className={styles.optionTitle}>Online Meeting</h3>
+                  <div className={styles.optionIcon}>🧠</div>
+                  <h3 className={styles.optionTitle}>Healthcare Professional</h3>
                   <p className={styles.optionDescription}>
-                    Video consultation with doctors from anywhere. 
-                    Access to all available doctors.
+                    Consult with healthcare professionals like counselors, therapists, 
+                    and mental health specialists for emotional and psychological support.
                   </p>
                   <div className={styles.optionFeatures}>
-                    <span className={styles.feature}>✓ Video consultation</span>
-                    <span className={styles.feature}>✓ All doctors available</span>
-                    <span className={styles.feature}>✓ Convenient from home</span>
-                    <span className={styles.feature}>✓ 1 hour duration</span>
+                    <span className={styles.feature}>✓ Mental health support</span>
+                    <span className={styles.feature}>✓ Counseling services</span>
+                    <span className={styles.feature}>✓ Therapy sessions</span>
+                    <span className={styles.feature}>✓ Emotional guidance</span>
                   </div>
                   <button className={styles.selectButton}>
-                    Select Online Meeting
+                    Select Healthcare Professional
                   </button>
                 </div>
               </div>
@@ -240,237 +285,298 @@ const ElderDoctors = () => {
             </div>
           )}
 
-          {/* Doctors List (shown after meeting type selection) */}
+          {/* Show meeting type selection (Step 2) */}
+          {showMeetingSelection && providerType && (
+            <div className={styles.meetingSelectionContainer}>
+              <div className={styles.selectionHeader}>
+                <button 
+                  className={styles.backToProviderButton}
+                  onClick={handleBackToProviderSelection}
+                >
+                  ← Back to Provider Type
+                </button>
+                
+                <h1 className={styles.pageTitle}>
+                  Choose Meeting Type
+                  {providerType === 'doctor' ? ' with Doctor' : ' with Healthcare Professional'}
+                </h1>
+                <p className={styles.selectionSubtitle}>
+                  Select how you want to meet with your chosen {providerType === 'doctor' ? 'doctor' : 'healthcare professional'}
+                </p>
+              </div>
+
+              <div className={styles.meetingOptionsGrid}>
+                <div 
+                  className={styles.meetingOption}
+                  onClick={() => handleMeetingTypeSelection('physical')}
+                >
+                  <div className={styles.optionIcon}>🏥</div>
+                  <h3 className={styles.optionTitle}>Physical Meeting</h3>
+                  <p className={styles.optionDescription}>
+                    {providerType === 'doctor' 
+                      ? 'Meet the doctor in person at their clinic or hospital. Shows doctors in your district only.'
+                      : 'Meet the healthcare professional in person at their clinic or office. Shows professionals in your district only.'
+                    }
+                  </p>
+                  <div className={styles.optionFeatures}>
+                    <span className={styles.feature}>✓ In-person consultation</span>
+                    <span className={styles.feature}>✓ {providerType === 'doctor' ? 'Physical examination' : 'Face-to-face therapy'}</span>
+                    <span className={styles.feature}>✓ Local {providerType === 'doctor' ? 'doctors' : 'professionals'} only</span>
+                    <span className={styles.feature}>✓ 2 hours duration</span>
+                  </div>
+                  <button className={styles.selectButton}>
+                    Select Physical Meeting
+                  </button>
+                </div>
+
+                <div 
+                  className={styles.meetingOption}
+                  onClick={() => handleMeetingTypeSelection('online')}
+                >
+                  <div className={styles.optionIcon}>💻</div>
+                  <h3 className={styles.optionTitle}>Online Meeting</h3>
+                  <p className={styles.optionDescription}>
+                    {providerType === 'doctor'
+                      ? 'Video consultation with doctors from anywhere. Access to all available doctors.'
+                      : 'Video consultation with healthcare professionals from anywhere. Access to all available professionals.'
+                    }
+                  </p>
+                  <div className={styles.optionFeatures}>
+                    <span className={styles.feature}>✓ Video consultation</span>
+                    <span className={styles.feature}>✓ All {providerType === 'doctor' ? 'doctors' : 'professionals'} available</span>
+                    <span className={styles.feature}>✓ Convenient from home</span>
+                    <span className={styles.feature}>✓ 1 hour duration</span>
+                  </div>
+                  <button className={styles.selectButton}>
+                    Select Online Meeting
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Show providers list after selection */}
           {!showMeetingSelection && (
-            <>
-              {/* Header Section */}
-              <div className={styles.header}>
-                <div className={styles.headerContent}>
-                  <h1 className={styles.title}>
-                    Available Doctors - {meetingType === 'physical' ? 'Physical Meeting' : 'Online Meeting'}
-                  </h1>
-                  {elderInfo && (
-                    <div className={styles.elderInfo}>
-                      <p className={styles.subtitle}>
-                        Doctors available for <strong>{elderInfo.name}</strong>
-                        {meetingType === 'physical' && elderInfo.district && (
-                          <> in <strong>{elderInfo.district}</strong> district</>
-                        )}
-                        {meetingType === 'online' && (
-                          <> - <strong>All Districts</strong> (Online Meeting)</>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className={styles.headerButtons}>
-                  <button 
-                    className={styles.changeTypeButton}
-                    onClick={handleBackToSelection}
-                  >
-                    🔄 Change Meeting Type
-                  </button>
-                  <button 
-                    className={styles.backButton}
-                    onClick={() => navigate('/family-member/elders')}
-                  >
-                    ← Back to Elders
-                  </button>
-                </div>
+            <div className={styles.providersListContainer}>
+              <div className={styles.providersHeader}>
+                <button 
+                  className={styles.backToSelectionButton}
+                  onClick={handleBackToSelection}
+                >
+                  ← Back to Selection
+                </button>
+                
+                <h1 className={styles.pageTitle}>
+                  {providerType === 'doctor'
+                    ? (meetingType === 'physical' ? 'Physical Meeting Doctors' : 'Online Meeting Doctors')
+                    : (meetingType === 'physical' ? 'Physical Meeting Healthcare Professionals' : 'Online Meeting Healthcare Professionals')
+                  }
+                </h1>
+                
+                {elderInfo && (
+                  <div className={styles.elderInfo}>
+                    <h2 className={styles.elderName}>For: {elderInfo.name}</h2>
+                    <p className={styles.elderDistrict}>📍 {elderInfo.district}</p>
+                  </div>
+                )}
               </div>
 
-              {/* Search Section */}
+              {/* Search Bar */}
               <div className={styles.searchSection}>
-                <div className={styles.searchContainer}>
-                  <input
-                    type="text"
-                    placeholder="Search doctors by name, specialization, or institution..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={styles.searchInput}
-                  />
-                  <div className={styles.searchIcon}>🔍</div>
-                </div>
-                               <div className={styles.doctorCount}>
-                  {dataLoading ? 'Loading...' : `${filteredDoctors.length} doctor${filteredDoctors.length !== 1 ? 's' : ''} found`}
-                </div>
+                <input
+                  type="text"
+                  placeholder={`Search ${providerType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={styles.searchInput}
+                />
               </div>
 
-              {/* Error Message */}
+              {/* Loading State */}
+              {dataLoading && (
+                <div className={styles.loadingSection}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading {providerType === 'healthcare' ? 'healthcare professionals' : 'doctors'}...</p>
+                </div>
+              )}
+
+              {/* Error State */}
               {error && (
-                <div className={styles.errorMessage}>
-                  <p>⚠️ {error}</p>
+                <div className={styles.errorSection}>
+                  <div className={styles.errorIcon}>⚠️</div>
+                  <h2>Error Loading Data</h2>
+                  <p>{error}</p>
                   <button 
                     className={styles.retryButton}
-                    onClick={() => fetchDoctors(meetingType)}
+                    onClick={() => fetchProviders(meetingType)}
                   >
-                    Retry
+                    Try Again
                   </button>
                 </div>
               )}
 
-              {/* Content Section */}
-              {dataLoading ? (
-                <div className={styles.loadingContent}>
-                  <div className={styles.loadingSpinner}></div>
-                  <p>Loading available doctors...</p>
-                </div>
-              ) : filteredDoctors.length === 0 ? (
-                <div className={styles.emptyState}>
-                  {searchTerm ? (
-                    <>
-                      <div className={styles.emptyIcon}>🔍</div>
-                      <h2>No doctors found</h2>
-                      <p>No doctors match your search criteria "{searchTerm}"</p>
-                      <button 
-                        className={styles.clearSearchButton}
-                        onClick={() => setSearchTerm('')}
-                      >
-                        Clear Search
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className={styles.emptyIcon}>👨‍⚕️</div>
-                      <h2>No Doctors Available</h2>
-                      <p>
-                        {meetingType === 'physical' && elderInfo 
-                          ? `No approved doctors found in ${elderInfo.district} district.`
-                          : 'No doctors available at the moment.'
-                        }
-                      </p>
-                      <p>Please try again later or contact support.</p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className={styles.doctorsGrid}>
-                  {filteredDoctors.map((doctor) => (
-                    <div key={doctor.doctor_id} className={styles.doctorCard}>
-                      {/* Meeting Type Badge */}
-                      <div className={styles.meetingTypeBadge}>
-                        {meetingType === 'physical' ? '🏥 Physical' : '💻 Online'}
-                      </div>
+              {/* Providers Grid */}
+              {!dataLoading && !error && (
+                filteredDoctors.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>
+                      {meetingType === 'healthcare' ? '🧠' : '👨‍⚕️'}
+                    </div>
+                    <h2>No {meetingType === 'healthcare' ? 'Healthcare Professionals' : 'Doctors'} Available</h2>
+                    <p>
+                      {meetingType === 'physical' && elderInfo 
+                        ? `No approved doctors found in ${elderInfo.district} district.`
+                        : meetingType === 'healthcare'
+                        ? 'No healthcare professionals available at the moment.'
+                        : 'No doctors available at the moment.'
+                      }
+                    </p>
+                    <p>Please try again later or contact support.</p>
+                  </div>
+                ) : (
+                  <div className={styles.doctorsGrid}>
+                    {filteredDoctors.map((provider) => {
+                      // Determine provider type and extract relevant data
+                      const isHealthcareProfessional = providerType === 'healthcare';
+                      const providerId = isHealthcareProfessional ? provider.counselor_id : provider.doctor_id;
+                      const providerName = isHealthcareProfessional ? provider.counselor_name : `Dr. ${provider.doctor_name}`;
+                      const providerSpecialty = isHealthcareProfessional ? provider.specialty : provider.specialization;
+                      const providerInstitution = isHealthcareProfessional 
+                        ? (meetingType === 'physical' ? 'In-Person Consultation' : 'Online Consultation')
+                        : provider.current_institution;
+                      const providerDistrict = provider.district;
+                      const providerExperience = provider.years_experience;
+                      
+                      return (
+                        <div key={providerId} className={styles.doctorCard}>
+                          {/* Meeting Type Badge */}
+                          <div className={styles.meetingTypeBadge}>
+                            {meetingType === 'physical' 
+                              ? (providerType === 'healthcare' ? '🏥 Physical Healthcare' : '🏥 Physical Doctor')
+                              : (providerType === 'healthcare' ? '💻 Online Healthcare' : '💻 Online Doctor')
+                            }
+                          </div>
 
-                      {/* Doctor Header */}
-                      <div className={styles.doctorHeader}>
-                        <div className={styles.doctorAvatar}>
-                          <div className={styles.doctorInitial}>
-                            {doctor.doctor_name?.charAt(0).toUpperCase() || 'D'}
-                          </div>
-                        </div>
-                        <div className={styles.doctorBasicInfo}>
-                          <h3 className={styles.doctorName}>Dr. {doctor.doctor_name}</h3>
-                          <p className={styles.doctorSpecialization}>{doctor.specialization}</p>
-                        </div>
-                      </div>
-
-                      {/* Doctor Details */}
-                      <div className={styles.doctorDetails}>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>🏥</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Institution</span>
-                            <span className={styles.detailValue}>{doctor.current_institution}</span>
-                          </div>
-                        </div>
-                        
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>📍</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>District</span>
-                            <span className={styles.detailValue}>{doctor.district}</span>
-                          </div>
-                        </div>
-                        
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>📞</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Phone</span>
-                            <span className={styles.detailValue}>{doctor.doctor_phone}</span>
-                          </div>
-                        </div>
-
-                        {doctor.alternative_number && (
-                          <div className={styles.detailRow}>
-                            <span className={styles.detailIcon}>📱</span>
-                            <div className={styles.detailContent}>
-                              <span className={styles.detailLabel}>Alternative</span>
-                              <span className={styles.detailValue}>{doctor.alternative_number}</span>
+                          {/* Provider Header */}
+                          <div className={styles.doctorHeader}>
+                            <div className={styles.doctorAvatar}>
+                              <div className={styles.doctorInitial}>
+                                {providerName?.charAt(0).toUpperCase() || (isHealthcareProfessional ? 'H' : 'D')}
+                              </div>
+                            </div>
+                            <div className={styles.doctorBasicInfo}>
+                              <h3 className={styles.doctorName}>{providerName}</h3>
+                              <p className={styles.doctorSpecialization}>{providerSpecialty}</p>
                             </div>
                           </div>
-                        )}
-                        
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>📧</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Email</span>
-                            <span className={styles.detailValue}>{doctor.doctor_email}</span>
+
+                          {/* Provider Details */}
+                          <div className={styles.doctorDetails}>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailIcon}>
+                                {isHealthcareProfessional ? '💻' : '🏥'}
+                              </span>
+                              <div className={styles.detailContent}>
+                                <span className={styles.detailLabel}>
+                                  {isHealthcareProfessional ? 'Service Type' : 'Institution'}
+                                </span>
+                                <span className={styles.detailValue}>{providerInstitution}</span>
+                              </div>
+                            </div>
+                            
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailIcon}>📍</span>
+                              <div className={styles.detailContent}>
+                                <span className={styles.detailLabel}>District</span>
+                                <span className={styles.detailValue}>{providerDistrict}</span>
+                              </div>
+                            </div>
+                            
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailIcon}>🎓</span>
+                              <div className={styles.detailContent}>
+                                <span className={styles.detailLabel}>Experience</span>
+                                <span className={styles.detailValue}>
+                                  {providerExperience} years
+                                </span>
+                              </div>
+                            </div>
+
+                            {!isHealthcareProfessional && provider.doctor_phone && (
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailIcon}>📞</span>
+                                <div className={styles.detailContent}>
+                                  <span className={styles.detailLabel}>Phone</span>
+                                  <span className={styles.detailValue}>{provider.doctor_phone}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {!isHealthcareProfessional && provider.alternative_number && (
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailIcon}>📱</span>
+                                <div className={styles.detailContent}>
+                                  <span className={styles.detailLabel}>Alternative</span>
+                                  <span className={styles.detailValue}>{provider.alternative_number}</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Show email for healthcare professionals, doctors have doctor_email */}
+                            {(isHealthcareProfessional ? provider.email : provider.doctor_email) && (
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailIcon}>📧</span>
+                                <div className={styles.detailContent}>
+                                  <span className={styles.detailLabel}>Email</span>
+                                  <span className={styles.detailValue}>
+                                    {isHealthcareProfessional ? provider.email : provider.doctor_email}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Show license only for doctors */}
+                            {!isHealthcareProfessional && provider.license_number && (
+                              <div className={styles.detailRow}>
+                                <span className={styles.detailIcon}>🆔</span>
+                                <div className={styles.detailContent}>
+                                  <span className={styles.detailLabel}>License</span>
+                                  <span className={styles.detailValue}>{provider.license_number}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Provider Actions */}
+                          <div className={styles.doctorActions}>
+                            <button 
+                              className={styles.primaryButton}
+                              onClick={() => handleBookAppointment(providerId)}
+                            >
+                              <span className={styles.buttonIcon}>📅</span>
+                              Book {meetingType === 'physical' ? 'Physical' : 
+                                    meetingType === 'online' ? 'Online' : 
+                                    'Healthcare'} {isHealthcareProfessional ? 'Session' : 'Appointment'}
+                            </button>
+                            <button 
+                              className={styles.secondaryButton}
+                              onClick={() => handleViewProviderProfile(providerId)}
+                            >
+                              <span className={styles.buttonIcon}>👁️</span>
+                              View Profile
+                            </button>
+                          </div>
+
+                          {/* Status Indicator */}
+                          <div className={styles.statusIndicator}>
+                            <div className={styles.statusDot}></div>
+                            <span className={styles.statusText}>Available</span>
                           </div>
                         </div>
-                        
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>🎓</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Experience</span>
-                            <span className={styles.detailValue}>{doctor.years_experience} years</span>
-                          </div>
-                        </div>
-
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>🆔</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>License</span>
-                            <span className={styles.detailValue}>{doctor.license_number}</span>
-                          </div>
-                        </div>
-
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>🆔</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Rating</span>
-                            <span className={styles.detailValue}>{getDoctorAverageRating(doctor.doctor_id)}</span>
-                          </div>
-                        </div>
-
-                        {/* Duration Info */}
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailIcon}>⏱️</span>
-                          <div className={styles.detailContent}>
-                            <span className={styles.detailLabel}>Duration</span>
-                            <span className={styles.detailValue}>
-                              {meetingType === 'physical' ? '2 hours' : '1 hour'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Doctor Actions */}
-                      <div className={styles.doctorActions}>
-                        <button 
-                          className={styles.primaryButton}
-                          onClick={() => handleBookAppointment(doctor.doctor_id)}
-                        >
-                          <span className={styles.buttonIcon}>📅</span>
-                          Book {meetingType === 'physical' ? 'Physical' : 'Online'} Appointment
-                        </button>
-                        <button 
-                          className={styles.secondaryButton}
-                          onClick={() => handleViewDoctorProfile(doctor.doctor_id)}
-                        >
-                          <span className={styles.buttonIcon}>👁️</span>
-                          View Profile
-                        </button>
-                      </div>
-
-                      {/* Status Indicator */}
-                      <div className={styles.statusIndicator}>
-                        <div className={styles.statusDot}></div>
-                        <span className={styles.statusText}>Available</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      );
+                    })}
+                  </div>
+                )
               )}
 
               {/* Navigation Section */}
@@ -494,7 +600,7 @@ const ElderDoctors = () => {
                   🏠 Back to Dashboard
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </FamilyMemberLayout>
@@ -503,4 +609,3 @@ const ElderDoctors = () => {
 };
 
 export default ElderDoctors;
-
