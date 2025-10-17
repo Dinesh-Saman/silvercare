@@ -3,10 +3,12 @@ import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/navbar';
 import ElderLayout from '../../components/ElderLayout';
 import styles from '../../components/css/elder/caregivers.module.css';
-import { getElderDetailsByEmail } from '../../services/elderApi2';
 import { 
-  getUpcomingCareAssignments,
-  getCareAssignmentsByMonth
+  getElderDetailsByEmail,
+  getCareAssignmentsByWeek 
+} from '../../services/elderApi2';
+import { 
+  getUpcomingCareAssignments
 } from '../../services/caregiverApi';
 
 const Caregivers = () => {
@@ -21,7 +23,7 @@ const Caregivers = () => {
 
   // Monthly calendar state
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [monthlyAssignments, setMonthlyAssignments] = useState({});
+  const [monthlyAssignments, setMonthlyAssignments] = useState([]);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
 
   // Modal state for day details
@@ -41,13 +43,23 @@ const Caregivers = () => {
 
       try {
         setLoading(true);
+        console.log('====== CAREGIVERS PAGE LOADING ======');
+        console.log('Fetching elder details for email:', currentUser.email);
+        
         const response = await getElderDetailsByEmail(currentUser.email);
+        console.log('Elder details received:', response.data);
+        console.log('Elder ID:', response.data.elder_id);
+        console.log('Elder Name:', response.data.name);
+        
         setElderDetails(response.data);
 
         // Fetch upcoming assignments
         if (response.data?.elder_id) {
+          console.log('Fetching care assignments for elder_id:', response.data.elder_id);
           await fetchUpcomingAssignments(response.data.elder_id);
           await fetchMonthlyAssignments(response.data.elder_id, currentMonth);
+        } else {
+          console.error('No elder_id found!');
         }
 
         setLoading(false);
@@ -75,22 +87,60 @@ const Caregivers = () => {
     }
   };
 
-  // Fetch monthly assignments
+  // Fetch monthly assignments (using week endpoint)
   const fetchMonthlyAssignments = async (elderId, month) => {
     try {
       setMonthlyLoading(true);
-      const response = await getCareAssignmentsByMonth(elderId, month);
-      console.log('Monthly assignments:', response.data);
+      console.log('=== Fetching Monthly Assignments (via weeks) ===');
+      console.log('Elder ID:', elderId);
+      console.log('Month:', month);
       
-      // Convert array to object keyed by date
-      const assignmentsByDate = {};
-      if (response.data.dailyAssignments) {
-        response.data.dailyAssignments.forEach(day => {
-          assignmentsByDate[day.date] = day.assignments;
-        });
+      // Get first day of the month
+      const year = month.getFullYear();
+      const monthNum = month.getMonth();
+      const firstDay = new Date(year, monthNum, 1);
+      const lastDay = new Date(year, monthNum + 1, 0);
+      
+      // Find the Sunday before or on the first day
+      const startOfFirstWeek = new Date(firstDay);
+      startOfFirstWeek.setDate(firstDay.getDate() - firstDay.getDay());
+      
+      const allDailyAssignments = [];
+      const weeksToFetch = [];
+      
+      // Calculate all week starts we need to fetch
+      let currentWeekStart = new Date(startOfFirstWeek);
+      while (currentWeekStart <= lastDay) {
+        weeksToFetch.push(new Date(currentWeekStart));
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
       }
       
-      setMonthlyAssignments(assignmentsByDate);
+      console.log(`Fetching ${weeksToFetch.length} weeks of data...`);
+      
+      // Fetch all weeks
+      const weekPromises = weeksToFetch.map(weekStart =>
+        getCareAssignmentsByWeek(elderId, weekStart.toISOString().split('T')[0])
+      );
+      
+      const weekResponses = await Promise.all(weekPromises);
+      
+      // Combine all daily assignments and filter to only this month
+      weekResponses.forEach(response => {
+        if (response.data.success && response.data.dailyAssignments) {
+          response.data.dailyAssignments.forEach(day => {
+            const dayDate = new Date(day.date);
+            // Only include days that are in the target month
+            if (dayDate.getMonth() === monthNum && dayDate.getFullYear() === year) {
+              allDailyAssignments.push(day);
+            }
+          });
+        }
+      });
+      
+      console.log('Total daily assignments for month:', allDailyAssignments.length);
+      console.log('Days with assignments:', allDailyAssignments.filter(d => d.assignments.length > 0).length);
+      
+      setMonthlyAssignments(allDailyAssignments);
       setMonthlyLoading(false);
     } catch (err) {
       console.error('Error fetching monthly assignments:', err);
@@ -165,6 +215,11 @@ const Caregivers = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     
+    console.log('=== Generating Calendar Days ===');
+    console.log('Current Month:', currentMonth);
+    console.log('Year:', year, 'Month:', month);
+    console.log('Monthly Assignments Array:', monthlyAssignments);
+    
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startingDayOfWeek = firstDay.getDay();
@@ -180,7 +235,14 @@ const Caregivers = () => {
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const assignments = monthlyAssignments[dateStr] || [];
+      
+      // Find assignments for this date from the array
+      const dayData = monthlyAssignments.find(d => d.date === dateStr);
+      const assignments = dayData ? dayData.assignments : [];
+      
+      if (day <= 5) { // Log first 5 days for debugging
+        console.log(`Day ${day} (${dateStr}):`, assignments.length, 'assignments', assignments);
+      }
       
       days.push({
         date: dateStr,
@@ -190,6 +252,7 @@ const Caregivers = () => {
       });
     }
 
+    console.log('Total days generated:', days.length);
     return days;
   };
 
@@ -379,39 +442,45 @@ const Caregivers = () => {
 
                   {/* Calendar grid */}
                   <div className={styles.calendarGrid}>
-                    {generateCalendarDays().map((dayInfo, index) => (
-                      dayInfo.isEmpty ? (
-                        <div key={`empty-${index}`} className={styles.emptyDay}></div>
-                      ) : (
-                        <div 
-                          key={dayInfo.date}
-                          className={`${styles.calendarDay} ${
-                            dayInfo.isToday ? styles.todayDay : ''
-                          } ${
-                            dayInfo.assignments.length > 0 ? styles.hasAssignment : ''
-                          }`}
-                          onClick={() => handleDayClick(dayInfo.date, dayInfo.assignments)}
-                        >
-                          <div className={styles.dayNumber}>{dayInfo.day}</div>
-                          
-                          {dayInfo.isToday && (
-                            <div className={styles.todayBadge}>Today</div>
-                          )}
-                          
-                          {dayInfo.assignments.length > 0 && (
-                            <div className={styles.assignmentsPreview}>
-                              {dayInfo.assignments.map((assignment, idx) => (
-                                <div key={idx} className={styles.assignmentPreviewItem}>
-                                  <div className={styles.caregiverNamePreview}>
-                                    {assignment.caregiver_name}
+                    {generateCalendarDays().length === 0 ? (
+                      <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '40px'}}>
+                        <p>No calendar days generated</p>
+                      </div>
+                    ) : (
+                      generateCalendarDays().map((dayInfo, index) => (
+                        dayInfo.isEmpty ? (
+                          <div key={`empty-${index}`} className={styles.emptyDay}></div>
+                        ) : (
+                          <div 
+                            key={dayInfo.date}
+                            className={`${styles.calendarDay} ${
+                              dayInfo.isToday ? styles.todayDay : ''
+                            } ${
+                              dayInfo.assignments.length > 0 ? styles.hasAssignment : ''
+                            }`}
+                            onClick={() => handleDayClick(dayInfo.date, dayInfo.assignments)}
+                          >
+                            <div className={styles.dayNumber}>{dayInfo.day}</div>
+                            
+                            {dayInfo.isToday && (
+                              <div className={styles.todayBadge}>Today</div>
+                            )}
+                            
+                            {dayInfo.assignments.length > 0 && (
+                              <div className={styles.assignmentsPreview}>
+                                {dayInfo.assignments.map((assignment, idx) => (
+                                  <div key={idx} className={styles.assignmentPreviewItem}>
+                                    <div className={styles.caregiverNamePreview}>
+                                      {assignment.caregiver_name}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    ))}
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      ))
+                    )}
                   </div>
                 </>
               )}

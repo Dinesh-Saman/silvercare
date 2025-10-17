@@ -367,14 +367,28 @@ const getCareAssignmentsByMonth = async (req, res) => {
     // Calculate number of days in the month
     const daysInMonth = new Date(monthEnd.getFullYear(), monthEnd.getMonth() + 1, 0).getDate();
     
+    console.log('Total assignments found:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('Sample assignment:', result.rows[0]);
+    }
+    
     for (let i = 1; i <= daysInMonth; i++) {
       const currentDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), i);
+      currentDate.setHours(0, 0, 0, 0);
       
       const dayAssignments = result.rows.filter(assignment => {
         const assignmentStart = new Date(assignment.start_date);
+        assignmentStart.setHours(0, 0, 0, 0);
         const assignmentEnd = new Date(assignment.end_date);
+        assignmentEnd.setHours(23, 59, 59, 999);
         
-        return currentDate >= assignmentStart && currentDate <= assignmentEnd;
+        const isInRange = currentDate >= assignmentStart && currentDate <= assignmentEnd;
+        
+        if (i <= 5 && isInRange) { // Log first 5 days with assignments
+          console.log(`Day ${i}: currentDate=${currentDate.toISOString()}, start=${assignmentStart.toISOString()}, end=${assignmentEnd.toISOString()}, caregiver=${assignment.caregiver_name}`);
+        }
+        
+        return isInRange;
       });
       
       const currentDateString = currentDate.getFullYear() + '-' + 
