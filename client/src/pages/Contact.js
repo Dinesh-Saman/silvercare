@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/navbar';
 import styles from '../components/css/Contact.module.css';
 
 const Contact = () => {
+  const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -51,6 +56,38 @@ const Contact = () => {
     }
   };
 
+  // Function to navigate to appropriate dashboard based on user role
+  const navigateToDashboard = () => {
+    if (!isAuthenticated || !currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    const role = currentUser.role?.toLowerCase();
+    switch (role) {
+      case 'family_member':
+        navigate('/family-member/dashboard');
+        break;
+      case 'elder':
+        navigate('/elder/dashboard');
+        break;
+      case 'doctor':
+        navigate('/doctor/dashboard');
+        break;
+      case 'caregiver':
+        navigate('/caregiver/dashboard');
+        break;
+      case 'healthprofessional':
+        navigate('/healthprofessional/dashboard');
+        break;
+      case 'admin':
+        navigate('/admin/dashboard');
+        break;
+      default:
+        navigate('/');
+    }
+  };
+
   return (
     <div className={styles.container}>
       <Navbar />
@@ -63,6 +100,16 @@ const Contact = () => {
             <p className={styles.heroSubtitle}>
               We're here to help. Reach out to us with any questions, concerns, or feedback.
             </p>
+            {isAuthenticated && (
+              <div className={styles.heroActions}>
+                <button 
+                  className={styles.dashboardButton}
+                  onClick={navigateToDashboard}
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
