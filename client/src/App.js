@@ -8,6 +8,7 @@ import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
 import ElderSignup from "./pages/familemember/elder-signup";
 import FamilyMemberDashboard from "./pages/familemember/dashboard";
 import FamilyMemberElders from "./pages/familemember/elders";
+import FamilyMemberReports from "./pages/familemember/reports";
 import ElderDetails from "./pages/familemember/elder-details";
 import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
@@ -269,6 +270,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["family_member"]}>
                 <FamilyMemberElders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/family-member/reports"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <FamilyMemberReports />
               </ProtectedRoute>
             }
           />

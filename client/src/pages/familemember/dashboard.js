@@ -334,8 +334,8 @@ const FamilyMemberDashboard = () => {
                 <div className={styles.quickActionCard} onClick={handleViewReports}>
                   <div className={styles.quickActionIcon}>📊</div>
                   <div className={styles.quickActionContent}>
-                    <h3 className={styles.quickActionTitle}>Health Reports</h3>
-                    <p className={styles.quickActionDescription}>View health reports and care summaries</p>
+                    <h3 className={styles.quickActionTitle}> Reports</h3>
+                    <p className={styles.quickActionDescription}>View elders appointment statics</p>
                   </div>
                 </div>
               </div>
