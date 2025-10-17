@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UserPage from "./pages/UserPage";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import { FamilyMemberReg } from "./pages/familemember/signup";
 import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
 import ElderSignup from "./pages/familemember/elder-signup";
@@ -101,6 +103,8 @@ function App() {
         <Routes>
           {/* Public Routes - No authentication required */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
