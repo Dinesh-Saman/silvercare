@@ -348,3 +348,49 @@ export const caregiverApi = {
 };
 
 export default caregiverApi;
+
+// Elder-specific care assignment functions
+const ELDER_API_BASE = 'http://localhost:5000/api/elders';
+
+// Get upcoming care assignments for an elder
+export const getUpcomingCareAssignments = (elderId) => {
+  return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/upcoming`);
+};
+
+// Get care assignments by week
+export const getCareAssignmentsByWeek = (elderId, startDate = null) => {
+  const params = startDate ? { startDate } : {};
+  return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/week`, { params });
+};
+
+// Get care assignments for a specific day
+export const getDayCareAssignments = (elderId, date) => {
+  return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/day`, {
+    params: { date }
+  });
+};
+
+// Get care assignments by month
+export const getCareAssignmentsByMonth = (elderId, month) => {
+  // Convert month date to start date of the month
+  const monthDate = new Date(month);
+  const year = monthDate.getFullYear();
+  const monthNum = monthDate.getMonth();
+  
+  // First day of the month
+  const startDate = new Date(year, monthNum, 1);
+  // Last day of the month
+  const endDate = new Date(year, monthNum + 1, 0);
+  
+  return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/month`, {
+    params: {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    }
+  });
+};
+
+// Get care assignment statistics
+export const getCareAssignmentStats = (elderId) => {
+  return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/stats`);
+};

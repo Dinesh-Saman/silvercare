@@ -53,7 +53,9 @@ const {
 const {
   getCareAssignmentsByWeek,
   getDayCareAssignments,
-  getCareAssignmentStats
+  getCareAssignmentStats,
+  getUpcomingCareAssignments,
+  getCareAssignmentsByMonth
 } = require('../controllers/carerequest');
 
 const {
@@ -137,6 +139,8 @@ router.get('/:elderId/sessions/:sessionId', getSessionById);
 router.post('/:elderId/sessions/:sessionId/join', joinSession);
 
 // Care assignment routes for elders - MUST BE BEFORE /:elderId route
+router.get('/:elderId/care-assignments/upcoming', getUpcomingCareAssignments);
+router.get('/:elderId/care-assignments/month', getCareAssignmentsByMonth);
 router.get('/:elderId/care-assignments/week', getCareAssignmentsByWeek);
 router.get('/:elderId/care-assignments/day', getDayCareAssignments);
 router.get('/:elderId/care-assignments/stats', getCareAssignmentStats);
