@@ -57,6 +57,7 @@ import ElderEvents from "./pages/elder/events";
 
 import DoctorDashboard from './pages/doctor/dashboard';
 import DoctorProfile from './pages/doctor/profile';
+import DoctorReports from './pages/doctor/reports';
 import VirtualMeetingRoom from './pages/VirtualMeetingRoom';
 import JitsiMeetingRoom from './pages/JitsiMeetingRoom';
 import MeetingGenerator from './pages/MeetingGenerator';
@@ -354,6 +355,17 @@ function App() {
           <Route path="/doctor/elder-chat" element={
             <ProtectedRoute allowedRoles={['doctor']}>
               <ElderChat />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/doctor/reports" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorReports />
+            </ProtectedRoute>
+          } />
+                    <Route path="/doctor/reports" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorReports />
             </ProtectedRoute>
           } />
           

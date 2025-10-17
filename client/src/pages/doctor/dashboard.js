@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/navbar';
 import DoctorSidebar from '../../components/doctor_sidebar';
@@ -13,6 +14,7 @@ const API_BASE = "http://localhost:5000"; // Change if your backend runs elsewhe
 
 const DoctorDashboard = () => {
   const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const token = localStorage.getItem('silvercare_token');
   const [dashboardData, setDashboardData] = useState({
     todaysAppointments: [],
@@ -561,11 +563,11 @@ const DoctorDashboard = () => {
               </div>
             </div>
             
-            <div className={styles.quickActionCard}>
+            <div className={styles.quickActionCard} onClick={() => navigate('/doctor/reports')} style={{ cursor: 'pointer' }}>
               <div className={styles.quickActionIcon}>📊</div>
               <div className={styles.quickActionContent}>
                 <h3 className={styles.quickActionTitle}>View Reports</h3>
-                <p className={styles.quickActionDescription}>Check patient reports and analytics</p>
+                <p className={styles.quickActionDescription}>Physical and Online appointment statistics</p>
               </div>
             </div>
             
