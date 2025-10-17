@@ -32,21 +32,6 @@ const AdminNavbar = () => {
       icon: '👥'
     },
     {
-      path: '/admin/appointments',
-      label: 'Appointments',
-      icon: '📅'
-    },
-    {
-      path: '/admin/doctors',
-      label: 'Doctors',
-      icon: '👨‍⚕️'
-    },
-    {
-      path: '/admin/reports',
-      label: 'Reports',
-      icon: '📈'
-    },
-    {
       path: '/admin/settings',
       label: 'Settings',
       icon: '⚙️'
