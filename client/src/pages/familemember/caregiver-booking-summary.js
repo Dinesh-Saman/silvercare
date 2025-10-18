@@ -82,7 +82,7 @@ const CaregiverBookingSummary = () => {
             email: response.caregiver.email,
             phone: response.caregiver.phone,
             fixed_line: response.caregiver.fixed_line,
-            daily_rate: response.caregiver.daily_rate || 3000
+            daily_rate: response.caregiver.daily_rate
           });
           
           setElderInfo({
@@ -110,7 +110,7 @@ const CaregiverBookingSummary = () => {
 
   // Calculate total cost
   const calculateTotalCost = () => {
-    const dailyRate = caregiverInfo?.daily_rate || 3000;
+    const dailyRate = caregiverInfo?.daily_rate || 0;
     return selectedDates.length * dailyRate;
   };
 
@@ -358,7 +358,7 @@ const CaregiverBookingSummary = () => {
                   <div className={styles.costBreakdown}>
                     <div className={styles.costRow}>
                       <span>Daily Rate:</span>
-                      <span>Rs. {caregiverInfo?.daily_rate?.toLocaleString() || '3,000'}</span>
+                      <span>Rs. {caregiverInfo?.daily_rate?.toLocaleString() || 'N/A'}</span>
                     </div>
                     <div className={styles.costRow}>
                       <span>Number of Days:</span>

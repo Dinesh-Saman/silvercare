@@ -74,7 +74,7 @@ const CaregiverBooking = () => {
             email: response.caregiver.email,
             phone: response.caregiver.phone,
             fixed_line: response.caregiver.fixed_line,
-            daily_rate: response.caregiver.daily_rate || 3000
+            daily_rate: response.caregiver.daily_rate
           });
           
           setElderInfo({
@@ -281,7 +281,7 @@ const CaregiverBooking = () => {
 
   // Calculate total cost
   const calculateTotalCost = () => {
-    const dailyRate = caregiverInfo?.daily_rate || 3000;
+    const dailyRate = caregiverInfo?.daily_rate || 0;
     return selectedDates.length * dailyRate;
   };
 
@@ -435,7 +435,7 @@ const CaregiverBooking = () => {
               <div className={styles.cardContent}>
                 <h3>Service Details</h3>
                 <p><strong>Service Type:</strong> Home Care</p>
-                <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate || 3000}</p>
+                <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate?.toLocaleString() || 'N/A'}</p>
                 <p><strong>Selected Days:</strong> {selectedDates.length}</p>
                 <p><strong>Total Cost:</strong> Rs. {calculateTotalCost().toLocaleString()}</p>
               </div>
@@ -556,7 +556,7 @@ const CaregiverBooking = () => {
                 </div>
                 <div className={styles.summaryTotal}>
                   <p><strong>Total Days:</strong> {selectedDates.length}</p>
-                  <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate || 3000}</p>
+                  <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate?.toLocaleString() || 'N/A'}</p>
                   <p className={styles.totalCost}>
                     <strong>Total Cost:</strong> Rs. {calculateTotalCost().toLocaleString()}
                   </p>
