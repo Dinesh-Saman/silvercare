@@ -42,7 +42,8 @@ const HealthProfessionalSidebar = ({ onToggleCollapse }) => {
       label: 'Messages', 
       icon: '✉️',
       subItems: [
-        { key: 'elder-chat', label: 'Elder Chat', icon: '�', path: '/healthprofessional/messages' },
+        { key: 'elder-chat', label: 'Elder Chat', icon: '👴', path: '/healthprofessional/messages' },
+        { key: 'family-chat', label: 'Family Chat', icon: '👨‍👩‍👧‍👦', path: '/healthprofessional/family-messages' },
       ]
     },
   ];

@@ -47,4 +47,7 @@ router.get('/:doctorId/family-member/:familyMemberId/appointments', doctorContro
 router.get('/:doctorId/elders-with-appointments', doctorElderChatController.getEldersWithAppointments);
 router.get('/:doctorId/elder/:elderId/appointments', doctorElderChatController.getAppointmentHistoryWithElder);
 
+// Reports and statistics routes
+router.get('/:doctorId/appointment-statistics', doctorController.getDoctorAppointmentStatistics);
+
 module.exports = router;

@@ -15,4 +15,7 @@ router.get('/:userId/doctors-with-appointments', doctormessageController.getDoct
 // Get appointment history between family member and specific doctor
 router.get('/:userId/doctor/:doctorId/appointments', doctormessageController.getAppointmentHistoryWithDoctor);
 
+// Get appointment statistics for reports
+router.get('/:userId/appointment-stats', familyMemberController.getAppointmentStatistics);
+
 module.exports = router;
