@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
+import { getImageSrc, handleImageError } from '../../utils/imageUtils';
 import Navbar from '../../components/navbar';
 import styles from '../../components/css/familymember/todays-care-report.module.css';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
@@ -237,17 +238,12 @@ const TodaysCareReport = () => {
                     #{index + 1}
                   </div>
                   <div className={styles.elderAvatar}>
-                    {elder.profile_photo ? (
-                      <img 
-                        src={`http://localhost:5000/${elder.profile_photo}`} 
-                        alt={elder.name}
-                        className={styles.elderPhoto}
-                      />
-                    ) : (
-                      <div className={styles.elderInitial}>
-                        {elder.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <img 
+                      src={getImageSrc(elder.profile_photo, 'elder', elder.gender, elder.elder_id)}
+                      alt={elder.name}
+                      className={styles.elderPhoto}
+                      onError={(e) => handleImageError(e, 'elder', elder.gender, elder.elder_id)}
+                    />
                   </div>
                   <div className={styles.elderBasicInfo}>
                     <h3 className={styles.elderName}>{elder.name}</h3>
