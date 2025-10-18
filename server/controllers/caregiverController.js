@@ -1089,41 +1089,98 @@ const createTemporaryCaregiverBooking = async (req, res) => {
     const startDate = sortedDates[0];
     const endDate = sortedDates[sortedDates.length - 1];
 
-    // Check for conflicting bookings
-    const conflictCheck = await pool.query(
-      `SELECT request_id FROM carerequest 
+    // Get all existing bookings for this caregiver that might overlap
+    const existingBookings = await pool.query(
+      `SELECT start_date, end_date, status
+       FROM carerequest 
        WHERE caregiver_id = $1 
        AND status IN ('pending', 'confirmed', 'approved', 'in-progress')
-       AND (
-         (start_date <= $3 AND end_date >= $2) OR
-         (start_date >= $2 AND start_date <= $3)
-       )`,
-      [caregiverId, startDate, endDate]
+       ORDER BY start_date`,
+      [caregiverId]
     );
 
-    if (conflictCheck.rows.length > 0) {
+    // Generate a set of all blocked dates from existing bookings
+    const blockedDatesSet = new Set();
+    existingBookings.rows.forEach(booking => {
+      let startDateStr, endDateStr;
+      
+      if (booking.start_date instanceof Date) {
+        const startYear = booking.start_date.getFullYear();
+        const startMonth = String(booking.start_date.getMonth() + 1).padStart(2, '0');
+        const startDay = String(booking.start_date.getDate()).padStart(2, '0');
+        startDateStr = `${startYear}-${startMonth}-${startDay}`;
+        
+        const endYear = booking.end_date.getFullYear();
+        const endMonth = String(booking.end_date.getMonth() + 1).padStart(2, '0');
+        const endDay = String(booking.end_date.getDate()).padStart(2, '0');
+        endDateStr = `${endYear}-${endMonth}-${endDay}`;
+      } else {
+        startDateStr = booking.start_date;
+        endDateStr = booking.end_date;
+      }
+      
+      // Add all dates in the booking range to the blocked set
+      const start = new Date(startDateStr + 'T00:00:00');
+      const end = new Date(endDateStr + 'T23:59:59');
+      const current = new Date(start);
+      
+      while (current <= end) {
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const day = String(current.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        blockedDatesSet.add(dateStr);
+        current.setDate(current.getDate() + 1);
+      }
+    });
+
+    // Check if any of the selected dates are in the blocked dates
+    const conflictingDates = selectedDates.filter(date => blockedDatesSet.has(date));
+    
+    if (conflictingDates.length > 0) {
+      console.log('Conflicting dates found:', conflictingDates);
       return res.status(400).json({
         success: false,
-        error: 'Some of the selected dates are already booked. Please select different dates.'
+        error: 'Some of the selected dates are already booked. Please select different dates.',
+        conflictingDates
       });
     }
 
     // Check for existing temporary bookings that haven't expired
-    const tempBookingCheck = await pool.query(
-      `SELECT temp_booking_id FROM temporary_caregiver_booking 
+    const tempBookings = await pool.query(
+      `SELECT start_date, end_date, selected_dates
+       FROM temporary_caregiver_booking 
        WHERE caregiver_id = $1 
-       AND (
-         (start_date <= $3 AND end_date >= $2) OR
-         (start_date >= $2 AND start_date <= $3)
-       )
        AND expires_at > CURRENT_TIMESTAMP`,
-      [caregiverId, startDate, endDate]
+      [caregiverId]
     );
 
-    if (tempBookingCheck.rows.length > 0) {
+    // Generate a set of temporarily blocked dates
+    const tempBlockedDatesSet = new Set();
+    tempBookings.rows.forEach(booking => {
+      // If selected_dates is stored as JSON, parse it
+      let tempDates = [];
+      if (booking.selected_dates) {
+        if (typeof booking.selected_dates === 'string') {
+          tempDates = JSON.parse(booking.selected_dates);
+        } else if (Array.isArray(booking.selected_dates)) {
+          tempDates = booking.selected_dates;
+        }
+      }
+      
+      // Add all temporarily booked dates to the set
+      tempDates.forEach(date => tempBlockedDatesSet.add(date));
+    });
+
+    // Check if any of the selected dates are temporarily blocked
+    const tempConflictingDates = selectedDates.filter(date => tempBlockedDatesSet.has(date));
+    
+    if (tempConflictingDates.length > 0) {
+      console.log('Temporarily blocked dates found:', tempConflictingDates);
       return res.status(400).json({
         success: false,
-        error: 'Some dates are temporarily reserved. Please wait or select different dates.'
+        error: 'Some dates are temporarily reserved. Please wait or select different dates.',
+        conflictingDates: tempConflictingDates
       });
     }
 
