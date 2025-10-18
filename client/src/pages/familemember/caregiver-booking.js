@@ -544,13 +544,6 @@ const CaregiverBooking = () => {
                     <div key={date} className={styles.selectedDateItem}>
                       <span className={styles.dateNumber}>{index + 1}.</span>
                       <span className={styles.dateText}>{formatDateForDisplay(date)}</span>
-                      <button
-                        className={styles.removeDateButton}
-                        onClick={() => handleDateToggle(date)}
-                        title="Remove this date"
-                      >
-                        ×
-                      </button>
                     </div>
                   ))}
                 </div>
