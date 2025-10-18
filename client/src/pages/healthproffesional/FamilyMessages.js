@@ -16,7 +16,6 @@ const FamilyMessages = () => {
   const [error, setError] = useState(null);
   const [selectedFamilyMember, setSelectedFamilyMember] = useState(null);
   const [showChat, setShowChat] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Redirect if not authenticated or not health professional
   useEffect(() => {
@@ -77,10 +76,10 @@ const FamilyMessages = () => {
 
   if (loading || dataLoading) {
     return (
-      <div className={styles.dashboardContainer}>
-        <HealthProfessionalSidebar onToggleCollapse={setSidebarCollapsed} />
-        <div className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
-          <Navbar />
+      <div className={styles.container}>
+        <Navbar />
+        <div className={styles.layout}>
+          <HealthProfessionalSidebar />
           <div className={styles.content}>
             <div className={styles.loadingContainer}>
               <div className={styles.loadingSpinner}></div>
@@ -93,10 +92,10 @@ const FamilyMessages = () => {
   }
 
   return (
-    <div className={styles.dashboardContainer}>
-      <HealthProfessionalSidebar onToggleCollapse={setSidebarCollapsed} />
-      <div className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainContentCollapsed : ''}`}>
-        <Navbar />
+    <div className={styles.container}>
+      <Navbar />
+      <div className={styles.layout}>
+        <HealthProfessionalSidebar />
         <div className={styles.content}>
           <div className={styles.header}>
             <div className={styles.headerContent}>
@@ -152,8 +151,13 @@ const FamilyMessages = () => {
                     >
                       <div className={styles.familyMemberInfo}>
                         <div className={styles.familyMemberHeader}>
-                          <h3 className={styles.familyMemberName}>{familyMember.family_member_name}</h3>
-                          <span className={styles.familyId}>Family ID: {familyMember.family_id}</span>
+                          <div className={styles.familyMemberAvatar}>
+                            <div className={styles.avatarPlaceholder}>👨‍👩‍👧‍👦</div>
+                          </div>
+                          <div className={styles.familyMemberBasicInfo}>
+                            <h3 className={styles.familyMemberName}>{familyMember.family_member_name}</h3>
+                            <span className={styles.familyId}>Family ID: {familyMember.family_id}</span>
+                          </div>
                         </div>
                         
                         <div className={styles.familyMemberDetails}>
@@ -195,7 +199,7 @@ const FamilyMessages = () => {
               )}
             </div>
 
-            {/* Chat/History Section */}
+            {/* Chat Section */}
             {selectedFamilyMember && showChat ? (
               <div className={styles.chatSection}>
                 <Chat 
@@ -219,25 +223,27 @@ const FamilyMessages = () => {
                   </h2>
                 </div>
 
-                <div className={styles.appointmentHistory}>
-                  <div className={styles.chatInterface}>
-                    <div className={styles.comingSoon}>
-                      <h4>💬 Ready to Chat!</h4>
-                      <p>Click the chat button to start messaging {selectedFamilyMember.family_member_name}</p>
-                      <button 
-                        className={styles.startChatButton}
-                        onClick={() => setShowChat(true)}
-                      >
-                        Start Conversation
-                      </button>
-                      <div className={styles.contactInfo}>
-                        <p><strong>Contact {selectedFamilyMember.family_member_name}:</strong></p>
-                        <p>📧 {selectedFamilyMember.family_member_email}</p>
-                        <p>📞 {selectedFamilyMember.family_member_phone}</p>
-                        {selectedFamilyMember.phone_fixed && (
-                          <p>📞 Fixed: {selectedFamilyMember.phone_fixed}</p>
-                        )}
-                      </div>
+                <div className={styles.chatInterface}>
+                  <div className={styles.comingSoon}>
+                    <h4>💬 Ready to Chat!</h4>
+                    <p>Click the chat button to start messaging {selectedFamilyMember.family_member_name}</p>
+                    <button 
+                      className={styles.startChatButton}
+                      onClick={() => setShowChat(true)}
+                    >
+                      Start Conversation
+                    </button>
+                    <div className={styles.contactInfo}>
+                      <p><strong>Family Member Information:</strong></p>
+                      <p>👨‍👩‍👧‍👦 {selectedFamilyMember.family_member_name}</p>
+                      <p>📧 {selectedFamilyMember.family_member_email}</p>
+                      <p>📞 {selectedFamilyMember.family_member_phone}</p>
+                      {selectedFamilyMember.phone_fixed && (
+                        <p>📞 Fixed Line: {selectedFamilyMember.phone_fixed}</p>
+                      )}
+                      <p>🏠 {selectedFamilyMember.address}</p>
+                      <p>👴 Elders: {selectedFamilyMember.elders_under_care}</p>
+                      <p>📅 {selectedFamilyMember.total_appointments} total appointments</p>
                     </div>
                   </div>
                 </div>
