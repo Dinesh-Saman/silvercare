@@ -31,6 +31,7 @@ const healthprofessionalRoutes = require('./routes/healthprofessionalRoutes');
 const careAssignmentRoutes = require('./routes/careAssignmentRoutes');
 const familyMemberRoutes = require('./routes/familyMemberRoutes');
 const messagesRoutes = require('./routes/messagesRoutes');
+const caregivermessageRoutes = require('./routes/caregivermessageRoutes');
 const meetingRoutes = require('./routes/meetingRoutes'); // Add meeting routes
 const feedbackRoutes = require('./routes/feedbackRoutes'); // Add feedback routes
 
@@ -47,6 +48,7 @@ app.use('/api/healthprofessional', healthprofessionalRoutes);
 app.use('/api/care-assignments', careAssignmentRoutes);
 app.use('/api/family-member', familyMemberRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/caregiver-messages', caregivermessageRoutes);
 app.use('/api/meetings', meetingRoutes); // Add meeting endpoints
 app.use('/api/feedback', feedbackRoutes); // Add feedback endpoints
 const PORT = process.env.PORT || 5000;
