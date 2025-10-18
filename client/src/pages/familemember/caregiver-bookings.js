@@ -15,6 +15,8 @@ const CaregiverBookings = () => {
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [filters, setFilters] = useState({
     type: 'all',
     search: ''
@@ -252,6 +254,16 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
     return booking.status;
   };
 
+  const openDetailsModal = (booking) => {
+    setSelectedBooking(booking);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedBooking(null);
+  };
+
   if (loading || dataLoading) {
     return (
       <div className={styles.container}>
@@ -383,76 +395,106 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
 
                   return (
                     <div key={booking.request_id} className={styles.bookingCard}>
-                      <div className={styles.bookingHeader}>
-                        <div className={styles.bookingInfo}>
-                          <h3 className={styles.bookingTitle}>
-                            🧑‍💼 {booking.caregiver_name}
-                          </h3>
-                          <p className={styles.elderInfo}>
-                            👴 Elder: {booking.elder_name}
-                          </p>
-                        </div>
-                        <div className={styles.bookingStatusBadge}>
+                      {/* Card Header */}
+                      <div className={styles.cardHeader}>
+                        <div className={styles.cardHeaderLeft}>
+                          <span className={styles.bookingIdBadge}>#{booking.request_id}</span>
                           <span className={`${styles.statusBadge} ${styles[bookingStatus.toLowerCase().replace(' ', '-')]}`}>
                             {bookingStatus}
                           </span>
                         </div>
-                      </div>
-
-                      <div className={styles.bookingDetails}>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>📅 Start Date:</span>
-                          <span className={styles.detailValue}>{dateRange.start}</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>📅 End Date:</span>
-                          <span className={styles.detailValue}>{dateRange.end}</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>⏱️ Duration:</span>
-                          <span className={styles.detailValue}>{booking.duration} days</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>💰 Amount:</span>
-                          <span className={styles.detailValue}>Rs. {booking.total_amount?.toLocaleString()}</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>🆔 Booking ID:</span>
-                          <span className={styles.detailValue}>#{booking.request_id}</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                          <span className={styles.detailLabel}>📅 Booked On:</span>
-                          <span className={styles.detailValue}>
-                            {createdAt.toLocaleDateString()} at {createdAt.toLocaleTimeString()}
+                        <div className={styles.bookingDate}>
+                          <span className={styles.dateLabel}>Booked</span>
+                          <span className={styles.dateValue}>
+                            {createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                       </div>
 
-                      {/* Cancellation Info for Upcoming Bookings */}
+                      {/* Card Body */}
+                      <div className={styles.cardBody}>
+                        <div className={styles.caregiverSection}>
+                          <div className={styles.sectionIcon}>🧑‍💼</div>
+                          <div className={styles.sectionContent}>
+                            <h3 className={styles.caregiverName}>{booking.caregiver_name}</h3>
+                            <p className={styles.caregiverLabel}>Professional Caregiver</p>
+                          </div>
+                        </div>
+
+                        <div className={styles.elderSection}>
+                          <span className={styles.infoLabel}>� Elder Care For:</span>
+                          <span className={styles.infoValue}>{booking.elder_name}</span>
+                        </div>
+
+                        <div className={styles.dateRangeSection}>
+                          <div className={styles.dateBox}>
+                            <span className={styles.dateBoxLabel}>Start Date</span>
+                            <span className={styles.dateBoxValue}>{dateRange.start}</span>
+                          </div>
+                          <div className={styles.dateArrow}>→</div>
+                          <div className={styles.dateBox}>
+                            <span className={styles.dateBoxLabel}>End Date</span>
+                            <span className={styles.dateBoxValue}>{dateRange.end}</span>
+                          </div>
+                        </div>
+
+                        <div className={styles.durationPriceSection}>
+                          <div className={styles.durationBadge}>
+                            <span className={styles.durationIcon}>⏱️</span>
+                            <span>{booking.duration} Days</span>
+                          </div>
+                          {booking.total_amount && (
+                            <div className={styles.priceBadge}>
+                              <span className={styles.priceIcon}>💰</span>
+                              <span>Rs. {booking.total_amount.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Payment Status */}
+                        {booking.payment_status && (
+                          <div className={styles.paymentStatusSection}>
+                            <span className={styles.paymentLabel}>Payment Status:</span>
+                            <span className={`${styles.paymentBadge} ${styles[booking.payment_status]}`}>
+                              {booking.payment_status === 'completed' ? '✓ Paid' : booking.payment_status}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Cancellation Alert */}
                       {booking.status === 'confirmed' && bookingStatus === 'Upcoming' && (
-                        <div className={styles.cancellationInfo}>
+                        <div className={styles.cancellationAlert}>
                           {canCancel ? (
-                            <div className={styles.canCancelInfo}>
-                              <span className={styles.checkIcon}>✓</span>
-                              <span>
-                                Can be cancelled • {(2 - hoursSinceCreated).toFixed(1)} hours remaining
-                                {' • Full refund available'}
+                            <div className={styles.canCancelAlert}>
+                              <span className={styles.alertIcon}>✓</span>
+                              <span className={styles.alertText}>
+                                Can cancel • {(2 - hoursSinceCreated).toFixed(1)}h remaining • Full refund
                               </span>
                             </div>
                           ) : (
-                            <div className={styles.cannotCancelInfo}>
-                              <span className={styles.xIcon}>✗</span>
-                              <span>Cancellation window expired ({hoursSinceCreated.toFixed(1)} hours ago)</span>
+                            <div className={styles.cannotCancelAlert}>
+                              <span className={styles.alertIcon}>✗</span>
+                              <span className={styles.alertText}>
+                                Cancellation window closed
+                              </span>
                             </div>
                           )}
                         </div>
                       )}
 
-                      {/* Action Buttons */}
-                      <div className={styles.bookingActions}>
+                      {/* Card Footer - Actions */}
+                      <div className={styles.cardFooter}>
+                        <button
+                          className={styles.detailsButton}
+                          onClick={() => openDetailsModal(booking)}
+                        >
+                          <span className={styles.buttonIcon}>📋</span>
+                          More Details
+                        </button>
                         {canCancel && (
                           <button
-                            className={styles.cancelButton}
+                            className={`${styles.cancelButton} ${cancellingId === booking.request_id ? styles.cancelling : ''}`}
                             onClick={(e) => handleCancelBooking(booking, e)}
                             disabled={cancellingId === booking.request_id}
                           >
@@ -463,23 +505,12 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
                               </>
                             ) : (
                               <>
-                                <span className={styles.cancelIcon}>🚫</span>
+                                <span className={styles.buttonIcon}>🚫</span>
                                 Cancel & Refund
-                                {booking.total_amount && (
-                                  <span className={styles.refundAmount}>
-                                    (Rs. {booking.total_amount.toLocaleString()})
-                                  </span>
-                                )}
                               </>
                             )}
                           </button>
                         )}
-                        <button
-                          className={styles.viewDetailsButton}
-                          onClick={() => navigate(`/family-member/caregiver-booking/${booking.request_id}`)}
-                        >
-                          View Details →
-                        </button>
                       </div>
                     </div>
                   );
@@ -487,6 +518,174 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
               </div>
             )}
           </div>
+
+          {/* Details Modal */}
+          {showDetailsModal && selectedBooking && (
+            <div className={styles.modalOverlay} onClick={closeDetailsModal}>
+              <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                  <h2 className={styles.modalTitle}>📋 Booking Details</h2>
+                  <button className={styles.modalClose} onClick={closeDetailsModal}>✕</button>
+                </div>
+
+                <div className={styles.modalBody}>
+                  {/* Booking ID & Status */}
+                  <div className={styles.modalSection}>
+                    <h3 className={styles.sectionTitle}>Booking Information</h3>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Booking ID:</span>
+                      <span className={styles.modalValue}>#{selectedBooking.request_id}</span>
+                    </div>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Status:</span>
+                      <span className={`${styles.statusBadge} ${styles[getBookingStatus(selectedBooking).toLowerCase().replace(' ', '-')]}`}>
+                        {getBookingStatus(selectedBooking)}
+                      </span>
+                    </div>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Booked On:</span>
+                      <span className={styles.modalValue}>
+                        {new Date(selectedBooking.created_at).toLocaleString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Caregiver Details */}
+                  <div className={styles.modalSection}>
+                    <h3 className={styles.sectionTitle}>🧑‍💼 Caregiver Details</h3>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Name:</span>
+                      <span className={styles.modalValue}>{selectedBooking.caregiver_name}</span>
+                    </div>
+                  </div>
+
+                  {/* Elder Details */}
+                  <div className={styles.modalSection}>
+                    <h3 className={styles.sectionTitle}>👴 Elder Care Details</h3>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Elder Name:</span>
+                      <span className={styles.modalValue}>{selectedBooking.elder_name}</span>
+                    </div>
+                  </div>
+
+                  {/* Service Period */}
+                  <div className={styles.modalSection}>
+                    <h3 className={styles.sectionTitle}>📅 Service Period</h3>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Start Date:</span>
+                      <span className={styles.modalValue}>
+                        {new Date(selectedBooking.start_date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>End Date:</span>
+                      <span className={styles.modalValue}>
+                        {new Date(selectedBooking.end_date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className={styles.modalRow}>
+                      <span className={styles.modalLabel}>Duration:</span>
+                      <span className={styles.modalValue}>
+                        <span className={styles.durationHighlight}>{selectedBooking.duration} Days</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Payment Details */}
+                  {selectedBooking.total_amount && (
+                    <div className={styles.modalSection}>
+                      <h3 className={styles.sectionTitle}>💰 Payment Information</h3>
+                      <div className={styles.modalRow}>
+                        <span className={styles.modalLabel}>Total Amount:</span>
+                        <span className={styles.modalValueHighlight}>
+                          Rs. {selectedBooking.total_amount.toLocaleString()}
+                        </span>
+                      </div>
+                      {selectedBooking.payment_method && (
+                        <div className={styles.modalRow}>
+                          <span className={styles.modalLabel}>Payment Method:</span>
+                          <span className={styles.modalValue}>{selectedBooking.payment_method}</span>
+                        </div>
+                      )}
+                      {selectedBooking.payment_status && (
+                        <div className={styles.modalRow}>
+                          <span className={styles.modalLabel}>Payment Status:</span>
+                          <span className={`${styles.paymentBadge} ${styles[selectedBooking.payment_status]}`}>
+                            {selectedBooking.payment_status === 'completed' ? '✓ Completed' : selectedBooking.payment_status}
+                          </span>
+                        </div>
+                      )}
+                      {selectedBooking.transaction_id && (
+                        <div className={styles.modalRow}>
+                          <span className={styles.modalLabel}>Transaction ID:</span>
+                          <span className={styles.modalValue}>{selectedBooking.transaction_id}</span>
+                        </div>
+                      )}
+                      {selectedBooking.payment_date && (
+                        <div className={styles.modalRow}>
+                          <span className={styles.modalLabel}>Payment Date:</span>
+                          <span className={styles.modalValue}>
+                            {new Date(selectedBooking.payment_date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Cancellation Policy */}
+                  {selectedBooking.status === 'confirmed' && getBookingStatus(selectedBooking) === 'Upcoming' && (
+                    <div className={styles.modalSection}>
+                      <h3 className={styles.sectionTitle}>📋 Cancellation Policy</h3>
+                      <div className={styles.cancellationPolicy}>
+                        <p>✓ Free cancellation within 2 hours of booking</p>
+                        <p>✓ Full refund if cancelled within window</p>
+                        <p>⚠️ No refund after 2-hour window</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button className={styles.modalCloseButton} onClick={closeDetailsModal}>
+                    Close
+                  </button>
+                  {canCancelBooking(selectedBooking) && (
+                    <button
+                      className={styles.modalCancelButton}
+                      onClick={(e) => {
+                        closeDetailsModal();
+                        handleCancelBooking(selectedBooking, e);
+                      }}
+                      disabled={cancellingId === selectedBooking.request_id}
+                    >
+                      {cancellingId === selectedBooking.request_id ? 'Cancelling...' : 'Cancel Booking'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </FamilyMemberLayout>
     </div>
