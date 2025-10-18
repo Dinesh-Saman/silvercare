@@ -212,6 +212,8 @@ const FamilyMessages = () => {
                     specialization: 'Family Member',
                     user_id: selectedFamilyMember.user_id
                   }}
+                  senderType="healthprofessional"
+                  receiverType="family_member"
                   onClose={handleCloseChat}
                 />
               </div>

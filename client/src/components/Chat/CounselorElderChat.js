@@ -93,7 +93,7 @@ const CounselorElderChat = ({ currentUser, selectedElder, onClose }) => {
       console.log('Sending message:', {
         from: currentUser.user_id,
         to: selectedElder.elder_id,
-        senderType: 'counselor',
+        senderType: 'healthprofessional',
         receiverType: 'elder',
         message: messageToSend
       });
@@ -101,7 +101,7 @@ const CounselorElderChat = ({ currentUser, selectedElder, onClose }) => {
       const response = await messagesApi.sendMessage(
         currentUser.user_id,
         selectedElder.elder_id,
-        'counselor',
+        'healthprofessional',
         'elder',
         messageToSend
       );
@@ -112,7 +112,7 @@ const CounselorElderChat = ({ currentUser, selectedElder, onClose }) => {
           message_id: response.message_id,
           sender_id: currentUser.user_id,
           receiver_id: selectedElder.elder_id,
-          sender_type: 'counselor',
+          sender_type: 'healthprofessional',
           receiver_type: 'elder',
           message_text: messageToSend,
           sent_at: new Date().toISOString(),
