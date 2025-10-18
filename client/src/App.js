@@ -52,6 +52,7 @@ import CaregiverBooking from './pages/familemember/caregiver-booking';
 import CaregiverBookingSummary from './pages/familemember/caregiver-booking-summary';
 import CaregiverPayment from './pages/familemember/caregiver-payment';
 import CaregiverPaymentSuccess from './pages/familemember/caregiver-payment-success';
+import TodaysCareReport from './pages/familemember/todays-care-report';
 
 
 
@@ -375,6 +376,12 @@ function App() {
 <Route path="/family-member/caregiver-payment-success" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <CaregiverPaymentSuccess />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/todays-care-report" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <TodaysCareReport />
   </ProtectedRoute>
 } />
 

@@ -87,6 +87,9 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       case 'care-reports':
         navigate('/family-member/care-reports');
         break;
+      case 'todays-care-report':
+        navigate('/family-member/todays-care-report');
+        break;
       case 'counselor-sessions':
         navigate('/family-member/counselor-sessions');
         break;
@@ -174,6 +177,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
         { key: 'book-caregiver', label: 'Book Caregiver', path: '/family-member/elder-caregivers' },
         { key: 'find-caregivers', label: 'Find Caregivers', path: '/family-member/caregivers' },
         { key: 'assigned-caregivers', label: 'Assigned Caregivers', path: 'assigned-caregivers' },
+        { key: 'todays-care-report', label: "Today's Care Report", path: '/family-member/todays-care-report' },
         { key: 'care-reports', label: 'Care Reports', path: '/family-member/care-reports' }
       ]
     },
