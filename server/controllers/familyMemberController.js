@@ -108,7 +108,116 @@ const updateFamilyMemberDetails = async (req, res) => {
   }
 };
 
+// Get appointment statistics for family member
+const getAppointmentStatistics = async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    console.log('Fetching appointment statistics for user ID:', userId);
+    
+    // First, get the family_id from user_id
+    const familyResult = await pool.query(`
+      SELECT family_id FROM familymember WHERE user_id = $1
+    `, [userId]);
+    
+    if (familyResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Family member not found'
+      });
+    }
+    
+    const familyId = familyResult.rows[0].family_id;
+    
+    // Get doctor appointment statistics
+    const doctorStatsQuery = `
+      SELECT 
+        appointment_type,
+        COUNT(*) as count
+      FROM appointment 
+      WHERE family_id = $1 
+        AND doctor_id IS NOT NULL 
+        AND counselor_id IS NULL
+      GROUP BY appointment_type
+    `;
+    
+    const doctorStatsResult = await pool.query(doctorStatsQuery, [familyId]);
+    
+    // Get health professional appointment statistics
+    const healthProfessionalStatsQuery = `
+      SELECT 
+        appointment_type,
+        COUNT(*) as count
+      FROM appointment 
+      WHERE family_id = $1 
+        AND counselor_id IS NOT NULL 
+        AND doctor_id IS NULL
+      GROUP BY appointment_type
+    `;
+    
+    const healthProfessionalStatsResult = await pool.query(healthProfessionalStatsQuery, [familyId]);
+    
+    // Process doctor statistics
+    const doctorStats = {
+      online: 0,
+      physical: 0,
+      total: 0
+    };
+    
+    doctorStatsResult.rows.forEach(row => {
+      const count = parseInt(row.count);
+      if (row.appointment_type === 'online') {
+        doctorStats.online = count;
+      } else if (row.appointment_type === 'physical') {
+        doctorStats.physical = count;
+      }
+      doctorStats.total += count;
+    });
+    
+    // Process health professional statistics
+    const healthProfessionalStats = {
+      online: 0,
+      physical: 0,
+      total: 0
+    };
+    
+    healthProfessionalStatsResult.rows.forEach(row => {
+      const count = parseInt(row.count);
+      if (row.appointment_type === 'online') {
+        healthProfessionalStats.online = count;
+      } else if (row.appointment_type === 'physical') {
+        healthProfessionalStats.physical = count;
+      }
+      healthProfessionalStats.total += count;
+    });
+    
+    // Calculate total appointments
+    const totalAppointments = doctorStats.total + healthProfessionalStats.total;
+    
+    const stats = {
+      doctorStats,
+      healthProfessionalStats,
+      totalAppointments
+    };
+    
+    console.log('Appointment statistics fetched successfully:', stats);
+    
+    res.json({
+      success: true,
+      stats: stats
+    });
+    
+  } catch (err) {
+    console.error('Error fetching appointment statistics:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching appointment statistics' 
+    });
+  }
+};
+
 module.exports = {
   getFamilyMemberDetails,
-  updateFamilyMemberDetails
+  updateFamilyMemberDetails,
+  getAppointmentStatistics
 };

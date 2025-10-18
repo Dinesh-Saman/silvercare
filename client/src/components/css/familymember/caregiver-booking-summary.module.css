@@ -1,0 +1,502 @@
+.container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #64748b;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.accessDenied {
+  text-align: center;
+  padding: 50px;
+  color: #ef4444;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: #64748b;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.backButton {
+  background: #e2e8f0;
+  color: #475569;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.errorMessage {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.errorIcon {
+  font-size: 1.5rem;
+}
+
+.summaryContainer {
+  display: grid;
+  gap: 20px;
+}
+
+/* Summary Card */
+.summaryCard {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #10b981;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-bottom: 2px solid #10b981;
+}
+
+.cardHeader h2 {
+  color: #166534;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.serviceType {
+  background: #10b981;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cardBody {
+  padding: 25px;
+}
+
+.detailSection {
+  margin-bottom: 30px;
+  padding-bottom: 25px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.detailSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sectionTitle {
+  color: #166534;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dcfce7;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detailLabel {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailValue {
+  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Schedule Info */
+.scheduleInfo {
+  background: #f0fdf4;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #10b981;
+  margin-bottom: 20px;
+}
+
+.scheduleInfo p {
+  margin: 8px 0;
+  color: #166534;
+  font-weight: 500;
+}
+
+.datesList h4 {
+  color: #475569;
+  font-size: 1rem;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.datesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.dateChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.dateChip:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dateIndex {
+  background: #10b981;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.dateText {
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* Cost Breakdown */
+.costBreakdown {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #3b82f6;
+}
+
+.costRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 1rem;
+  color: #475569;
+}
+
+.costRow:last-child {
+  border-bottom: none;
+}
+
+.totalRow {
+  border-top: 2px solid #10b981;
+  margin-top: 10px;
+  padding-top: 15px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.totalAmount {
+  color: #166534;
+  font-size: 1.5rem;
+}
+
+/* Disclaimer Card */
+.disclaimerCard {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f59e0b;
+}
+
+.disclaimerHeader {
+  padding: 20px 25px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-bottom: 2px solid #f59e0b;
+}
+
+.disclaimerHeader h2 {
+  color: #92400e;
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.disclaimerBody {
+  padding: 25px;
+}
+
+.disclaimerSection {
+  margin-bottom: 25px;
+}
+
+.disclaimerSection h3 {
+  color: #475569;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+
+.disclaimerSection ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style-type: none;
+}
+
+.disclaimerSection li {
+  position: relative;
+  padding-left: 25px;
+  margin-bottom: 10px;
+  color: #64748b;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.disclaimerSection li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Acceptance Section */
+.acceptanceSection {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #10b981;
+  margin-top: 30px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: #10b981;
+}
+
+.checkboxText {
+  color: #166534;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Proceed Section */
+.proceedSection {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.proceedButton {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 20px 30px;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto;
+}
+
+.proceedButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+}
+
+.proceedButton:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.buttonSpinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.proceedNote {
+  margin-top: 15px;
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content {
+    padding: 15px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .datesGrid {
+    grid-template-columns: 1fr;
+    max-height: 250px;
+  }
+
+  .proceedButton {
+    font-size: 1.1rem;
+    padding: 16px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem;
+  }
+
+  .cardHeader h2 {
+    font-size: 1.2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+
+  .serviceType {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .proceedButton {
+    font-size: 1rem;
+  }
+}
