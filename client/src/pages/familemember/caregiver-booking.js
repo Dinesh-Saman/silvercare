@@ -186,14 +186,58 @@ const CaregiverBooking = () => {
     return days;
   };
 
-  // Handle date selection/deselection
+  // Handle date selection with automatic range filling
   const handleDateToggle = (dateString) => {
     if (selectedDates.includes(dateString)) {
-      // Deselect
+      // Deselect - remove this date
       setSelectedDates(selectedDates.filter(d => d !== dateString));
     } else {
       // Select
-      setSelectedDates([...selectedDates, dateString]);
+      if (selectedDates.length === 0) {
+        // First date selection
+        setSelectedDates([dateString]);
+      } else {
+        // Get all currently selected dates and the new date, then sort them
+        const allDates = [...selectedDates, dateString].sort();
+        const startDate = allDates[0];
+        const endDate = allDates[allDates.length - 1];
+        
+        // Generate all dates between start and end (inclusive)
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dateRange = [];
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const formattedDate = `${year}-${month}-${day}`;
+          
+          // Check if date is not blocked and not past
+          const dateObj = new Date(d);
+          dateObj.setHours(0, 0, 0, 0);
+          
+          const isPast = dateObj < today;
+          const isBlocked = blockedDates.includes(formattedDate);
+          
+          if (!isPast && !isBlocked) {
+            dateRange.push(formattedDate);
+          }
+        }
+        
+        // Check if any dates in the range are blocked
+        const totalDaysInRange = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        if (dateRange.length < totalDaysInRange) {
+          setError('Cannot select this range: Some dates are unavailable or already booked');
+          setTimeout(() => setError(null), 4000);
+          return;
+        }
+        
+        setSelectedDates(dateRange);
+      }
     }
   };
 
@@ -325,7 +369,7 @@ const CaregiverBooking = () => {
                 👨‍⚕️ Book Caregiver Service
               </h1>
               <p className={styles.subtitle}>
-                Select dates for caregiver service (You can select multiple dates)
+                Select dates as a range - Click two dates to automatically select all dates in between
               </p>
             </div>
             <button 
