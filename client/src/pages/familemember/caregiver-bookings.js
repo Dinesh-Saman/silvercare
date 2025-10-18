@@ -17,6 +17,8 @@ const CaregiverBookings = () => {
   const [cancellingId, setCancellingId] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
   const [filters, setFilters] = useState({
     type: 'all',
     search: ''
@@ -130,89 +132,51 @@ const CaregiverBookings = () => {
     const hoursSinceCreated = (currentDate - createdAt) / (1000 * 60 * 60);
     
     if (hoursSinceCreated > 2) {
-      window.alert(`Cancellation not allowed. This booking was created ${hoursSinceCreated.toFixed(1)} hours ago. Caregiver bookings can only be cancelled within 2 hours of booking.`);
+      alert('Cancellation not allowed. This booking can only be cancelled within 2 hours of booking.');
       return;
     }
     
-    const remainingHours = 2 - hoursSinceCreated;
-    
-    // Show detailed cancellation confirmation
-    const confirmMessage = `Are you sure you want to cancel this caregiver booking?
+    // Show cancel confirmation modal
+    setBookingToCancel(booking);
+    setShowCancelModal(true);
+  };
 
-📋 Booking Details:
-• Caregiver: ${booking.caregiver_name}
-• Elder: ${booking.elder_name}
-• Start Date: ${new Date(booking.start_date).toLocaleDateString()}
-• End Date: ${new Date(booking.end_date).toLocaleDateString()}
-• Duration: ${booking.duration} days
-• Booked: ${createdAt.toLocaleDateString()} at ${createdAt.toLocaleTimeString()}
-
-⏰ Cancellation Policy:
-• Hours since booking: ${hoursSinceCreated.toFixed(1)} hours
-• Remaining time to cancel: ${remainingHours.toFixed(1)} hours
-• Must cancel within 2 hours of booking
-
-💰 Refund Information:
-${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
-• Refund will be processed to your original payment method
-• Refund typically takes 5-10 business days` : '• No payment found for this booking'}
-
-⚠️ This action cannot be undone.`;
-
-    if (!window.confirm(confirmMessage)) return;
-    
-    const reason = window.prompt('Please provide a reason for cancellation (optional):');
-    if (reason === null) return; // User cancelled the prompt
+  // Confirm cancellation
+  const confirmCancellation = async () => {
+    if (!bookingToCancel) return;
     
     try {
-      setCancellingId(booking.request_id);
+      setCancellingId(bookingToCancel.request_id);
+      setShowCancelModal(false);
       
-      const response = await caregiverApi.cancelCaregiverBooking(booking.request_id, reason);
+      const response = await caregiverApi.cancelCaregiverBooking(bookingToCancel.request_id, 'Cancelled by family member');
       
       if (response.success) {
         // Update the booking status in the list
         setBookings(prev => 
           prev.map(b => 
-            b.request_id === booking.request_id 
+            b.request_id === bookingToCancel.request_id 
               ? { ...b, status: 'cancelled' }
               : b
           )
         );
         
-        // Show success message with refund info
-        let successMessage = 'Caregiver booking cancelled successfully!';
-        
-        if (response.refund) {
-          if (response.refund.error) {
-            successMessage += `\n\n⚠️ Refund Issue: ${response.refund.error}`;
-          } else {
-            successMessage += `\n\n💰 Refund Processed:
-• Amount: Rs. ${response.refund.amount}
-• Refund ID: ${response.refund.refund_id}
-• Expected in: ${response.cancellationInfo?.estimatedRefundDays || '5-10 business days'}
-• You will receive an email confirmation shortly`;
-          }
-        }
-        
-        window.alert(successMessage);
+        // Simple success message
+        alert('Booking cancelled successfully! Your refund will be processed within 5-10 business days.');
       }
     } catch (err) {
       console.error('Error cancelling caregiver booking:', err);
-      
-      let errorMessage = 'Failed to cancel caregiver booking.';
-      
-      if (err.message.includes('not allowed')) {
-        errorMessage = err.message;
-      } else if (err.message.includes('hours')) {
-        errorMessage = err.message;
-      } else {
-        errorMessage += ' Please try again or contact support.';
-      }
-      
-      window.alert(errorMessage);
+      alert('Failed to cancel booking. Please try again.');
     } finally {
       setCancellingId(null);
+      setBookingToCancel(null);
     }
+  };
+
+  // Close cancel modal
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setBookingToCancel(null);
   };
 
   const formatDateRange = (startDate, endDate) => {
@@ -422,7 +386,7 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
                           <div className={styles.sectionIcon}>🧑‍💼</div>
                           <div className={styles.sectionContent}>
                             <h3 className={styles.caregiverName}>{booking.caregiver_name}</h3>
-                            <p className={styles.caregiverLabel}>Professional Caregiver</p>
+                            <p className={styles.caregiverLabel}>Caregiver</p>
                           </div>
                         </div>
 
@@ -443,18 +407,15 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
                           </div>
                         </div>
 
-                        <div className={styles.durationPriceSection}>
-                          <div className={styles.durationBadge}>
-                            <span className={styles.durationIcon}>⏱️</span>
-                            <span>{booking.duration} Days</span>
-                          </div>
-                          {booking.total_amount && (
-                            <div className={styles.priceBadge}>
+                        {/* Price Section - Removed Duration */}
+                        {booking.total_amount && (
+                          <div className={styles.durationPriceSection}>
+                            <div className={styles.priceBadge} style={{flex: 'initial', width: '100%'}}>
                               <span className={styles.priceIcon}>💰</span>
                               <span>Rs. {booking.total_amount.toLocaleString()}</span>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Payment Status */}
                         {booking.payment_status && (
@@ -687,6 +648,55 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
                       {cancellingId === selectedBooking.request_id ? 'Cancelling...' : 'Cancel Booking'}
                     </button>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Cancel Confirmation Modal */}
+          {showCancelModal && bookingToCancel && (
+            <div className={styles.modalOverlay} onClick={closeCancelModal}>
+              <div className={styles.cancelModalContent} onClick={(e) => e.stopPropagation()}>
+                <div className={styles.cancelModalHeader}>
+                  <span className={styles.cancelModalIcon}>⚠️</span>
+                  <h2 className={styles.cancelModalTitle}>Cancel Booking</h2>
+                </div>
+
+                <div className={styles.cancelModalBody}>
+                  <p className={styles.cancelModalText}>
+                    Are you sure you want to cancel this booking?
+                  </p>
+                  
+                  <div className={styles.cancelModalInfo}>
+                    <div className={styles.cancelInfoRow}>
+                      <span className={styles.cancelInfoLabel}>Caregiver:</span>
+                      <span className={styles.cancelInfoValue}>{bookingToCancel.caregiver_name}</span>
+                    </div>
+                    <div className={styles.cancelInfoRow}>
+                      <span className={styles.cancelInfoLabel}>Elder:</span>
+                      <span className={styles.cancelInfoValue}>{bookingToCancel.elder_name}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.cancelModalNotice}>
+                    <span className={styles.noticeIcon}>💰</span>
+                    <span className={styles.noticeText}>A full refund will be processed to your account</span>
+                  </div>
+                </div>
+
+                <div className={styles.cancelModalFooter}>
+                  <button
+                    className={styles.cancelModalNoButton}
+                    onClick={closeCancelModal}
+                  >
+                    No, Keep Booking
+                  </button>
+                  <button
+                    className={styles.cancelModalYesButton}
+                    onClick={confirmCancellation}
+                  >
+                    Yes, Cancel Booking
+                  </button>
                 </div>
               </div>
             </div>
