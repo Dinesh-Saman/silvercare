@@ -967,19 +967,49 @@ const getBlockedDates = async (req, res) => {
     // Generate array of blocked dates from the care requests
     const blockedDates = [];
     result.rows.forEach(request => {
-      const start = new Date(request.start_date);
-      const end = new Date(request.end_date);
+      // PostgreSQL returns dates as Date objects in local timezone
+      // We need to extract just the date part without timezone conversion
+      let startDateStr, endDateStr;
       
-      // Add each date in the range
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      if (request.start_date instanceof Date) {
+        // Format date as YYYY-MM-DD in local timezone to avoid UTC conversion
+        const startYear = request.start_date.getFullYear();
+        const startMonth = String(request.start_date.getMonth() + 1).padStart(2, '0');
+        const startDay = String(request.start_date.getDate()).padStart(2, '0');
+        startDateStr = `${startYear}-${startMonth}-${startDay}`;
+        
+        const endYear = request.end_date.getFullYear();
+        const endMonth = String(request.end_date.getMonth() + 1).padStart(2, '0');
+        const endDay = String(request.end_date.getDate()).padStart(2, '0');
+        endDateStr = `${endYear}-${endMonth}-${endDay}`;
+      } else {
+        // If already strings, use them directly
+        startDateStr = request.start_date;
+        endDateStr = request.end_date;
+      }
+      
+      console.log(`Processing booking: ${startDateStr} to ${endDateStr} (status: ${request.status})`);
+      
+      // Generate all dates in the range
+      const start = new Date(startDateStr + 'T00:00:00');
+      const end = new Date(endDateStr + 'T23:59:59');
+      
+      const current = new Date(start);
+      while (current <= end) {
+        const year = current.getFullYear();
+        const month = String(current.getMonth() + 1).padStart(2, '0');
+        const day = String(current.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        
         if (!blockedDates.includes(dateStr)) {
           blockedDates.push(dateStr);
+          console.log(`  Blocked: ${dateStr}`);
         }
+        current.setDate(current.getDate() + 1);
       }
     });
     
-    console.log('Blocked dates:', blockedDates);
+    console.log('Total blocked dates:', blockedDates.length);
     
     res.json({
       success: true,
@@ -996,6 +1026,461 @@ const getBlockedDates = async (req, res) => {
   }
 };
 
+// NEW: Create temporary caregiver booking (expires in 10 minutes)
+const createTemporaryCaregiverBooking = async (req, res) => {
+  try {
+    const {
+      elderId,
+      caregiverId,
+      familyId,
+      selectedDates,
+      totalAmount,
+      elderName,
+      caregiverName
+    } = req.body;
+
+    console.log('Creating temporary caregiver booking:', {
+      elderId,
+      caregiverId,
+      familyId,
+      selectedDates,
+      totalAmount
+    });
+
+    // Validate required fields
+    if (!elderId || !caregiverId || !familyId || !selectedDates || selectedDates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Elder, caregiver, family, and selected dates are required'
+      });
+    }
+
+    // Verify elder exists and belongs to family
+    const elderResult = await pool.query(
+      'SELECT elder_id, name, family_id FROM elder WHERE elder_id = $1 AND family_id = $2',
+      [elderId, familyId]
+    );
+
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found or does not belong to this family'
+      });
+    }
+
+    // Verify caregiver exists and is available
+    const caregiverResult = await pool.query(
+      `SELECT c.caregiver_id, u.name as caregiver_name 
+       FROM caregiver c 
+       INNER JOIN "User" u ON c.user_id = u.user_id 
+       WHERE c.caregiver_id = $1 AND c.availability = 'available'`,
+      [caregiverId]
+    );
+
+    if (caregiverResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caregiver not found or not available'
+      });
+    }
+
+    // Sort dates and get start and end date
+    const sortedDates = selectedDates.sort();
+    const startDate = sortedDates[0];
+    const endDate = sortedDates[sortedDates.length - 1];
+
+    // Check for conflicting bookings
+    const conflictCheck = await pool.query(
+      `SELECT request_id FROM carerequest 
+       WHERE caregiver_id = $1 
+       AND status IN ('pending', 'confirmed', 'approved', 'in-progress')
+       AND (
+         (start_date <= $3 AND end_date >= $2) OR
+         (start_date >= $2 AND start_date <= $3)
+       )`,
+      [caregiverId, startDate, endDate]
+    );
+
+    if (conflictCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Some of the selected dates are already booked. Please select different dates.'
+      });
+    }
+
+    // Check for existing temporary bookings that haven't expired
+    const tempBookingCheck = await pool.query(
+      `SELECT temp_booking_id FROM temporary_caregiver_booking 
+       WHERE caregiver_id = $1 
+       AND (
+         (start_date <= $3 AND end_date >= $2) OR
+         (start_date >= $2 AND start_date <= $3)
+       )
+       AND expires_at > CURRENT_TIMESTAMP`,
+      [caregiverId, startDate, endDate]
+    );
+
+    if (tempBookingCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Some dates are temporarily reserved. Please wait or select different dates.'
+      });
+    }
+
+    // Create temporary booking (expires in 10 minutes)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const duration = selectedDates.length;
+    
+    const tempBookingResult = await pool.query(
+      `INSERT INTO temporary_caregiver_booking (
+        elder_id, 
+        family_id, 
+        caregiver_id, 
+        start_date,
+        end_date,
+        selected_dates,
+        duration,
+        total_amount,
+        expires_at,
+        created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+      RETURNING 
+        temp_booking_id,
+        elder_id,
+        family_id,
+        caregiver_id,
+        start_date,
+        end_date,
+        selected_dates,
+        duration,
+        total_amount,
+        expires_at,
+        created_at`,
+      [
+        parseInt(elderId),
+        parseInt(familyId),
+        parseInt(caregiverId),
+        startDate,
+        endDate,
+        JSON.stringify(selectedDates),
+        duration,
+        parseFloat(totalAmount),
+        expiresAt
+      ]
+    );
+
+    const tempBooking = tempBookingResult.rows[0];
+    console.log('Temporary caregiver booking created:', tempBooking);
+
+    res.status(201).json({
+      success: true,
+      message: 'Temporary booking created successfully',
+      tempBooking: {
+        temp_booking_id: tempBooking.temp_booking_id,
+        elder_id: tempBooking.elder_id,
+        family_id: tempBooking.family_id,
+        caregiver_id: tempBooking.caregiver_id,
+        start_date: tempBooking.start_date,
+        end_date: tempBooking.end_date,
+        selected_dates: tempBooking.selected_dates,
+        duration: tempBooking.duration,
+        total_amount: tempBooking.total_amount,
+        expires_at: tempBooking.expires_at,
+        created_at: tempBooking.created_at,
+        elder_name: elderResult.rows[0].name,
+        caregiver_name: caregiverResult.rows[0].caregiver_name
+      }
+    });
+
+  } catch (err) {
+    console.error('Error creating temporary caregiver booking:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error creating temporary booking',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// NEW: Get temporary booking by ID (for timer initialization)
+const getTemporaryCaregiverBooking = async (req, res) => {
+  try {
+    const { tempBookingId } = req.params;
+
+    console.log('Fetching temporary caregiver booking:', tempBookingId);
+
+    if (!tempBookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Temporary booking ID is required'
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT 
+        temp_booking_id,
+        elder_id,
+        family_id,
+        caregiver_id,
+        start_date,
+        end_date,
+        selected_dates,
+        duration,
+        total_amount,
+        expires_at,
+        created_at
+      FROM temporary_caregiver_booking
+      WHERE temp_booking_id = $1`,
+      [tempBookingId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Temporary booking not found'
+      });
+    }
+
+    const booking = result.rows[0];
+    
+    // Check if booking has expired
+    if (new Date(booking.expires_at) < new Date()) {
+      return res.status(410).json({
+        success: false,
+        error: 'Temporary booking has expired',
+        expired: true
+      });
+    }
+
+    console.log('Temporary booking found:', booking);
+
+    res.status(200).json({
+      success: true,
+      ...booking
+    });
+
+  } catch (err) {
+    console.error('Error fetching temporary caregiver booking:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching temporary booking',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// NEW: Confirm payment and create actual care request
+const confirmPaymentAndCreateCareRequest = async (req, res) => {
+  try {
+    const {
+      tempBookingId,
+      paymentMethod,
+      paymentAmount,
+      transactionId,
+      paymentStatus
+    } = req.body;
+
+    console.log('Confirming payment and creating care request:', {
+      tempBookingId,
+      paymentMethod,
+      paymentAmount,
+      transactionId,
+      paymentStatus
+    });
+
+    // Validate required fields
+    if (!tempBookingId || !paymentMethod || !paymentAmount || !transactionId) {
+      return res.status(400).json({
+        success: false,
+        error: 'All payment details are required'
+      });
+    }
+
+    // Get temporary booking details
+    const tempBookingResult = await pool.query(
+      `SELECT * FROM temporary_caregiver_booking 
+       WHERE temp_booking_id = $1 
+       AND expires_at > CURRENT_TIMESTAMP`,
+      [tempBookingId]
+    );
+
+    if (tempBookingResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Temporary booking not found or expired'
+      });
+    }
+
+    const tempBooking = tempBookingResult.rows[0];
+
+    // Start transaction
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Create the care request
+      const careRequestResult = await client.query(
+        `INSERT INTO carerequest (
+          family_id,
+          caregiver_id,
+          elder_id,
+          start_date,
+          end_date,
+          status,
+          duration,
+          request_date
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+        RETURNING request_id, family_id, caregiver_id, elder_id, start_date, end_date, status, duration`,
+        [
+          tempBooking.family_id,
+          tempBooking.caregiver_id,
+          tempBooking.elder_id,
+          tempBooking.start_date,
+          tempBooking.end_date,
+          'confirmed',
+          tempBooking.duration
+        ]
+      );
+
+      const careRequest = careRequestResult.rows[0];
+      console.log('Care request created:', careRequest);
+
+      // Create payment record
+      const paymentResult = await client.query(
+        `INSERT INTO caregiver_payment (
+          care_request_id,
+          elder_id,
+          amount,
+          payment_method,
+          transaction_id,
+          payment_status,
+          payment_date,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        RETURNING payment_id, care_request_id, elder_id, amount, payment_method, transaction_id, payment_status`,
+        [
+          careRequest.request_id,
+          tempBooking.elder_id,
+          parseFloat(paymentAmount),
+          paymentMethod,
+          transactionId,
+          paymentStatus || 'completed'
+        ]
+      );
+
+      const payment = paymentResult.rows[0];
+      console.log('Payment record created:', payment);
+
+      // Delete the temporary booking
+      await client.query(
+        'DELETE FROM temporary_caregiver_booking WHERE temp_booking_id = $1',
+        [tempBookingId]
+      );
+
+      await client.query('COMMIT');
+
+      res.status(201).json({
+        success: true,
+        message: 'Payment confirmed and care request created successfully',
+        careRequest: {
+          request_id: careRequest.request_id,
+          family_id: careRequest.family_id,
+          caregiver_id: careRequest.caregiver_id,
+          elder_id: careRequest.elder_id,
+          start_date: careRequest.start_date,
+          end_date: careRequest.end_date,
+          status: careRequest.status,
+          duration: careRequest.duration
+        },
+        payment: {
+          payment_id: payment.payment_id,
+          care_request_id: payment.care_request_id,
+          amount: payment.amount,
+          payment_method: payment.payment_method,
+          transaction_id: payment.transaction_id,
+          payment_status: payment.payment_status
+        }
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+  } catch (err) {
+    console.error('Error confirming payment and creating care request:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error processing payment confirmation',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// NEW: Cancel temporary caregiver booking
+const cancelTemporaryCaregiverBooking = async (req, res) => {
+  try {
+    const { tempBookingId } = req.params;
+
+    console.log('Canceling temporary caregiver booking:', tempBookingId);
+
+    const result = await pool.query(
+      'DELETE FROM temporary_caregiver_booking WHERE temp_booking_id = $1 RETURNING temp_booking_id',
+      [tempBookingId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Temporary booking not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Temporary booking cancelled successfully'
+    });
+
+  } catch (err) {
+    console.error('Error canceling temporary booking:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error canceling temporary booking'
+    });
+  }
+};
+
+// NEW: Cleanup expired temporary caregiver bookings
+const cleanupExpiredCaregiverBookings = async (req, res) => {
+  try {
+    console.log('Cleaning up expired temporary caregiver bookings...');
+
+    const result = await pool.query(
+      `DELETE FROM temporary_caregiver_booking 
+       WHERE expires_at <= CURRENT_TIMESTAMP 
+       RETURNING temp_booking_id`
+    );
+
+    console.log(`Cleaned up ${result.rows.length} expired temporary bookings`);
+
+    res.json({
+      success: true,
+      message: `Cleaned up ${result.rows.length} expired bookings`,
+      count: result.rows.length
+    });
+
+  } catch (err) {
+    console.error('Error cleaning up expired bookings:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error cleaning up expired bookings'
+    });
+  }
+};
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -1007,7 +1492,12 @@ module.exports = {
   updateCareRequestStatus,
   
   // NEW: Caregiver booking functions
-  getBlockedDates
+  getBlockedDates,
+  createTemporaryCaregiverBooking,
+  getTemporaryCaregiverBooking,
+  confirmPaymentAndCreateCareRequest,
+  cancelTemporaryCaregiverBooking,
+  cleanupExpiredCaregiverBookings
   //getCareRequestById,
   //getAssignedElders,
   //getAssignedFamiliesCount,

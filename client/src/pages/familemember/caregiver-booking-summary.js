@@ -127,13 +127,66 @@ const CaregiverBookingSummary = () => {
       return;
     }
 
-    // For now, just show alert as payment integration is not required
-    alert('Payment integration will be implemented in the next phase. Booking flow complete!');
-    
-    // Navigate back to dashboard
-    setTimeout(() => {
-      navigate('/family-member/dashboard');
-    }, 2000);
+    setProcessing(true);
+    setError(null);
+
+    try {
+      console.log('Creating temporary booking...');
+      
+      // Get family_id from currentUser
+      if (!currentUser?.user_id) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get family_id
+      const familyResponse = await fetch(`http://localhost:5000/api/family-member/${currentUser.user_id}`);
+      const familyData = await familyResponse.json();
+      
+      if (!familyData.success || !familyData.familyMember) {
+        throw new Error('Family member not found');
+      }
+
+      const familyId = familyData.familyMember.family_id;
+      const totalAmount = calculateTotalCost();
+
+      // Create temporary booking
+      const tempBookingResponse = await caregiverApi.createTemporaryBooking({
+        elderId: parseInt(elderId),
+        caregiverId: parseInt(caregiverId),
+        familyId: familyId,
+        selectedDates: selectedDates,
+        totalAmount: totalAmount,
+        elderName: elderInfo?.name,
+        caregiverName: caregiverInfo?.name
+      });
+
+      console.log('Temporary booking created:', tempBookingResponse);
+
+      if (!tempBookingResponse.success) {
+        throw new Error(tempBookingResponse.error || 'Failed to create temporary booking');
+      }
+
+      // Navigate to payment page with booking data
+      const params = new URLSearchParams({
+        tempBookingId: tempBookingResponse.tempBooking.temp_booking_id,
+        elderId: elderId,
+        caregiverId: caregiverId,
+        amount: totalAmount,
+        duration: selectedDates.length,
+        elderName: elderInfo?.name || 'Elder',
+        caregiverName: caregiverInfo?.name || 'Caregiver',
+        selectedDates: selectedDates.join(','),
+        bookingType: 'caregiver'
+      });
+
+      navigate(`/family-member/caregiver-payment?${params.toString()}`);
+
+    } catch (err) {
+      console.error('Error proceeding to payment:', err);
+      setError(err.message || 'Failed to proceed to payment. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleGoBack = () => {

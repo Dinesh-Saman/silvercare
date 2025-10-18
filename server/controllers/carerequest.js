@@ -49,7 +49,7 @@ const getCareAssignmentsByWeek = async (req, res) => {
       INNER JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
       INNER JOIN "User" u ON c.user_id = u.user_id
       WHERE cr.elder_id = $3 
-      AND cr.status IN ('approved', 'completed')
+      AND cr.status IN ('approved', 'completed','confirmed')
       AND (
         (cr.start_date <= $2 AND cr.end_date >= $1) OR
         (cr.start_date >= $1 AND cr.start_date <= $2) OR
@@ -156,7 +156,7 @@ const getDayCareAssignments = async (req, res) => {
       INNER JOIN "User" u ON c.user_id = u.user_id
       INNER JOIN elder e ON cr.elder_id = e.elder_id
       WHERE cr.elder_id = $1 
-      AND cr.status IN ('approved', 'completed')
+      AND cr.status IN ('approved', 'completed','confirmed')
       AND $2 >= cr.start_date 
       AND $2 <= cr.end_date
       ORDER BY cr.start_date ASC
@@ -282,7 +282,7 @@ const getUpcomingCareAssignments = async (req, res) => {
       INNER JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
       INNER JOIN "User" u ON c.user_id = u.user_id
       WHERE cr.elder_id = $1 
-      AND cr.status IN ('approved', 'completed')
+      AND cr.status IN ('approved', 'completed', 'confirmed')
       AND cr.end_date >= $2
       ORDER BY cr.start_date ASC
       LIMIT 10
@@ -346,7 +346,7 @@ const getCareAssignmentsByMonth = async (req, res) => {
       INNER JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
       INNER JOIN "User" u ON c.user_id = u.user_id
       WHERE cr.elder_id = $3 
-      AND cr.status IN ('approved', 'completed')
+      AND cr.status IN ('approved', 'completed', 'confirmed')
       AND (
         (cr.start_date <= $2 AND cr.end_date >= $1) OR
         (cr.start_date >= $1 AND cr.start_date <= $2) OR

@@ -47,6 +47,8 @@ import FamilyMemberElderCaregivers from './pages/familemember/elder-caregivers';
 import CaregiversByDistrict from './pages/familemember/caregivers-by-district';
 import CaregiverBooking from './pages/familemember/caregiver-booking';
 import CaregiverBookingSummary from './pages/familemember/caregiver-booking-summary';
+import CaregiverPayment from './pages/familemember/caregiver-payment';
+import CaregiverPaymentSuccess from './pages/familemember/caregiver-payment-success';
 
 
 
@@ -346,6 +348,18 @@ function App() {
 <Route path="/family-member/caregiver-booking-summary" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <CaregiverBookingSummary />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/caregiver-payment" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverPayment />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/caregiver-payment-success" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverPaymentSuccess />
   </ProtectedRoute>
 } />
 

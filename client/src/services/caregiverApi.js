@@ -431,6 +431,133 @@ export const caregiverApi = {
     }
   },
 
+  // NEW: Create temporary caregiver booking (for payment flow)
+  createTemporaryBooking: async (bookingData) => {
+    try {
+      console.log('API: Creating temporary caregiver booking:', bookingData);
+      const response = await fetch(`${API_BASE}/temporary-booking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Temporary booking response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create temporary booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error creating temporary booking:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Get temporary booking by ID (for timer initialization)
+  getTemporaryBooking: async (tempBookingId) => {
+    try {
+      console.log('API: Fetching temporary caregiver booking:', tempBookingId);
+      const response = await fetch(`${API_BASE}/temporary-booking/${tempBookingId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      console.log('API: Temporary booking details:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch temporary booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching temporary booking:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Confirm payment and create care request
+  confirmPayment: async (paymentData) => {
+    try {
+      console.log('API: Confirming payment for caregiver booking:', paymentData);
+      const response = await fetch(`${API_BASE}/confirm-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Payment confirmation response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to confirm payment');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error confirming payment:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Cancel temporary booking
+  cancelTemporaryBooking: async (tempBookingId) => {
+    try {
+      console.log('API: Canceling temporary booking:', tempBookingId);
+      const response = await fetch(`${API_BASE}/temporary-booking/${tempBookingId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      console.log('API: Cancel booking response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error canceling booking:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Create payment intent for caregiver booking
+  createPaymentIntent: async (paymentData) => {
+    try {
+      const token = localStorage.getItem('silvercare_token');
+      console.log('API: Creating payment intent for caregiver booking:', paymentData);
+      const response = await fetch('http://localhost:5000/api/payment/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(paymentData),
+      });
+      
+      const data = await response.json();
+      console.log('API: Payment intent response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create payment intent');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error creating payment intent:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default caregiverApi;
