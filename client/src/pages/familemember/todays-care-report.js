@@ -382,24 +382,10 @@ const TodaysCareReport = () => {
                   <div className={styles.quickActions}>
                     <button 
                       className={styles.actionButton}
-                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}/doctors`)}
+                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}`)}
                     >
-                      <span className={styles.actionIcon}>📅</span>
-                      Book Appointment
-                    </button>
-                    <button 
-                      className={styles.actionButton}
-                      onClick={() => navigate('/family-member/elder-caregivers')}
-                    >
-                      <span className={styles.actionIcon}>🧑‍💼</span>
-                      Find Caregiver
-                    </button>
-                    <button 
-                      className={styles.actionButton}
-                      onClick={() => navigate('/family-member/elder-messages')}
-                    >
-                      <span className={styles.actionIcon}>💬</span>
-                      Send Message
+                      <span className={styles.actionIcon}>�</span>
+                      See Report
                     </button>
                   </div>
                 </div>
