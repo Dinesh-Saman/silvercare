@@ -382,9 +382,9 @@ const TodaysCareReport = () => {
                   <div className={styles.quickActions}>
                     <button 
                       className={styles.actionButton}
-                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}`)}
+                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}/care-schedule`)}
                     >
-                      <span className={styles.actionIcon}>�</span>
+                      <span className={styles.actionIcon}>📊</span>
                       See Report
                     </button>
                   </div>
