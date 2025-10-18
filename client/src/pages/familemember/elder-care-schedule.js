@@ -1,0 +1,730 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { elderApi } from '../../services/elderApi';
+import { 
+  getCareAssignmentsByWeek,
+  getUpcomingCareAssignments
+} from '../../services/caregiverApi';
+import Navbar from '../../components/navbar';
+import styles from '../../components/css/familymember/elder-care-schedule.module.css';
+import FamilyMemberLayout from '../../components/FamilyMemberLayout';
+
+const ElderCareSchedule = () => {
+  const { elderId } = useParams();
+  const { currentUser, loading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  const [elder, setElder] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Today's schedule state
+  const [todaysAssignments, setTodaysAssignments] = useState([]);
+  const [todaysLoading, setTodaysLoading] = useState(false);
+
+  // Upcoming care schedule state
+  const [upcomingAssignments, setUpcomingAssignments] = useState([]);
+  const [upcomingLoading, setUpcomingLoading] = useState(false);
+
+  // Monthly calendar state
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [monthlyAssignments, setMonthlyAssignments] = useState([]);
+  const [monthlyLoading, setMonthlyLoading] = useState(false);
+
+  // Modal state for day details
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [showDayModal, setShowDayModal] = useState(false);
+  const [selectedDayAssignments, setSelectedDayAssignments] = useState([]);
+
+  // Protect the route
+  useEffect(() => {
+    if (loading) return;
+
+    if (!isAuthenticated || !currentUser) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    if (currentUser.role !== 'family_member') {
+      navigate('/login', { replace: true });
+      return;
+    }
+  }, [currentUser, isAuthenticated, loading, navigate]);
+
+  // Fetch elder details and care data
+  useEffect(() => {
+    const fetchElderAndCareData = async () => {
+      if (!elderId || !currentUser?.user_id) return;
+      
+      try {
+        setDataLoading(true);
+        setError(null);
+        
+        // Fetch elder details from family member's elders
+        const response = await elderApi.getEldersByFamilyMember(currentUser.user_id);
+        
+        if (response.success) {
+          const elderData = response.elders.find(e => e.elder_id === parseInt(elderId));
+          
+          if (elderData) {
+            setElder(elderData);
+            
+            // Fetch today's assignments
+            await fetchTodaysAssignments(elderId);
+            
+            // Fetch upcoming assignments
+            await fetchUpcomingAssignments(elderId);
+            
+            // Fetch monthly assignments
+            await fetchMonthlyAssignments(elderId, currentMonth);
+          } else {
+            setError('Elder not found or not accessible');
+          }
+        } else {
+          setError('Failed to load elder data');
+        }
+        
+      } catch (err) {
+        console.error('Error fetching elder data:', err);
+        setError('Failed to load elder care schedule');
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (currentUser && currentUser.role === 'family_member') {
+      fetchElderAndCareData();
+    }
+  }, [elderId, currentUser, currentMonth]);
+
+  // Fetch today's assignments
+  const fetchTodaysAssignments = async (elderId) => {
+    try {
+      setTodaysLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get the week that contains today
+      const todayDate = new Date();
+      const weekStart = new Date(todayDate);
+      weekStart.setDate(todayDate.getDate() - todayDate.getDay()); // Go to Sunday
+      
+      const response = await getCareAssignmentsByWeek(elderId, weekStart.toISOString().split('T')[0]);
+      
+      if (response.data.success && response.data.dailyAssignments) {
+        const todayData = response.data.dailyAssignments.find(day => day.date === today);
+        setTodaysAssignments(todayData ? todayData.assignments : []);
+      }
+      
+      setTodaysLoading(false);
+    } catch (err) {
+      console.error('Error fetching today\'s assignments:', err);
+      setTodaysLoading(false);
+    }
+  };
+
+  // Fetch upcoming assignments
+  const fetchUpcomingAssignments = async (elderId) => {
+    try {
+      setUpcomingLoading(true);
+      const response = await getUpcomingCareAssignments(elderId);
+      setUpcomingAssignments(response.data.assignments || []);
+      setUpcomingLoading(false);
+    } catch (err) {
+      console.error('Error fetching upcoming assignments:', err);
+      setUpcomingLoading(false);
+    }
+  };
+
+  // Fetch monthly assignments
+  const fetchMonthlyAssignments = async (elderId, month) => {
+    try {
+      setMonthlyLoading(true);
+      
+      // Get first day of the month
+      const year = month.getFullYear();
+      const monthNum = month.getMonth();
+      const firstDay = new Date(year, monthNum, 1);
+      const lastDay = new Date(year, monthNum + 1, 0);
+      
+      // Find the Sunday before or on the first day
+      const startOfFirstWeek = new Date(firstDay);
+      startOfFirstWeek.setDate(firstDay.getDate() - firstDay.getDay());
+      
+      const allDailyAssignments = [];
+      const weeksToFetch = [];
+      
+      // Calculate all week starts we need to fetch
+      let currentWeekStart = new Date(startOfFirstWeek);
+      while (currentWeekStart <= lastDay) {
+        weeksToFetch.push(new Date(currentWeekStart));
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      }
+      
+      // Fetch all weeks
+      const weekPromises = weeksToFetch.map(weekStart =>
+        getCareAssignmentsByWeek(elderId, weekStart.toISOString().split('T')[0])
+      );
+      
+      const weekResponses = await Promise.all(weekPromises);
+      
+      // Combine all daily assignments and filter to only this month
+      weekResponses.forEach(response => {
+        if (response.data.success && response.data.dailyAssignments) {
+          response.data.dailyAssignments.forEach(day => {
+            const dayDate = new Date(day.date);
+            // Only include days that are in the target month
+            if (dayDate.getMonth() === monthNum && dayDate.getFullYear() === year) {
+              allDailyAssignments.push(day);
+            }
+          });
+        }
+      });
+      
+      setMonthlyAssignments(allDailyAssignments);
+      setMonthlyLoading(false);
+    } catch (err) {
+      console.error('Error fetching monthly assignments:', err);
+      setMonthlyLoading(false);
+    }
+  };
+
+  // Month navigation
+  const handleMonthChange = (direction) => {
+    const newMonth = new Date(currentMonth);
+    if (direction === 'prev') {
+      newMonth.setMonth(currentMonth.getMonth() - 1);
+    } else {
+      newMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+    setCurrentMonth(newMonth);
+    if (elderId) {
+      fetchMonthlyAssignments(elderId, newMonth);
+    }
+  };
+
+  const goToCurrentMonth = () => {
+    const today = new Date();
+    setCurrentMonth(today);
+    if (elderId) {
+      fetchMonthlyAssignments(elderId, today);
+    }
+  };
+
+  // Handle day click
+  const handleDayClick = async (date, assignments) => {
+    if (assignments && assignments.length > 0) {
+      setSelectedDay(date);
+      setSelectedDayAssignments(assignments);
+      setShowDayModal(true);
+    }
+  };
+
+  // Format date helpers
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatMonthYear = (date) => {
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
+  };
+
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return currentMonth.getMonth() === today.getMonth() && 
+           currentMonth.getFullYear() === today.getFullYear();
+  };
+
+  const isToday = (date) => {
+    const today = new Date();
+    const checkDate = new Date(date);
+    return today.getDate() === checkDate.getDate() &&
+           today.getMonth() === checkDate.getMonth() &&
+           today.getFullYear() === checkDate.getFullYear();
+  };
+
+  // Generate calendar days
+  const generateCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push({ isEmpty: true });
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      // Find assignments for this date from the array
+      const dayData = monthlyAssignments.find(d => d.date === dateStr);
+      const assignments = dayData ? dayData.assignments : [];
+      
+      days.push({
+        date: dateStr,
+        day: day,
+        assignments: assignments,
+        isToday: isToday(dateStr)
+      });
+    }
+
+    return days;
+  };
+
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated || !currentUser || currentUser.role !== 'family_member') {
+    return (
+      <div className={styles.accessDenied}>
+        <h2>Access Denied</h2>
+        <p>Redirecting to login...</p>
+      </div>
+    );
+  }
+
+  if (dataLoading) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <FamilyMemberLayout>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading elder care schedule...</p>
+          </div>
+        </FamilyMemberLayout>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <FamilyMemberLayout>
+          <div className={styles.errorContainer}>
+            <h2>⚠️ Error</h2>
+            <p>{error}</p>
+            <button 
+              className={styles.retryButton}
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        </FamilyMemberLayout>
+      </div>
+    );
+  }
+
+  if (!elder) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <FamilyMemberLayout>
+          <div className={styles.errorContainer}>
+            <h2>⚠️ Elder Not Found</h2>
+            <p>The requested elder could not be found.</p>
+            <button 
+              className={styles.backButton}
+              onClick={() => navigate('/family-member/todays-care-report')}
+            >
+              Back to Care Report
+            </button>
+          </div>
+        </FamilyMemberLayout>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <Navbar />
+      <FamilyMemberLayout>
+        <div className={styles.content}>
+          {/* Header Section */}
+          <div className={styles.header}>
+            <div className={styles.headerContent}>
+              <div className={styles.elderInfo}>
+                <div className={styles.elderAvatar}>
+                  {elder.profile_photo ? (
+                    <img 
+                      src={`http://localhost:5000/${elder.profile_photo}`} 
+                      alt={elder.name}
+                      className={styles.elderPhoto}
+                    />
+                  ) : (
+                    <div className={styles.elderInitial}>
+                      {elder.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h1 className={styles.title}>Care Schedule for {elder.name}</h1>
+                  <p className={styles.subtitle}>
+                    {getCurrentDate()} - Today's care overview and schedule
+                  </p>
+                  <div className={styles.elderMeta}>
+                    <span>{elder.gender} • {new Date().getFullYear() - new Date(elder.dob).getFullYear()} years old</span>
+                    <span>{elder.district}</span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                className={styles.backButton}
+                onClick={() => navigate('/family-member/todays-care-report')}
+              >
+                ← Back to Care Report
+              </button>
+            </div>
+          </div>
+
+          {/* Today's Schedule Section */}
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2>📅 Today's Care Schedule</h2>
+              <p>Current care assignments for {getCurrentDate()}</p>
+            </div>
+
+            <div className={styles.sectionContent}>
+              {todaysLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading today's schedule...</p>
+                </div>
+              ) : todaysAssignments.length > 0 ? (
+                <div className={styles.todaysGrid}>
+                  {todaysAssignments.map((assignment, index) => (
+                    <div key={index} className={styles.todaysCard}>
+                      <div className={styles.cardHeader}>
+                        <div className={styles.caregiverIcon}>👨‍⚕️</div>
+                        <div className={styles.cardHeaderInfo}>
+                          <h3>{assignment.caregiver_name}</h3>
+                          <span className={styles.statusBadge}>
+                            {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className={styles.todayBadge}>Today</div>
+                      </div>
+                      
+                      <div className={styles.cardBody}>
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>📞 Phone:</span>
+                          <span className={styles.infoValue}>{assignment.caregiver_phone}</span>
+                        </div>
+                        
+                        {assignment.caregiver_fixed_line && (
+                          <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>☎️ Fixed Line:</span>
+                            <span className={styles.infoValue}>{assignment.caregiver_fixed_line}</span>
+                          </div>
+                        )}
+                        
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>📧 Email:</span>
+                          <span className={styles.infoValue}>{assignment.caregiver_email}</span>
+                        </div>
+                        
+                        {assignment.duration && (
+                          <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>⏱️ Duration:</span>
+                            <span className={styles.infoValue}>{assignment.duration}</span>
+                          </div>
+                        )}
+                        
+                        {assignment.certifications && (
+                          <div className={styles.certificationsRow}>
+                            <span className={styles.infoLabel}>🎓 Certifications:</span>
+                            <span className={styles.certificationsValue}>{assignment.certifications}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.noData}>
+                  <div className={styles.noDataIcon}>📋</div>
+                  <h3>No Care Scheduled Today</h3>
+                  <p>{elder.name} doesn't have any care sessions scheduled for today.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Care Schedule Section */}
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2>📅 Upcoming Care Schedule</h2>
+              <p>Scheduled care sessions in the coming days</p>
+            </div>
+
+            <div className={styles.sectionContent}>
+              {upcomingLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading upcoming assignments...</p>
+                </div>
+              ) : upcomingAssignments.length > 0 ? (
+                <div className={styles.upcomingGrid}>
+                  {upcomingAssignments.map((assignment, index) => (
+                    <div key={index} className={styles.upcomingCard}>
+                      <div className={styles.cardHeader}>
+                        <div className={styles.caregiverIcon}>👨‍⚕️</div>
+                        <div className={styles.cardHeaderInfo}>
+                          <h3>{assignment.caregiver_name}</h3>
+                          <span className={styles.statusBadge}>
+                            {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.cardBody}>
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>📞 Phone:</span>
+                          <span className={styles.infoValue}>{assignment.caregiver_phone}</span>
+                        </div>
+                        
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>📆 Start Date:</span>
+                          <span className={styles.infoValue}>{formatDate(assignment.start_date)}</span>
+                        </div>
+                        
+                        <div className={styles.infoRow}>
+                          <span className={styles.infoLabel}>📆 End Date:</span>
+                          <span className={styles.infoValue}>{formatDate(assignment.end_date)}</span>
+                        </div>
+                        
+                        {assignment.duration && (
+                          <div className={styles.infoRow}>
+                            <span className={styles.infoLabel}>⏱️ Duration:</span>
+                            <span className={styles.infoValue}>{assignment.duration}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.noData}>
+                  <div className={styles.noDataIcon}>📋</div>
+                  <h3>No Upcoming Care Sessions</h3>
+                  <p>{elder.name} doesn't have any care sessions scheduled.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Monthly Calendar Section */}
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h2>📆 Care Calendar</h2>
+              <p>Monthly view of {elder.name}'s care schedule</p>
+            </div>
+
+            <div className={styles.calendarNavigation}>
+              <button 
+                className={styles.navBtn}
+                onClick={() => handleMonthChange('prev')}
+              >
+                &#8249; Previous Month
+              </button>
+              
+              <div className={styles.monthDisplay}>
+                <span className={styles.monthText}>{formatMonthYear(currentMonth)}</span>
+                {!isCurrentMonth() && (
+                  <button 
+                    className={styles.currentMonthBtn}
+                    onClick={goToCurrentMonth}
+                  >
+                    This Month
+                  </button>
+                )}
+              </div>
+              
+              <button 
+                className={styles.navBtn}
+                onClick={() => handleMonthChange('next')}
+              >
+                Next Month &#8250;
+              </button>
+            </div>
+
+            <div className={styles.calendarContent}>
+              {monthlyLoading ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading calendar...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Day headers */}
+                  <div className={styles.calendarHeader}>
+                    <div className={styles.dayHeader}>Sun</div>
+                    <div className={styles.dayHeader}>Mon</div>
+                    <div className={styles.dayHeader}>Tue</div>
+                    <div className={styles.dayHeader}>Wed</div>
+                    <div className={styles.dayHeader}>Thu</div>
+                    <div className={styles.dayHeader}>Fri</div>
+                    <div className={styles.dayHeader}>Sat</div>
+                  </div>
+
+                  {/* Calendar grid */}
+                  <div className={styles.calendarGrid}>
+                    {generateCalendarDays().map((dayInfo, index) => (
+                      dayInfo.isEmpty ? (
+                        <div key={`empty-${index}`} className={styles.emptyDay}></div>
+                      ) : (
+                        <div 
+                          key={dayInfo.date}
+                          className={`${styles.calendarDay} ${
+                            dayInfo.isToday ? styles.todayDay : ''
+                          } ${
+                            dayInfo.assignments.length > 0 ? styles.hasAssignment : ''
+                          }`}
+                          onClick={() => handleDayClick(dayInfo.date, dayInfo.assignments)}
+                        >
+                          <div className={styles.dayNumber}>{dayInfo.day}</div>
+                          
+                          {dayInfo.isToday && (
+                            <div className={styles.todayCalendarBadge}>Today</div>
+                          )}
+                          
+                          {dayInfo.assignments.length > 0 && (
+                            <div className={styles.assignmentsPreview}>
+                              {dayInfo.assignments.map((assignment, idx) => (
+                                <div key={idx} className={styles.assignmentPreviewItem}>
+                                  <div className={styles.caregiverNamePreview}>
+                                    {assignment.caregiver_name}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </FamilyMemberLayout>
+
+      {/* Day Details Modal */}
+      {showDayModal && (
+        <div className={styles.modal} onClick={() => setShowDayModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3>{elder.name}'s Care Assignments</h3>
+                <div className={styles.modalDate}>{formatDate(selectedDay)}</div>
+              </div>
+              <button 
+                className={styles.closeBtn}
+                onClick={() => setShowDayModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              {selectedDayAssignments.map((assignment, index) => (
+                <div key={index} className={styles.modalAssignmentCard}>
+                  <div className={styles.modalCardHeader}>
+                    <div className={styles.modalCaregiverIcon}>👨‍⚕️</div>
+                    <div>
+                      <h4>{assignment.caregiver_name}</h4>
+                      <span className={styles.modalStatusBadge}>
+                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.modalCardBody}>
+                    <div className={styles.modalInfoRow}>
+                      <span className={styles.modalInfoLabel}>📞 Phone:</span>
+                      <span className={styles.modalInfoValue}>{assignment.caregiver_phone}</span>
+                    </div>
+
+                    {assignment.caregiver_fixed_line && (
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalInfoLabel}>☎️ Fixed Line:</span>
+                        <span className={styles.modalInfoValue}>{assignment.caregiver_fixed_line}</span>
+                      </div>
+                    )}
+
+                    <div className={styles.modalInfoRow}>
+                      <span className={styles.modalInfoLabel}>📧 Email:</span>
+                      <span className={styles.modalInfoValue}>{assignment.caregiver_email}</span>
+                    </div>
+
+                    <div className={styles.modalInfoRow}>
+                      <span className={styles.modalInfoLabel}>📆 Start Date:</span>
+                      <span className={styles.modalInfoValue}>{formatDate(assignment.start_date)}</span>
+                    </div>
+
+                    <div className={styles.modalInfoRow}>
+                      <span className={styles.modalInfoLabel}>📆 End Date:</span>
+                      <span className={styles.modalInfoValue}>{formatDate(assignment.end_date)}</span>
+                    </div>
+
+                    {assignment.duration && (
+                      <div className={styles.modalInfoRow}>
+                        <span className={styles.modalInfoLabel}>⏱️ Duration:</span>
+                        <span className={styles.modalInfoValue}>{assignment.duration}</span>
+                      </div>
+                    )}
+
+                    {assignment.certifications && (
+                      <div className={styles.modalCertifications}>
+                        <span className={styles.modalInfoLabel}>🎓 Certifications:</span>
+                        <span className={styles.modalCertificationsValue}>{assignment.certifications}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ElderCareSchedule;
