@@ -3155,6 +3155,140 @@ const bulkUpdateElders = async (req, res) => {
   }
 };
 
+// NEW: Get caregivers by elder's district
+const getCaregiversByElderDistrict = async (req, res) => {
+  const { elderId } = req.params;
+  
+  try {
+    console.log('Fetching caregivers for elder:', elderId);
+    
+    // First, get elder's district
+    const elderResult = await pool.query(
+      'SELECT district, name, age, gender, contact, medical_conditions FROM elder WHERE elder_id = $1',
+      [elderId]
+    );
+    
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+    
+    const elderInfo = elderResult.rows[0];
+    console.log('Elder district:', elderInfo.district);
+    
+    // Get caregivers from the same district who are available
+    const caregiversResult = await pool.query(`
+      SELECT 
+        c.caregiver_id,
+        c.user_id,
+        c.availability,
+        c.certifications,
+        c.fixed_line,
+        c.district,
+        u.name as caregiver_name,
+        u.email as caregiver_email,
+        u.phone as caregiver_phone,
+        u.created_at
+      FROM caregiver c
+      INNER JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.district = $1 
+        AND u.role = 'caregiver' 
+        AND c.availability = 'available'
+      ORDER BY u.created_at DESC
+    `, [elderInfo.district]);
+    
+    console.log('Found caregivers:', caregiversResult.rows.length);
+    
+    res.json({
+      success: true,
+      caregivers: caregiversResult.rows,
+      elderInfo: {
+        name: elderInfo.name,
+        district: elderInfo.district,
+        age: elderInfo.age
+      }
+    });
+    
+  } catch (err) {
+    console.error('Error fetching caregivers:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching caregivers data' 
+    });
+  }
+};
+
+// NEW: Get caregiver booking info (both elder and caregiver details)
+const getCaregiverBookingInfo = async (req, res) => {
+  const { elderId, caregiverId } = req.params;
+  
+  try {
+    console.log('Fetching booking info for elder:', elderId, 'caregiver:', caregiverId);
+    
+    // Get caregiver details
+    const caregiverResult = await pool.query(`
+      SELECT 
+        c.caregiver_id,
+        c.user_id,
+        c.availability,
+        c.certifications,
+        c.fixed_line,
+        c.district,
+        u.name,
+        u.email,
+        u.phone,
+        3000 as daily_rate
+      FROM caregiver c
+      INNER JOIN "User" u ON c.user_id = u.user_id
+      WHERE c.caregiver_id = $1
+    `, [caregiverId]);
+    
+    if (caregiverResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Caregiver not found'
+      });
+    }
+    
+    // Get elder details
+    const elderResult = await pool.query(`
+      SELECT 
+        elder_id,
+        name,
+        dob,
+        gender,
+        contact,
+        district,
+        medical_conditions,
+        EXTRACT(YEAR FROM AGE(dob)) as age
+      FROM elder
+      WHERE elder_id = $1
+    `, [elderId]);
+    
+    if (elderResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      caregiver: caregiverResult.rows[0],
+      elder: elderResult.rows[0]
+    });
+    
+  } catch (err) {
+    console.error('Error fetching booking info:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching booking information' 
+    });
+  }
+};
+
 module.exports = {
   getEldersByFamilyMember,
   getElderCount,
@@ -3185,7 +3319,11 @@ module.exports = {
   cancelTemporaryBooking,
   cleanupExpiredBookings,
   createTemporaryHealthcareProfessionalBooking,
-  confirmPaymentAndCreateHealthcareProfessionalAppointment
+  confirmPaymentAndCreateHealthcareProfessionalAppointment,
+  
+  // NEW: Caregiver booking functions
+  getCaregiversByElderDistrict,
+  getCaregiverBookingInfo
 };
 
 

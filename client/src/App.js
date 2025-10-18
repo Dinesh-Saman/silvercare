@@ -42,6 +42,14 @@ import PaymentSuccess from './pages/familemember/payment-success';
 import HealthcarePayment from './pages/familemember/healthcare-payment';
 import HealthcarePaymentSuccess from './pages/familemember/healthcare-payment-success';
 
+// Import new caregiver booking components
+import FamilyMemberElderCaregivers from './pages/familemember/elder-caregivers';
+import CaregiversByDistrict from './pages/familemember/caregivers-by-district';
+import CaregiverBooking from './pages/familemember/caregiver-booking';
+import CaregiverBookingSummary from './pages/familemember/caregiver-booking-summary';
+import CaregiverPayment from './pages/familemember/caregiver-payment';
+import CaregiverPaymentSuccess from './pages/familemember/caregiver-payment-success';
+
 
 
 import AllAppointments from "./pages/elder/appointments";
@@ -315,6 +323,43 @@ function App() {
 <Route path="/family-member/healthcare-payment-success" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <HealthcarePaymentSuccess />
+  </ProtectedRoute>
+} />
+
+{/* NEW: Caregiver booking flow routes */}
+<Route path="/family-member/elder-caregivers" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <FamilyMemberElderCaregivers />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/elder/:elderId/caregivers-list" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiversByDistrict />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/elder/:elderId/caregiver-booking/:caregiverId" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverBooking />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/caregiver-booking-summary" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverBookingSummary />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/caregiver-payment" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverPayment />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/caregiver-payment-success" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverPaymentSuccess />
   </ProtectedRoute>
 } />
 
