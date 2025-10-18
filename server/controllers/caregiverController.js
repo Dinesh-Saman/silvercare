@@ -1396,7 +1396,7 @@ const confirmPaymentAndCreateCareRequest = async (req, res) => {
           tempBooking.elder_id,
           tempBooking.start_date,
           tempBooking.end_date,
-          'confirmed',
+          'pending',
           tempBooking.duration
         ]
       );
