@@ -12,7 +12,6 @@ const CaregiverBookings = () => {
   
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
-  const [stats, setStats] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -51,8 +50,11 @@ const CaregiverBookings = () => {
         
         if (response.success) {
           console.log('Caregiver bookings received:', response.bookings);
-          setBookings(response.bookings || []);
-          setStats(response.stats || {});
+          // Sort by latest first (request_date descending)
+          const sortedBookings = (response.bookings || []).sort((a, b) => {
+            return new Date(b.request_date) - new Date(a.request_date);
+          });
+          setBookings(sortedBookings);
         } else {
           throw new Error(response.error || 'Failed to fetch caregiver bookings');
         }
@@ -89,8 +91,10 @@ const CaregiverBookings = () => {
           return startDate > currentDate && booking.status === 'confirmed';
         } else if (filters.type === 'ongoing') {
           return startDate <= currentDate && endDate >= currentDate && booking.status === 'confirmed';
-        } else if (filters.type === 'past') {
-          return endDate < currentDate || booking.status === 'cancelled';
+        } else if (filters.type === 'completed') {
+          return endDate < currentDate && booking.status === 'confirmed';
+        } else if (filters.type === 'cancelled') {
+          return booking.status === 'cancelled';
         }
         return true;
       });
@@ -285,40 +289,6 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
             </button>
           </div>
 
-          {/* Stats Cards */}
-          {stats && (
-            <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>📋</div>
-                <div className={styles.statContent}>
-                  <h3>{stats.total || 0}</h3>
-                  <p>Total Bookings</p>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>⏰</div>
-                <div className={styles.statContent}>
-                  <h3>{stats.upcoming || 0}</h3>
-                  <p>Upcoming</p>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>▶️</div>
-                <div className={styles.statContent}>
-                  <h3>{stats.ongoing || 0}</h3>
-                  <p>Ongoing</p>
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon}>✅</div>
-                <div className={styles.statContent}>
-                  <h3>{stats.completed || 0}</h3>
-                  <p>Completed</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Filters */}
           <div className={styles.filtersSection}>
             <div className={styles.filterTabs}>
@@ -326,35 +296,41 @@ ${booking.total_amount ? `• Amount: Rs. ${booking.total_amount}
                 className={`${styles.filterTab} ${filters.type === 'all' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'all' }))}
               >
-                All Bookings
+                📋 All Bookings
               </button>
               <button 
                 className={`${styles.filterTab} ${filters.type === 'upcoming' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'upcoming' }))}
               >
-                Upcoming
+                ⏰ Upcoming
               </button>
               <button 
                 className={`${styles.filterTab} ${filters.type === 'ongoing' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'ongoing' }))}
               >
-                Ongoing
+                ▶️ Ongoing
               </button>
               <button 
-                className={`${styles.filterTab} ${filters.type === 'past' ? styles.active : ''}`}
-                onClick={() => setFilters(prev => ({ ...prev, type: 'past' }))}
+                className={`${styles.filterTab} ${filters.type === 'completed' ? styles.active : ''}`}
+                onClick={() => setFilters(prev => ({ ...prev, type: 'completed' }))}
               >
-                Past
+                ✅ Completed
+              </button>
+              <button 
+                className={`${styles.filterTab} ${filters.type === 'cancelled' ? styles.active : ''}`}
+                onClick={() => setFilters(prev => ({ ...prev, type: 'cancelled' }))}
+              >
+                ❌ Cancelled
               </button>
             </div>
 
-            <div className={styles.searchBox}>
+            <div className={styles.searchContainer}>
               <input
                 type="text"
-                placeholder="Search by caregiver, elder, or booking ID..."
+                className={styles.searchInput}
+                placeholder="🔍 Search by caregiver, elder, or booking ID..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                className={styles.searchInput}
               />
             </div>
           </div>
