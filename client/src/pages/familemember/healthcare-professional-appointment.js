@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
-import styles from '../../components/css/familymember/online-appointment.module.css';
+import styles from '../../components/css/familymember/physical-appointment.module.css';
 
 const HealthcareProfessionalAppointment = () => {
   const { currentUser, loading, isAuthenticated } = useAuth();
@@ -17,11 +17,24 @@ const HealthcareProfessionalAppointment = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [counselorInfo, setCounselorInfo] = useState(null);
   const [elderInfo, setElderInfo] = useState(null);
+  const [blockedSlots, setBlockedSlots] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-  const [notes, setNotes] = useState('');
+
+  // Calculate age from date of birth
+  const calculateAge = (dob) => {
+    if (!dob) return 'N/A';
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   // Format date for display
   const formatDateForDisplay = (dateString) => {
@@ -52,22 +65,22 @@ const HealthcareProfessionalAppointment = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  // Fetch healthcare professional and elder info
+  // Fetch appointment booking info from backend
   useEffect(() => {
-    const fetchProviderInfo = async () => {
+    const fetchAppointmentInfo = async () => {
       if (!elderId || !counselorId) return;
       
       try {
         setDataLoading(true);
         setError(null);
         
-        console.log('Fetching healthcare professional info for elder:', elderId, 'counselor:', counselorId);
+        console.log('Fetching healthcare professional booking info for elder:', elderId, 'counselor:', counselorId);
         
-        // Get all healthcare professionals and find the specific one
+        // Get healthcare professional information
         const response = await elderApi.getAllHealthProfessionalsForOnlineMeeting(elderId);
         
         if (response.success) {
-          console.log('Healthcare professionals response:', response);
+          console.log('Healthcare professional booking info received:', response);
           
           const counselor = response.healthProfessionals.find(
             hp => hp.counselor_id === parseInt(counselorId)
@@ -76,11 +89,13 @@ const HealthcareProfessionalAppointment = () => {
           if (counselor) {
             setCounselorInfo({
               name: counselor.counselor_name,
-              specialty: counselor.specialty,
+              specialization: counselor.specialty,
+              institution: counselor.district, // Using district as institution
               district: counselor.district,
               experience: counselor.years_experience,
               email: counselor.email,
-              phone: counselor.phone
+              phone: counselor.phone,
+              fee: meetingType === 'physical' ? 2500 : 2000
             });
           } else {
             throw new Error('Healthcare professional not found');
@@ -88,7 +103,11 @@ const HealthcareProfessionalAppointment = () => {
           
           setElderInfo({
             name: response.elderInfo.name,
-            district: response.elderInfo.district
+            age: 'N/A', // We might not have DOB
+            gender: 'N/A',
+            district: response.elderInfo.district,
+            contact: 'N/A',
+            medical_conditions: 'N/A'
           });
           
         } else {
@@ -96,145 +115,159 @@ const HealthcareProfessionalAppointment = () => {
         }
         
       } catch (err) {
-        console.error('Error fetching healthcare professional info:', err);
-        setError(err.message || 'Failed to load healthcare professional information');
+        console.error('Error fetching booking info:', err);
+        setError(err.message || 'Error loading booking information. Please try again.');
       } finally {
         setDataLoading(false);
       }
     };
 
-    fetchProviderInfo();
-  }, [elderId, counselorId]);
+    fetchAppointmentInfo();
+  }, [elderId, counselorId, meetingType]);
 
-  // Get minimum date (tomorrow)
-  const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
+  // Generate calendar days for current month without timezone issues
+  const generateCalendarDays = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-  // Get available time slots
-  const getAvailableTimeSlots = () => {
-    return [
-      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-      '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
-    ];
-  };
-
-  // Handle appointment booking
-  const handleBookAppointment = async (e) => {
-    e.preventDefault();
+    const days = [];
     
-    if (!selectedDate || !selectedTime) {
-      setError('Please select both date and time for your appointment');
-      return;
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
     }
-
-    try {
-      setSubmitting(true);
-      setError(null);
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       
-      const appointmentData = {
-        counselorId: parseInt(counselorId),
-        appointmentDate: selectedDate,
-        appointmentTime: selectedTime,
-        appointmentType: 'online',
-        familyId: currentUser.family_id, // Add family ID from current user
-        patientName: elderInfo?.name || 'Elder Patient',
-        contactNumber: currentUser.phone || '',
-        emergencyContact: currentUser.phone || '',
-        notes: notes || 'Online healthcare professional consultation'
-      };
-
-      console.log('Booking healthcare professional appointment:', appointmentData);
+      const date = new Date(currentYear, currentMonth, day);
+      const isToday = date.toDateString() === today.toDateString();
+      const isPast = date < today;
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
       
-      const response = await elderApi.createHealthProfessionalAppointment(elderId, appointmentData);
-      
-      if (response.success) {
-        setSuccessMessage('Healthcare professional appointment booked successfully!');
-        
-        // Show success modal with meeting details
-        const meetingLink = response.appointment.meeting_link;
-        
-        setTimeout(() => {
-          alert(`
-✅ Healthcare Professional Appointment Confirmed!
+      days.push({
+        day,
+        date: dateString,
+        isToday,
+        isPast,
+        isWeekend,
+        isAvailable: !isPast && !isWeekend
+      });
+    }
+    
+    return days;
+  };
 
-📅 Date: ${formatDateForDisplay(selectedDate)}
-🕐 Time: ${formatTimeForDisplay(selectedTime)}
-👩‍⚕️ Healthcare Professional: ${counselorInfo.name}
-🧠 Specialty: ${counselorInfo.specialty}
+  // Generate available time slots for healthcare professional appointments
+  const generateTimeSlots = () => {
+    const slots = [];
+    
+    // Afternoon slots (3 PM - 8 PM) 
+    for (let hour = 15; hour <= 20; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    return slots;
+  };
 
-🔗 Meeting Link: ${meetingLink}
+  // Check if a time slot is blocked
+  const isTimeSlotBlocked = (timeSlot) => {
+    return blockedSlots.includes(timeSlot);
+  };
 
-You can join the meeting using the link above. 
-The meeting is accessible globally and doesn't require any local setup.
+  const handleDateSelection = (dateString) => {
+    setSelectedDate(dateString);
+    setSelectedTime(''); // Reset selected time when date changes
+    console.log('Calendar day clicked, date set to:', dateString);
+  };
 
-You will be redirected to your appointments page.
-          `);
-          
-          // Redirect to appointments page
-          navigate(`/family-member/appointments`);
-        }, 500);
-        
-      } else {
-        throw new Error(response.error || 'Failed to book appointment');
-      }
-      
-    } catch (err) {
-      console.error('Error booking appointment:', err);
-      setError(err.message || 'Failed to book appointment');
-    } finally {
-      setSubmitting(false);
+  const handleTimeSelection = (time) => {
+    if (!isTimeSlotBlocked(time)) {
+      setSelectedTime(time);
+      console.log('Selected time:', time);
     }
   };
 
-  // Protect the route
-  useEffect(() => {
-    if (loading) return;
-
-    if (!isAuthenticated || !currentUser || currentUser.role !== 'family_member') {
-      navigate('/login', { replace: true });
+  // Handle booking appointment - redirect to booking summary
+  const handleBookAppointment = async () => {
+    if (!selectedDate || !selectedTime) {
+      setError('Please select both date and time for the appointment');
       return;
     }
-  }, [currentUser, isAuthenticated, loading, navigate]);
 
-  // Show loading
-  if (loading || dataLoading) {
+    if (isTimeSlotBlocked(selectedTime)) {
+      setError('Selected time slot is not available. Please choose a different time.');
+      return;
+    }
+
+    // Redirect to healthcare professional booking summary page
+    const summaryParams = new URLSearchParams({
+      date: selectedDate,
+      time: selectedTime,
+      type: meetingType || 'online'
+    });
+
+    navigate(`/family-member/elder/${elderId}/healthcare-professional-booking-summary/${counselorId}?${summaryParams.toString()}`);
+  };
+
+  const days = generateCalendarDays();
+  const timeSlots = generateTimeSlots();
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+  const currentMonth = monthNames[new Date().getMonth()];
+  const currentYear = new Date().getFullYear();
+  
+  // Debug log to verify calendar generation
+  console.log('Healthcare Professional Calendar - Generated days:', days.length);
+
+  // Show loading while checking authentication
+  if (loading) {
     return (
-      <div>
-        <Navbar />
-        <FamilyMemberLayout>
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingSpinner}></div>
-            <h2>Loading healthcare professional information...</h2>
-          </div>
-        </FamilyMemberLayout>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}></div>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated || !currentUser || currentUser.role !== 'family_member') {
+    return (
+      <div className={styles.accessDenied}>
+        <h2>Access Denied</h2>
+        <p>You need to be logged in as a family member to book healthcare professional appointments.</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className={styles.container}>
       <Navbar />
       <FamilyMemberLayout>
-        <div className={styles.appointmentContainer}>
-          <div className={styles.headerSection}>
+        <div className={styles.content}>
+          {/* Header */}
+          <div className={styles.header}>
+            <div className={styles.headerContent}>
+              <h1 className={styles.title}>
+                🩺 Book Healthcare Professional Appointment
+              </h1>
+              <p className={styles.subtitle}>
+                Schedule a {meetingType === 'physical' ? 'physical meeting (2 hours)' : 'video consultation (1 hour)'} 
+              </p>
+            </div>
             <button 
               className={styles.backButton}
-              onClick={() => navigate(`/family-member/elder/${elderId}/providers`)}
+              onClick={() => navigate(`/family-member/elder/${elderId}/doctors`)}
             >
-              ← Back to Healthcare Professionals
+              ← Back to Providers
             </button>
-            
-            <h1 className={styles.pageTitle}>
-              Book Healthcare Professional Consultation
-            </h1>
-            <p className={styles.pageSubtitle}>
-              Schedule an online consultation with a healthcare professional
-            </p>
           </div>
 
+          {/* Error Message */}
           {error && (
             <div className={styles.errorMessage}>
               <span className={styles.errorIcon}>⚠️</span>
@@ -242,6 +275,7 @@ You will be redirected to your appointments page.
             </div>
           )}
 
+          {/* Success Message */}
           {successMessage && (
             <div className={styles.successMessage}>
               <span className={styles.successIcon}>✅</span>
@@ -249,142 +283,208 @@ You will be redirected to your appointments page.
             </div>
           )}
 
-          <div className={styles.appointmentContent}>
-            {/* Healthcare Professional Info */}
-            {counselorInfo && (
-              <div className={styles.providerCard}>
-                <div className={styles.providerHeader}>
-                  <div className={styles.providerAvatar}>
-                    <span className={styles.avatarText}>
-                      {counselorInfo.name.charAt(0).toUpperCase()}
-                    </span>
+          {dataLoading ? (
+            <div className={styles.loadingContainer}>
+              <div className={styles.loadingSpinner}></div>
+              <p>Loading healthcare professional information...</p>
+            </div>
+          ) : (
+            <>
+              {/* Info Cards */}
+              <div className={styles.infoCards}>
+                <div className={styles.infoCard}>
+                  <div className={styles.cardIcon}>🩺</div>
+                  <div className={styles.cardContent}>
+                    <h3>Healthcare Professional Information</h3>
+                    {counselorInfo && (
+                      <>
+                        <p><strong>{counselorInfo.name}</strong></p>
+                        <p>{counselorInfo.specialization}</p>
+                        <p>🏥 {counselorInfo.institution}</p>
+                        <p>📍 {counselorInfo.district}</p>
+                        <p>⭐ {counselorInfo.experience} years experience</p>
+                        {counselorInfo.phone && <p>📞 {counselorInfo.phone}</p>}
+                        {counselorInfo.email && <p>✉️ {counselorInfo.email}</p>}
+                      </>
+                    )}
                   </div>
-                  <div className={styles.providerInfo}>
-                    <h2 className={styles.providerName}>{counselorInfo.name}</h2>
-                    <p className={styles.providerSpecialty}>{counselorInfo.specialty}</p>
-                    <div className={styles.providerDetails}>
-                      <span className={styles.detail}>
-                        📍 {counselorInfo.district}
-                      </span>
-                      <span className={styles.detail}>
-                        🎓 {counselorInfo.experience} years experience
-                      </span>
-                      <span className={styles.detail}>
-                        💻 Online Consultation Available
-                      </span>
+                </div>
+
+                <div className={styles.infoCard}>
+                  <div className={styles.cardIcon}>👨‍👩‍👧‍👦</div>
+                  <div className={styles.cardContent}>
+                    <h3>Patient Information</h3>
+                    {elderInfo && (
+                      <>
+                        <p><strong>{elderInfo.name}</strong></p>
+                        <p>Age: {elderInfo.age} years</p>
+                        <p>Gender: {elderInfo.gender}</p>
+                        <p>📍 {elderInfo.district}</p>
+                        <p>📞 {elderInfo.contact}</p>
+                        {elderInfo.medical_conditions !== 'N/A' && (
+                          <p><strong>Medical Conditions:</strong> {elderInfo.medical_conditions}</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.infoCard}>
+                  <div className={styles.cardIcon}>💰</div>
+                  <div className={styles.cardContent}>
+                    <h3>Appointment Details</h3>
+                    <p><strong>Meeting Type:</strong> {meetingType === 'physical' ? 'Physical' : 'Online'}</p>
+                    <p><strong>Duration:</strong> {meetingType === 'physical' ? '2 hours' : '1 hour'}</p>
+                    <p><strong>Consultation Fee:</strong> Rs. {counselorInfo?.fee || (meetingType === 'physical' ? 2500 : 2000)}</p>
+                  </div>
+                </div>
+              </div>
+
+            <div className={styles.appointmentForm}>
+            {/* Calendar and Time Section - Combined */}
+            <div className={styles.calendarSection}>
+              <div className={styles.calendarTimeContainer}>
+                {/* Calendar Wrapper */}
+                <div className={styles.calendarWrapper}>
+                  <h2 className={styles.sectionTitle}>📅 Select Date</h2>
+                  <div className={styles.calendarContainer}>
+                        <div className={styles.calendarHeader}>
+                          <h3>{currentMonth} {currentYear}</h3>
+                        </div>
+                        <div className={styles.calendarGrid}>
+                          <div className={styles.dayHeaders}>
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                              <div key={day} className={styles.dayHeader}>{day}</div>
+                            ))}
+                          </div>
+                          <div className={styles.daysGrid}>
+                            {days.map((dayInfo, index) => (
+                              <div
+                                key={index}
+                                className={`${styles.dayCell} ${
+                                  dayInfo ? (
+                                    dayInfo.isToday ? styles.today :
+                                    dayInfo.isPast ? styles.pastDay :
+                                    dayInfo.isWeekend ? styles.weekend :
+                                    dayInfo.date === selectedDate ? styles.selected :
+                                    styles.available
+                                  ) : styles.empty
+                                }`}
+                                onClick={() => {
+                                  if (dayInfo && dayInfo.isAvailable) {
+                                    handleDateSelection(dayInfo.date);
+                                  }
+                                }}
+                              >
+                                {dayInfo?.day}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={styles.calendarLegend}>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.availableColor}></div>
+                            <span>Available</span>
+                          </div>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.selectedColor}></div>
+                            <span>Selected</span>
+                          </div>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.weekendColor}></div>
+                            <span>Weekend</span>
+                          </div>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.pastColor}></div>
+                            <span>Past</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Time Wrapper */}
+                    <div className={styles.timeWrapper}>
+                      <div className={styles.timeSection}>
+                        <h2 className={styles.sectionTitle}>🕐 Select Time</h2>
+                        {selectedDate && blockedSlots.length > 0 && (
+                          <div className={styles.blockedSlotsInfo}>
+                            <p className={styles.infoText}>
+                              ⚠️ Some time slots are unavailable due to existing appointments
+                            </p>
+                          </div>
+                        )}
+                        <div className={styles.timeSlots}>
+                          {timeSlots.map(time => {
+                            const isBlocked = isTimeSlotBlocked(time);
+                            return (
+                              <button
+                                key={time}
+                                className={`${styles.timeSlot} ${
+                                  selectedTime === time ? styles.selectedTime : ''
+                                } ${isBlocked ? styles.blockedTime : ''}`}
+                                onClick={() => handleTimeSelection(time)}
+                                disabled={!selectedDate || isBlocked}
+                                title={isBlocked ? 'This time slot is not available' : ''}
+                              >
+                                {formatTimeForDisplay(time)}
+                                {isBlocked && <span className={styles.blockedIcon}>🚫</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className={styles.timeSlotLegend}>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.availableTimeColor}></div>
+                            <span>Available</span>
+                          </div>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.selectedTimeColor}></div>
+                            <span>Selected</span>
+                          </div>
+                          <div className={styles.legendItem}>
+                            <div className={styles.legendColor + ' ' + styles.blockedTimeColor}></div>
+                            <span>Blocked</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Elder Info */}
-            {elderInfo && (
-              <div className={styles.elderCard}>
-                <h3 className={styles.elderTitle}>Appointment For:</h3>
-                <div className={styles.elderInfo}>
-                  <span className={styles.elderName}>{elderInfo.name}</span>
-                  <span className={styles.elderLocation}>📍 {elderInfo.district}</span>
-                </div>
-              </div>
-            )}
+                {/* Summary Section */}
+                {selectedDate && selectedTime && (
+                  <div className={styles.appointmentSummary}>
+                    <h3>📋 Appointment Summary</h3>
+                    <div className={styles.summaryContent}>
+                      <p><strong>Date:</strong> {formatDateForDisplay(selectedDate)}</p>
+                      <p><strong>Time:</strong> {formatTimeForDisplay(selectedTime)}</p>
+                      <p><strong>Duration:</strong> {meetingType === 'physical' ? '2 hours' : '1 hour'}</p>
+                      <p><strong>Type:</strong> {meetingType === 'physical' ? 'Physical Meeting' : 'Online Consultation'}</p>
+                      <p><strong>Fee:</strong> Rs. {counselorInfo?.fee || (meetingType === 'physical' ? 2500 : 2000)}</p>
+                    </div>
+                  </div>
+                )}
 
-            {/* Booking Form */}
-            <form onSubmit={handleBookAppointment} className={styles.bookingForm}>
-              <div className={styles.formSection}>
-                <h3 className={styles.sectionTitle}>Select Date & Time</h3>
-                
-                <div className={styles.dateTimeGrid}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="appointmentDate">
-                      Preferred Date:
-                    </label>
-                    <input
-                      type="date"
-                      id="appointmentDate"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      min={getMinDate()}
-                      className={styles.dateInput}
-                      required
-                    />
-                    {selectedDate && (
-                      <p className={styles.dateDisplay}>
-                        Selected: {formatDateForDisplay(selectedDate)}
-                      </p>
+                {/* Book Button */}
+                <div className={styles.submitSection}>
+                  <button
+                    className={styles.submitButton}
+                    onClick={handleBookAppointment}
+                    disabled={!selectedDate || !selectedTime || submitting || isTimeSlotBlocked(selectedTime)}
+                  >
+                    {submitting ? (
+                      <>
+                        <div className={styles.buttonSpinner}></div>
+                        Processing...
+                      </>
+                    ) : (
+                      `📅 Book ${meetingType === 'physical' ? 'Physical' : 'Online'} Appointment`
                     )}
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="appointmentTime">
-                      Preferred Time:
-                    </label>
-                    <select
-                      id="appointmentTime"
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className={styles.timeSelect}
-                      required
-                    >
-                      <option value="">Select a time slot</option>
-                      {getAvailableTimeSlots().map((time) => (
-                        <option key={time} value={time}>
-                          {formatTimeForDisplay(time)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  </button>
                 </div>
               </div>
-
-              <div className={styles.formSection}>
-                <h3 className={styles.sectionTitle}>Additional Information</h3>
-                <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="notes">
-                    Notes or specific concerns (Optional):
-                  </label>
-                  <textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Please describe any specific concerns or topics you'd like to discuss during the consultation..."
-                    className={styles.notesTextarea}
-                    rows={4}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.bookingActions}>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={() => navigate(`/family-member/elder/${elderId}/providers`)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting || !selectedDate || !selectedTime}
-                  className={styles.bookButton}
-                >
-                  {submitting ? '⏳ Booking...' : '📅 Book Consultation'}
-                </button>
-              </div>
-            </form>
-
-            {/* Meeting Info */}
-            <div className={styles.meetingInfoCard}>
-              <h3 className={styles.infoTitle}>🌐 About Online Consultations</h3>
-              <ul className={styles.infoList}>
-                <li>✅ Secure video consultations via Jitsi Meet</li>
-                <li>✅ Global access - works from anywhere with internet</li>
-                <li>✅ Automatic meeting link generation</li>
-                <li>✅ No software installation required</li>
-                <li>✅ Professional healthcare support</li>
-                <li>✅ 60-minute consultation duration</li>
-              </ul>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </FamilyMemberLayout>
     </div>

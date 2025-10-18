@@ -19,19 +19,20 @@ const getUpcomingSessions = async (req, res) => {
       });
     }
 
-    // Query to get upcoming sessions with counselor details
+    // Query to get upcoming counselor appointments with counselor details
     const limitClause = limit ? `LIMIT ${parseInt(limit)}` : '';
     const upcomingSessionsResult = await pool.query(
       `
       SELECT 
-        s.session_id,
-        s.elder_id,
-        s.family_id,
-        s.counselor_id,
-        s.date_time,
-        s.session_notes,
-        s.status,
-        s.session_type,
+        ca.appointment_id as session_id,
+        ca.elder_id,
+        ca.family_id,
+        ca.counselor_id,
+        ca.date_time,
+        ca.notes as session_notes,
+        ca.status,
+        ca.appointment_type as session_type,
+        ca.meeting_link,
         c.specialization,
         c.years_of_experience,
         c.current_institution,
@@ -39,14 +40,14 @@ const getUpcomingSessions = async (req, res) => {
         u.name as counselor_name,
         u.email as counselor_email,
         u.phone as counselor_phone
-      FROM session s
-      INNER JOIN counselor c ON s.counselor_id = c.counselor_id
+      FROM counselor_appointment ca
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      WHERE s.elder_id = $1 
-      AND s.date_time > NOW()
-      AND s.status IN ('confirmed','completed')
-      AND s.status != 'cancelled'
-      ORDER BY s.date_time ASC
+      WHERE ca.elder_id = $1 
+      AND ca.date_time > NOW()
+      AND ca.status IN ('confirmed')
+      AND ca.status != 'cancelled'
+      ORDER BY ca.date_time ASC
       ${limitClause}
     `,
       [elderId]
@@ -88,19 +89,20 @@ const getPastSessions = async (req, res) => {
       });
     }
 
-    // Query to get past sessions with counselor details
+    // Query to get past counselor appointments with counselor details
     const limitClause = limit ? `LIMIT ${parseInt(limit)}` : '';
     const pastSessionsResult = await pool.query(
       `
       SELECT 
-        s.session_id,
-        s.elder_id,
-        s.family_id,
-        s.counselor_id,
-        s.date_time,
-        s.session_notes,
-        s.status,
-        s.session_type,
+        ca.appointment_id as session_id,
+        ca.elder_id,
+        ca.family_id,
+        ca.counselor_id,
+        ca.date_time,
+        ca.notes as session_notes,
+        ca.status,
+        ca.appointment_type as session_type,
+        ca.meeting_link,
         c.specialization,
         c.years_of_experience,
         c.current_institution,
@@ -108,12 +110,12 @@ const getPastSessions = async (req, res) => {
         u.name as counselor_name,
         u.email as counselor_email,
         u.phone as counselor_phone
-      FROM session s
-      INNER JOIN counselor c ON s.counselor_id = c.counselor_id
+      FROM counselor_appointment ca
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      WHERE s.elder_id = $1 
-      AND (s.date_time <= NOW() OR s.status IN ('completed', 'cancelled'))
-      ORDER BY s.date_time DESC
+      WHERE ca.elder_id = $1 
+      AND (ca.date_time <= NOW() OR ca.status IN ('completed', 'cancelled'))
+      ORDER BY ca.date_time DESC
       ${limitClause}
     `,
       [elderId]
@@ -154,18 +156,19 @@ const getAllSessions = async (req, res) => {
       });
     }
 
-    // Query to get all sessions with counselor details
+    // Query to get all counselor appointments with counselor details
     const allSessionsResult = await pool.query(
       `
       SELECT 
-        s.session_id,
-        s.elder_id,
-        s.family_id,
-        s.counselor_id,
-        s.date_time,
-        s.session_notes,
-        s.status,
-        s.session_type,
+        ca.appointment_id as session_id,
+        ca.elder_id,
+        ca.family_id,
+        ca.counselor_id,
+        ca.date_time,
+        ca.notes as session_notes,
+        ca.status,
+        ca.appointment_type as session_type,
+        ca.meeting_link,
         c.specialization,
         c.years_of_experience,
         c.current_institution,
@@ -173,11 +176,11 @@ const getAllSessions = async (req, res) => {
         u.name as counselor_name,
         u.email as counselor_email,
         u.phone as counselor_phone
-      FROM session s
-      INNER JOIN counselor c ON s.counselor_id = c.counselor_id
+      FROM counselor_appointment ca
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      WHERE s.elder_id = $1 
-      ORDER BY s.date_time DESC
+      WHERE ca.elder_id = $1 
+      ORDER BY ca.date_time DESC
     `,
       [elderId]
     );
@@ -208,14 +211,15 @@ const getSessionById = async (req, res) => {
     const sessionResult = await pool.query(
       `
       SELECT 
-        s.session_id,
-        s.elder_id,
-        s.family_id,
-        s.counselor_id,
-        s.date_time,
-        s.session_notes,
-        s.status,
-        s.session_type,
+        ca.appointment_id as session_id,
+        ca.elder_id,
+        ca.family_id,
+        ca.counselor_id,
+        ca.date_time,
+        ca.notes as session_notes,
+        ca.status,
+        ca.appointment_type as session_type,
+        ca.meeting_link,
         c.specialization,
         c.years_of_experience,
         c.current_institution,
@@ -223,10 +227,10 @@ const getSessionById = async (req, res) => {
         u.name as counselor_name,
         u.email as counselor_email,
         u.phone as counselor_phone
-      FROM session s
-      INNER JOIN counselor c ON s.counselor_id = c.counselor_id
+      FROM counselor_appointment ca
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      WHERE s.elder_id = $1 AND s.session_id = $2
+      WHERE ca.elder_id = $1 AND ca.appointment_id = $2
     `,
       [elderId, sessionId]
     );
@@ -261,16 +265,16 @@ const joinSession = async (req, res) => {
   console.log("Joining session for elder ID:", elderId, "session ID:", sessionId);
 
   try {
-    // Check if session exists and belongs to the elder
+    // Check if counselor appointment exists and belongs to the elder
     const sessionCheck = await pool.query(
       `
       SELECT 
-        s.*,
+        ca.*,
         u.name as counselor_name
-      FROM session s
-      INNER JOIN counselor c ON s.counselor_id = c.counselor_id
+      FROM counselor_appointment ca
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      WHERE s.session_id = $1 AND s.elder_id = $2
+      WHERE ca.appointment_id = $1 AND ca.elder_id = $2
     `,
       [sessionId, elderId]
     );
@@ -284,8 +288,8 @@ const joinSession = async (req, res) => {
 
     const session = sessionCheck.rows[0];
 
-    // Check if session is online
-    if (session.session_type !== 'online') {
+    // Check if appointment is online
+    if (session.appointment_type !== 'online') {
       return res.status(400).json({
         success: false,
         error: "Only online sessions can be joined"
@@ -306,8 +310,11 @@ const joinSession = async (req, res) => {
       });
     }
 
-    // Generate meeting URL (in a real app, this would integrate with video conferencing service)
-    const meetingUrl = `https://meet.silvercare.com/session/${sessionId}?elder=${elderId}&counselor=${session.counselor_id}`;
+    // Use existing meeting_link or generate one if not exists
+    let meetingUrl = session.meeting_link;
+    if (!meetingUrl) {
+      meetingUrl = `https://meet.silvercare.com/session/${sessionId}?elder=${elderId}&counselor=${session.counselor_id}`;
+    }
 
     console.log("Session join successful, meeting URL generated");
 
@@ -316,10 +323,10 @@ const joinSession = async (req, res) => {
       message: "Session joined successfully",
       meetingUrl: meetingUrl,
       session: {
-        session_id: session.session_id,
+        session_id: session.appointment_id,
         counselor_name: session.counselor_name,
         date_time: session.date_time,
-        session_type: session.session_type
+        session_type: session.appointment_type
       }
     });
 

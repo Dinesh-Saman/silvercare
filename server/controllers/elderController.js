@@ -1506,37 +1506,77 @@ const getUpcomingAppointmentsByFamily = async (req, res) => {
     const familyId = familyMemberResult.rows[0].family_id;
     console.log('Found family_id:', familyId);
     
-    // Get upcoming appointments for this family
+    // Get upcoming appointments (doctor + counselor) for this family
     const result = await pool.query(
-      `SELECT 
-        a.appointment_id,
-        a.elder_id,
-        a.family_id,
-        a.doctor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
-        a.created_at,
-        a.updated_at,
-        e.name as elder_name,
-        e.contact as elder_contact,
-        e.gender as elder_gender,
-        u.name as doctor_name,
-        u.email as doctor_email,
-        u.phone as doctor_phone,
-        d.specialization,
-        d.current_institution,
-        d.district as doctor_district
-      FROM appointment a
-      INNER JOIN elder e ON a.elder_id = e.elder_id
-      INNER JOIN doctor d ON a.doctor_id = d.doctor_id
-      INNER JOIN "User" u ON d.user_id = u.user_id
-      WHERE a.family_id = $1 
-      AND a.date_time > CURRENT_TIMESTAMP
-      AND a.status IN ( 'confirmed')
-      ORDER BY a.date_time ASC
-      LIMIT 10`,
+      `
+      (
+        SELECT 
+          a.appointment_id,
+          a.elder_id,
+          a.family_id,
+          a.doctor_id,
+          NULL::INTEGER as counselor_id,
+          a.doctor_id as provider_id,
+          a.date_time,
+          a.status,
+          a.notes,
+          a.appointment_type,
+          a.created_at,
+          a.updated_at,
+          e.name as elder_name,
+          e.contact as elder_contact,
+          e.gender as elder_gender,
+          u.name as provider_name,
+          u.email as provider_email,
+          u.phone as provider_phone,
+          d.specialization,
+          d.current_institution,
+          d.district as provider_district,
+          'doctor' as provider_role
+        FROM appointment a
+        INNER JOIN elder e ON a.elder_id = e.elder_id
+        INNER JOIN doctor d ON a.doctor_id = d.doctor_id
+        INNER JOIN "User" u ON d.user_id = u.user_id
+        WHERE a.family_id = $1 
+          AND a.date_time > CURRENT_TIMESTAMP
+          AND a.status IN ('confirmed')
+      )
+      UNION ALL
+      (
+        SELECT 
+          ca.appointment_id,
+          ca.elder_id,
+          ca.family_id,
+          NULL::INTEGER as doctor_id,
+          ca.counselor_id,
+          ca.counselor_id as provider_id,
+          ca.date_time,
+          ca.status,
+          ca.notes,
+          ca.appointment_type,
+          ca.created_at,
+          ca.updated_at,
+          e.name as elder_name,
+          e.contact as elder_contact,
+          e.gender as elder_gender,
+          u.name as provider_name,
+          u.email as provider_email,
+          u.phone as provider_phone,
+          c.specialization,
+          c.current_institution,
+          c.district as provider_district,
+          'counselor' as provider_role
+        FROM counselor_appointment ca
+        INNER JOIN elder e ON ca.elder_id = e.elder_id
+        INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
+        INNER JOIN "User" u ON c.user_id = u.user_id
+        WHERE ca.family_id = $1 
+          AND ca.date_time > CURRENT_TIMESTAMP
+          AND ca.status IN ('confirmed')
+      )
+      ORDER BY date_time ASC
+      LIMIT 10
+      `,
       [familyId]
     );
     
@@ -1836,7 +1876,7 @@ const createAppointment = async (req, res) => {
   }
 };
 
-// Create healthcare professional appointment
+// Create healthcare professional appointment (stored in counselor_appointment)
 const createHealthProfessionalAppointment = async (req, res) => {
   const { elderId } = req.params;
   const { 
@@ -1949,30 +1989,33 @@ const createHealthProfessionalAppointment = async (req, res) => {
       });
     }
 
-    // Generate a unique meeting link using UUID
-    const meetingId = require('crypto').randomUUID();
-    const meetingLink = `https://meet.jit.si/silvercare-${meetingId}`;
+    // Generate a unique meeting link using shared MeetingService (for online only)
+    let meetingLink = null;
+    if (appointmentType === 'online') {
+      const MeetingService = require('../services/meetingService');
+      const meetingData = MeetingService.generateMeetingLink(null, null, elderId);
+      meetingLink = meetingData.meetingLink;
+      console.log('Generated meeting link for counselor appointment:', meetingLink);
+    }
 
-    console.log('Generated meeting link:', meetingLink);
-
-    // Insert the appointment
-    console.log('Inserting healthcare professional appointment into database...');
+    // Insert the appointment into counselor_appointment table
+    console.log('Inserting healthcare professional appointment into counselor_appointment...');
     const insertQuery = `
-      INSERT INTO appointment (
-        elder_id, 
-        family_id, 
+      INSERT INTO counselor_appointment (
+        elder_id,
+        family_id,
         counselor_id,
-        date_time, 
-        status, 
-        patient_name, 
-        contact_number, 
-        emergency_contact, 
-        created_at,
+        date_time,
+        status,
         appointment_type,
         meeting_link,
-        provider_type,
-        notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        notes,
+        patient_name,
+        contact_number,
+        emergency_contact,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *
     `;
 
@@ -1982,14 +2025,12 @@ const createHealthProfessionalAppointment = async (req, res) => {
       counselorId,
       appointmentDateTime,
       'pending',
-      patientName,
-      contactNumber,
-      emergencyContact,
-      new Date(),
-      'online', // Healthcare professional appointments are always online
+      appointmentType || 'online',
       meetingLink,
-      'healthcare',
-      notes
+      notes,
+      patientName || elderResult.rows[0].name,
+      contactNumber,
+      emergencyContact
     ]);
 
     const newAppointment = insertResult.rows[0];
@@ -2008,15 +2049,15 @@ const createHealthProfessionalAppointment = async (req, res) => {
         status: newAppointment.status,
         appointment_type: newAppointment.appointment_type,
         meeting_link: newAppointment.meeting_link,
-        provider_type: newAppointment.provider_type,
+        provider_type: 'healthcare_professional',
         notes: newAppointment.notes,
         created_at: newAppointment.created_at,
         elder_name: elderResult.rows[0].name,
         counselor_name: counselorResult.rows[0].counselor_name,
         counselor_specialty: counselorResult.rows[0].specialty,
-        patient_name: patientName || elderResult.rows[0].name,
-        contact_number: contactNumber,
-        emergency_contact: emergencyContact
+        patient_name: newAppointment.patient_name,
+        contact_number: newAppointment.contact_number,
+        emergency_contact: newAppointment.emergency_contact
       }
     });
 
@@ -2074,7 +2115,8 @@ const getElderAppointments = async (req, res) => {
         a.elder_id,
         a.family_id,
         a.doctor_id,
-        a.counselor_id,
+        NULL::INTEGER as counselor_id,
+        a.doctor_id as provider_id,
         a.date_time,
         a.status,
         a.notes,
@@ -2085,7 +2127,8 @@ const getElderAppointments = async (req, res) => {
         d.specialization,
         d.current_institution,
         e.name as elder_name,
-        'doctor' as provider_type
+        'doctor' as provider_type,
+        'doctor' as provider_role
       FROM appointment a 
       INNER JOIN doctor d ON a.doctor_id = d.doctor_id
       INNER JOIN "User" u ON d.user_id = u.user_id
@@ -2095,27 +2138,29 @@ const getElderAppointments = async (req, res) => {
       UNION ALL
       
       SELECT 
-        a.appointment_id,
-        a.elder_id,
-        a.family_id,
-        a.doctor_id,
-        a.counselor_id,
-        a.date_time,
-        a.status,
-        a.notes,
-        a.appointment_type,
-        a.created_at,
-        a.updated_at,
+        ca.appointment_id,
+        ca.elder_id,
+        ca.family_id,
+        NULL::INTEGER as doctor_id,
+        ca.counselor_id,
+        ca.counselor_id as provider_id,
+        ca.date_time,
+        ca.status,
+        ca.notes,
+        ca.appointment_type,
+        ca.created_at,
+        ca.updated_at,
         u.name as provider_name,
         c.specialization,
         c.current_institution,
         e.name as elder_name,
-        'healthcare_professional' as provider_type
-      FROM appointment a 
-      INNER JOIN counselor c ON a.counselor_id = c.counselor_id
+        'healthcare_professional' as provider_type,
+        'counselor' as provider_role
+      FROM counselor_appointment ca 
+      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
       INNER JOIN "User" u ON c.user_id = u.user_id
-      INNER JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.elder_id = $1 AND a.counselor_id IS NOT NULL
+      INNER JOIN elder e ON ca.elder_id = e.elder_id
+      WHERE ca.elder_id = $1
       
       ORDER BY date_time DESC`,
       [elderId]
@@ -2973,9 +3018,9 @@ const confirmPaymentAndCreateHealthcareProfessionalAppointment = async (req, res
         console.log(`📞 Generated meeting link for new healthcare professional appointment: ${meetingLink}`);
       }
 
-      // Create the actual appointment
+      // Create the actual appointment in counselor_appointment table
       const appointmentResult = await client.query(
-        `INSERT INTO appointment (
+        `INSERT INTO counselor_appointment (
           elder_id, 
           family_id, 
           counselor_id, 
@@ -3012,10 +3057,10 @@ const confirmPaymentAndCreateHealthcareProfessionalAppointment = async (req, res
 
       const newAppointment = appointmentResult.rows[0];
 
-      // Create payment record
+      // Create payment record for counselor appointment
       const paymentResult = await client.query(
         `INSERT INTO payment (
-          appointment_id,
+          counselor_appointment_id,
           elder_id,
           amount,
           payment_method,
