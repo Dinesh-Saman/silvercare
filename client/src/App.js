@@ -1,11 +1,14 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UserPage from "./pages/UserPage";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import { FamilyMemberReg } from "./pages/familemember/signup";
 import { FamilyMemberReg2 } from "./pages/familemember/signup-step2";
 import ElderSignup from "./pages/familemember/elder-signup";
 import FamilyMemberDashboard from "./pages/familemember/dashboard";
 import FamilyMemberElders from "./pages/familemember/elders";
+import FamilyMemberReports from "./pages/familemember/reports";
 import ElderDetails from "./pages/familemember/elder-details";
 import CaregiverDetails from "./pages/familemember/caregiver-details";
 import FamilyMemberLayout from "./components/FamilyMemberLayout";
@@ -62,6 +65,7 @@ import ElderEvents from "./pages/elder/events";
 
 import DoctorDashboard from './pages/doctor/dashboard';
 import DoctorProfile from './pages/doctor/profile';
+import DoctorReports from './pages/doctor/reports';
 import VirtualMeetingRoom from './pages/VirtualMeetingRoom';
 import JitsiMeetingRoom from './pages/JitsiMeetingRoom';
 import MeetingGenerator from './pages/MeetingGenerator';
@@ -109,6 +113,8 @@ function App() {
         <Routes>
           {/* Public Routes - No authentication required */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/roles" element={<Roles />} />
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -278,6 +284,15 @@ function App() {
           />
 
           <Route
+            path="/family-member/reports"
+            element={
+              <ProtectedRoute allowedRoles={["family_member"]}>
+                <FamilyMemberReports />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/family-member/elder/:elderId"
             element={
               <ProtectedRoute allowedRoles={["family_member"]}>
@@ -385,6 +400,17 @@ function App() {
           <Route path="/doctor/elder-chat" element={
             <ProtectedRoute allowedRoles={['doctor']}>
               <ElderChat />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/doctor/reports" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorReports />
+            </ProtectedRoute>
+          } />
+                    <Route path="/doctor/reports" element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorReports />
             </ProtectedRoute>
           } />
           
