@@ -14,7 +14,9 @@ const {
   getTemporaryCaregiverBooking,  // NEW: Get temporary booking by ID
   confirmPaymentAndCreateCareRequest,  // NEW: Confirm payment
   cancelTemporaryCaregiverBooking,  // NEW: Cancel temporary booking
-  cleanupExpiredCaregiverBookings  // NEW: Cleanup expired bookings
+  cleanupExpiredCaregiverBookings,  // NEW: Cleanup expired bookings
+  getCaregiverBookingsByFamily,  // NEW: Get caregiver bookings for family
+  cancelCaregiverBooking  // NEW: Cancel caregiver booking with refund
 } = require('../controllers/caregiverController');
 
 const { 
@@ -60,6 +62,10 @@ router.get('/temporary-booking/:tempBookingId', getTemporaryCaregiverBooking);
 router.post('/confirm-payment', confirmPaymentAndCreateCareRequest);
 router.delete('/temporary-booking/:tempBookingId', cancelTemporaryCaregiverBooking);
 router.post('/cleanup-expired', cleanupExpiredCaregiverBookings);
+
+// NEW: Caregiver bookings management
+router.get('/bookings/family/:familyMemberId', getCaregiverBookingsByFamily);
+router.post('/bookings/:requestId/cancel', cancelCaregiverBooking);
 
 // Get specific caregiver by ID
 router.get('/:caregiverId', getCaregiverById);
