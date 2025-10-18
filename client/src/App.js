@@ -388,6 +388,9 @@ function App() {
 <Route path="/family-member/caregiver-bookings" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <CaregiverBookings />
+  </ProtectedRoute>
+} />
+
 <Route path="/family-member/todays-care-report" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <TodaysCareReport />
