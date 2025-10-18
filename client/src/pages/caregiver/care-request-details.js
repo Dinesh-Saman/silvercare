@@ -12,6 +12,9 @@ const CareRequestDetails = () => {
   const [careRequest, setCareRequest] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState('success'); // 'success' or 'error'
 
   useEffect(() => {
     fetchCareRequestDetails();
@@ -43,22 +46,40 @@ const CareRequestDetails = () => {
       
       if (response.success) {
         // Show success message and navigate back
-        alert(`Care request ${newStatus} successfully!`);
-        navigate('/caregiver/dashboard');
+        const message = (newStatus === 'approved' || newStatus === 'confirmed') ? 'Care request approved successfully!' : 
+                       newStatus === 'cancelled' ? 'Care request deleted successfully!' : 
+                       `Care request ${newStatus} successfully!`;
+        showPopupMessage(message, 'success');
+        
+        // Navigate back after showing popup
+        setTimeout(() => {
+          navigate('/caregiver/dashboard');
+        }, 2000);
       } else {
-        alert('Failed to update care request status');
+        showPopupMessage('Failed to update care request status', 'error');
       }
     } catch (error) {
       console.error('Error updating care request status:', error);
-      alert('Failed to update care request status');
+      showPopupMessage('Failed to update care request status', 'error');
     } finally {
       setUpdating(false);
     }
   };
 
+  const showPopupMessage = (message, type = 'success') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
+  };
+
   const handleApprove = () => {
     if (window.confirm('Are you sure you want to approve this care request?')) {
-      handleStatusUpdate('approved');
+      handleStatusUpdate('confirmed');
     }
   };
 
@@ -335,6 +356,26 @@ const CareRequestDetails = () => {
           </div>
         </div>
       </CaregiverLayout>
+
+      {/* Success/Error Popup */}
+      {showPopup && (
+        <div className={styles.popupOverlay}>
+          <div className={`${styles.popup} ${styles[popupType]}`}>
+            <div className={styles.popupContent}>
+              <div className={styles.popupIcon}>
+                {popupType === 'success' ? '✅' : '❌'}
+              </div>
+              <p className={styles.popupMessage}>{popupMessage}</p>
+              <button 
+                className={styles.popupClose}
+                onClick={() => setShowPopup(false)}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
