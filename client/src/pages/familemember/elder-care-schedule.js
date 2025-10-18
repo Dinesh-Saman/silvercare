@@ -468,10 +468,10 @@ const ElderCareSchedule = () => {
               <div className={styles.elderInfo}>
                 <div className={styles.elderAvatar}>
                   <img 
-                    src={getImageSrc(elder.profile_photo, 'elder', elder.gender)}
+                    src={getImageSrc(elder.profile_photo, 'elder', elder.gender, elder.elder_id)}
                     alt={elder.name}
                     className={styles.elderPhoto}
-                    onError={(e) => handleImageError(e, 'elder', elder.gender)}
+                    onError={(e) => handleImageError(e, 'elder', elder.gender, elder.elder_id)}
                   />
                 </div>
                 <div>
