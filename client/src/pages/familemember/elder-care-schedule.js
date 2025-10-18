@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
+import { familyMemberApi } from '../../services/familyMemberApi';
 import { 
   getCareAssignmentsByWeek,
   getUpcomingCareAssignments
@@ -36,6 +37,12 @@ const ElderCareSchedule = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showDayModal, setShowDayModal] = useState(false);
   const [selectedDayAssignments, setSelectedDayAssignments] = useState([]);
+
+  // Carelog state
+  const [carelogStatus, setCarelogStatus] = useState([]);
+  const [carelogLoading, setCarelogLoading] = useState(false);
+  const [selectedDayCarelogs, setSelectedDayCarelogs] = useState([]);
+  const [carelogDetailsLoading, setCarelogDetailsLoading] = useState(false);
 
   // Protect the route
   useEffect(() => {
@@ -182,10 +189,53 @@ const ElderCareSchedule = () => {
       });
       
       setMonthlyAssignments(allDailyAssignments);
+      
+      // Also fetch carelog status for the month
+      await fetchMonthlyCarelogStatus(elderId, month);
+      
       setMonthlyLoading(false);
     } catch (err) {
       console.error('Error fetching monthly assignments:', err);
       setMonthlyLoading(false);
+    }
+  };
+
+  // Fetch carelog status for the month
+  const fetchMonthlyCarelogStatus = async (elderId, month) => {
+    if (!currentUser?.user_id) return;
+    
+    try {
+      setCarelogLoading(true);
+      
+      // Get first and last day of the month
+      const year = month.getFullYear();
+      const monthNum = month.getMonth();
+      const firstDay = new Date(year, monthNum, 1);
+      const lastDay = new Date(year, monthNum + 1, 0);
+      
+      const startDate = firstDay.toISOString().split('T')[0];
+      const endDate = lastDay.toISOString().split('T')[0];
+      
+      const response = await familyMemberApi.getElderCarelogStatus(
+        currentUser.user_id, 
+        elderId, 
+        startDate, 
+        endDate
+      );
+      
+      if (response.success) {
+        setCarelogStatus(response.carelogStatus);
+        console.log('Carelog status received:', response.carelogStatus);
+      } else {
+        console.error('Failed to fetch carelog status:', response.message);
+        setCarelogStatus([]);
+      }
+      
+      setCarelogLoading(false);
+    } catch (err) {
+      console.error('Error fetching carelog status:', err);
+      setCarelogStatus([]);
+      setCarelogLoading(false);
     }
   };
 
@@ -212,10 +262,35 @@ const ElderCareSchedule = () => {
   };
 
   // Handle day click
-  const handleDayClick = async (date, assignments) => {
-    if (assignments && assignments.length > 0) {
+  const handleDayClick = async (date, assignments, hasCarelog = false) => {
+    if (assignments && assignments.length > 0 || hasCarelog) {
       setSelectedDay(date);
-      setSelectedDayAssignments(assignments);
+      setSelectedDayAssignments(assignments || []);
+      setSelectedDayCarelogs([]);
+      
+      // If there's carelog data, fetch it
+      if (hasCarelog && currentUser?.user_id && elderId) {
+        setCarelogDetailsLoading(true);
+        try {
+          const response = await familyMemberApi.getElderCarelogByDate(
+            currentUser.user_id, 
+            elderId, 
+            date
+          );
+          
+          if (response.success) {
+            setSelectedDayCarelogs(response.carelogs);
+          } else {
+            console.error('Failed to fetch carelog details:', response.message);
+            setSelectedDayCarelogs([]);
+          }
+        } catch (err) {
+          console.error('Error fetching carelog details:', err);
+          setSelectedDayCarelogs([]);
+        }
+        setCarelogDetailsLoading(false);
+      }
+      
       setShowDayModal(true);
     }
   };
@@ -276,11 +351,22 @@ const ElderCareSchedule = () => {
       const dayData = monthlyAssignments.find(d => d.date === dateStr);
       const assignments = dayData ? dayData.assignments : [];
       
+      // Find carelog status for this date
+      const carelogData = carelogStatus.find(c => c.log_date === dateStr);
+      const hasCarelog = carelogData && carelogData.report_count > 0;
+      
+      // Debug logging for carelog status
+      if (hasCarelog) {
+        console.log(`Date ${dateStr} has carelog:`, carelogData);
+      }
+      
       days.push({
         date: dateStr,
         day: day,
         assignments: assignments,
-        isToday: isToday(dateStr)
+        isToday: isToday(dateStr),
+        hasCarelog: hasCarelog,
+        carelogInfo: carelogData
       });
     }
 
@@ -614,13 +700,19 @@ const ElderCareSchedule = () => {
                             dayInfo.isToday ? styles.todayDay : ''
                           } ${
                             dayInfo.assignments.length > 0 ? styles.hasAssignment : ''
+                          } ${
+                            dayInfo.hasCarelog ? styles.hasCarelog : ''
                           }`}
-                          onClick={() => handleDayClick(dayInfo.date, dayInfo.assignments)}
+                          onClick={() => handleDayClick(dayInfo.date, dayInfo.assignments, dayInfo.hasCarelog)}
                         >
                           <div className={styles.dayNumber}>{dayInfo.day}</div>
                           
                           {dayInfo.isToday && (
                             <div className={styles.todayCalendarBadge}>Today</div>
+                          )}
+                          
+                          {dayInfo.hasCarelog && (
+                            <div className={styles.submittedBadge}>Submitted</div>
                           )}
                           
                           {dayInfo.assignments.length > 0 && (
@@ -663,62 +755,158 @@ const ElderCareSchedule = () => {
             </div>
 
             <div className={styles.modalBody}>
-              {selectedDayAssignments.map((assignment, index) => (
-                <div key={index} className={styles.modalAssignmentCard}>
-                  <div className={styles.modalCardHeader}>
-                    <div className={styles.modalCaregiverIcon}>👨‍⚕️</div>
-                    <div>
-                      <h4>{assignment.caregiver_name}</h4>
-                      <span className={styles.modalStatusBadge}>
-                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.modalCardBody}>
-                    <div className={styles.modalInfoRow}>
-                      <span className={styles.modalInfoLabel}>📞 Phone:</span>
-                      <span className={styles.modalInfoValue}>{assignment.caregiver_phone}</span>
-                    </div>
-
-                    {assignment.caregiver_fixed_line && (
-                      <div className={styles.modalInfoRow}>
-                        <span className={styles.modalInfoLabel}>☎️ Fixed Line:</span>
-                        <span className={styles.modalInfoValue}>{assignment.caregiver_fixed_line}</span>
+              {/* Care Assignments Section */}
+              {selectedDayAssignments.length > 0 && (
+                <div className={styles.modalSection}>
+                  <h4 className={styles.modalSectionTitle}>📋 Care Assignments</h4>
+                  {selectedDayAssignments.map((assignment, index) => (
+                    <div key={index} className={styles.modalAssignmentCard}>
+                      <div className={styles.modalCardHeader}>
+                        <div className={styles.modalCaregiverIcon}>👨‍⚕️</div>
+                        <div>
+                          <h4>{assignment.caregiver_name}</h4>
+                          <span className={styles.modalStatusBadge}>
+                            {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                          </span>
+                        </div>
                       </div>
-                    )}
 
-                    <div className={styles.modalInfoRow}>
-                      <span className={styles.modalInfoLabel}>📧 Email:</span>
-                      <span className={styles.modalInfoValue}>{assignment.caregiver_email}</span>
-                    </div>
+                      <div className={styles.modalCardBody}>
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>📞 Phone:</span>
+                          <span className={styles.modalInfoValue}>{assignment.caregiver_phone}</span>
+                        </div>
 
-                    <div className={styles.modalInfoRow}>
-                      <span className={styles.modalInfoLabel}>📆 Start Date:</span>
-                      <span className={styles.modalInfoValue}>{formatDate(assignment.start_date)}</span>
-                    </div>
+                        {assignment.caregiver_fixed_line && (
+                          <div className={styles.modalInfoRow}>
+                            <span className={styles.modalInfoLabel}>☎️ Fixed Line:</span>
+                            <span className={styles.modalInfoValue}>{assignment.caregiver_fixed_line}</span>
+                          </div>
+                        )}
 
-                    <div className={styles.modalInfoRow}>
-                      <span className={styles.modalInfoLabel}>📆 End Date:</span>
-                      <span className={styles.modalInfoValue}>{formatDate(assignment.end_date)}</span>
-                    </div>
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>📧 Email:</span>
+                          <span className={styles.modalInfoValue}>{assignment.caregiver_email}</span>
+                        </div>
 
-                    {assignment.duration && (
-                      <div className={styles.modalInfoRow}>
-                        <span className={styles.modalInfoLabel}>⏱️ Duration:</span>
-                        <span className={styles.modalInfoValue}>{assignment.duration}</span>
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>📆 Start Date:</span>
+                          <span className={styles.modalInfoValue}>{formatDate(assignment.start_date)}</span>
+                        </div>
+
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>📆 End Date:</span>
+                          <span className={styles.modalInfoValue}>{formatDate(assignment.end_date)}</span>
+                        </div>
+
+                        {assignment.duration && (
+                          <div className={styles.modalInfoRow}>
+                            <span className={styles.modalInfoLabel}>⏱️ Duration:</span>
+                            <span className={styles.modalInfoValue}>{assignment.duration}</span>
+                          </div>
+                        )}
+
+                        {assignment.certifications && (
+                          <div className={styles.modalCertifications}>
+                            <span className={styles.modalInfoLabel}>🎓 Certifications:</span>
+                            <span className={styles.modalCertificationsValue}>{assignment.certifications}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                    {assignment.certifications && (
-                      <div className={styles.modalCertifications}>
-                        <span className={styles.modalInfoLabel}>🎓 Certifications:</span>
-                        <span className={styles.modalCertificationsValue}>{assignment.certifications}</span>
-                      </div>
-                    )}
+              {/* Carelog Reports Section */}
+              {carelogDetailsLoading ? (
+                <div className={styles.modalSection}>
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.loadingSpinner}></div>
+                    <p>Loading care reports...</p>
                   </div>
                 </div>
-              ))}
+              ) : selectedDayCarelogs.length > 0 ? (
+                <div className={styles.modalSection}>
+                  <h4 className={styles.modalSectionTitle}>📝 Care Reports</h4>
+                  {selectedDayCarelogs.map((carelog, index) => (
+                    <div key={index} className={styles.modalCarelogCard}>
+                      <div className={styles.modalCardHeader}>
+                        <div className={styles.modalCarelogIcon}>📋</div>
+                        <div>
+                          <h4>Report by {carelog.caregiver_name}</h4>
+                          <span className={styles.modalDateBadge}>
+                            {new Date(carelog.date).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={styles.modalCardBody}>
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>👨‍⚕️ Caregiver:</span>
+                          <span className={styles.modalInfoValue}>{carelog.caregiver_name}</span>
+                        </div>
+
+                        <div className={styles.modalInfoRow}>
+                          <span className={styles.modalInfoLabel}>📞 Contact:</span>
+                          <span className={styles.modalInfoValue}>{carelog.caregiver_phone}</span>
+                        </div>
+
+                        {carelog.mood && (
+                          <div className={styles.modalInfoRow}>
+                            <span className={styles.modalInfoLabel}>😊 Mood:</span>
+                            <span className={styles.modalInfoValue}>{carelog.mood}</span>
+                          </div>
+                        )}
+
+                        {carelog.health_status && (
+                          <div className={styles.modalInfoSection}>
+                            <span className={styles.modalInfoLabel}>🏥 Health Status:</span>
+                            <div className={styles.modalInfoText}>{carelog.health_status}</div>
+                          </div>
+                        )}
+
+                        {carelog.activities && (
+                          <div className={styles.modalInfoSection}>
+                            <span className={styles.modalInfoLabel}>🎯 Activities:</span>
+                            <div className={styles.modalInfoText}>{carelog.activities}</div>
+                          </div>
+                        )}
+
+                        {carelog.medications_given && (
+                          <div className={styles.modalInfoSection}>
+                            <span className={styles.modalInfoLabel}>💊 Medications Given:</span>
+                            <div className={styles.modalInfoText}>{carelog.medications_given}</div>
+                          </div>
+                        )}
+
+                        {carelog.notes && (
+                          <div className={styles.modalInfoSection}>
+                            <span className={styles.modalInfoLabel}>📝 Notes:</span>
+                            <div className={styles.modalInfoText}>{carelog.notes}</div>
+                          </div>
+                        )}
+
+                        {carelog.concerns && (
+                          <div className={styles.modalInfoSection}>
+                            <span className={styles.modalInfoLabel}>⚠️ Concerns:</span>
+                            <div className={styles.modalInfoText}>{carelog.concerns}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Empty state */}
+              {selectedDayAssignments.length === 0 && selectedDayCarelogs.length === 0 && !carelogDetailsLoading && (
+                <div className={styles.modalEmptyState}>
+                  <div className={styles.emptyIcon}>📋</div>
+                  <h4>No Data Available</h4>
+                  <p>No care assignments or reports found for this date.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

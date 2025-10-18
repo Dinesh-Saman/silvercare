@@ -18,4 +18,10 @@ router.get('/:userId/doctor/:doctorId/appointments', doctormessageController.get
 // Get appointment statistics for reports
 router.get('/:userId/appointment-stats', familyMemberController.getAppointmentStatistics);
 
+// Get carelog data for specific elder and date
+router.get('/:userId/elder/:elderId/carelog', familyMemberController.getElderCarelogByDate);
+
+// Get carelog status for date range (for calendar display)
+router.get('/:userId/elder/:elderId/carelog-status', familyMemberController.getElderCarelogStatus);
+
 module.exports = router;
