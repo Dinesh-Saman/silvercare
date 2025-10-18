@@ -44,6 +44,9 @@ const CaregiverSidebar = ({ onItemClick }) => {
       case 'family-messages':
         navigate('/caregiver/family-member-messages');
         break;
+      case 'elder-messages':
+        navigate('/caregiver/elder-messages');
+        break;
       case 'profile':
         navigate('/caregiver/profile');
         break;
@@ -87,6 +90,12 @@ const CaregiverSidebar = ({ onItemClick }) => {
       label: 'Family Messages',
       icon: '👨‍👩‍👧‍👦',
       path: '/caregiver/family-member-messages'
+    },
+    {
+      key: 'elder-messages',
+      label: 'Elder Messages',
+      icon: '👴👵',
+      path: '/caregiver/elder-messages'
     },
     {
       key: 'profile',
