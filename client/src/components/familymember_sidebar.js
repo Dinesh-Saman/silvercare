@@ -75,6 +75,9 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       case 'caregiver-chat':
         navigate('/family-member/caregiver-chat');
         break;
+      case 'healthcare-professional-chat':
+        navigate('/family-member/healthcare-professional-messages');
+        break;
       case 'book-caregiver':
         navigate('/family-member/elder-caregivers');
         break;
@@ -83,6 +86,9 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
         break;
       case 'care-reports':
         navigate('/family-member/care-reports');
+        break;
+      case 'todays-care-report':
+        navigate('/family-member/todays-care-report');
         break;
       case 'counselor-sessions':
         navigate('/family-member/counselor-sessions');
@@ -158,7 +164,8 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       submenu: [
         { key: 'elder-chat', label: 'Elder Messages', path: '/family-member/elder-messages' },
         { key: 'doctor-chat', label: 'Doctor Chat', path: '/family-member/doctor-messages' },
-        { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/family-member/caregiver-chat' }
+        { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/family-member/caregiver-chat' },
+        { key: 'healthcare-professional-chat', label: 'Healthcare Professional Chat', path: '/family-member/healthcare-professional-messages' }
       ]
     },
  
@@ -170,6 +177,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       submenu: [
         { key: 'book-caregiver', label: 'Book Caregiver', path: '/family-member/elder-caregivers' },
         { key: 'assigned-caregivers', label: 'Assigned Caregivers', path: 'assigned-caregivers' },
+        { key: 'todays-care-report', label: "Today's Care Report", path: '/family-member/todays-care-report' },
         { key: 'care-reports', label: 'Care Reports', path: '/family-member/care-reports' }
       ]
     },

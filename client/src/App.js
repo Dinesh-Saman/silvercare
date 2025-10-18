@@ -52,6 +52,8 @@ import CaregiverBooking from './pages/familemember/caregiver-booking';
 import CaregiverBookingSummary from './pages/familemember/caregiver-booking-summary';
 import CaregiverPayment from './pages/familemember/caregiver-payment';
 import CaregiverPaymentSuccess from './pages/familemember/caregiver-payment-success';
+import TodaysCareReport from './pages/familemember/todays-care-report';
+import ElderCareSchedule from './pages/familemember/elder-care-schedule';
 
 
 
@@ -90,6 +92,10 @@ import ElderDoctorMessages from "./pages/elder/DoctorMessages";
 import CounselorMessages from "./pages/elder/CounselorMessages";
 import ElderChat from "./pages/doctor/ElderChat";
 import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
+import CaregiverMessages from "./pages/familemember/CaregiverMessages";
+import FamilyMemberMessages from "./pages/caregiver/FamilyMemberMessages";
+import HealthcareProfessionalMessages from "./pages/familemember/HealthcareProfessionalMessages";
+import HealthProfessionalFamilyMessages from "./pages/healthproffesional/FamilyMessages";
 
 // Import admin related
 import AdminUsers from "./pages/admin/users";
@@ -378,6 +384,18 @@ function App() {
   </ProtectedRoute>
 } />
 
+<Route path="/family-member/todays-care-report" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <TodaysCareReport />
+  </ProtectedRoute>
+} />
+
+<Route path="/family-member/elder/:elderId/care-schedule" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <ElderCareSchedule />
+  </ProtectedRoute>
+} />
+
           
           <Route path="/doctor/dashboard" element={
             <ProtectedRoute allowedRoles={['doctor']}>
@@ -474,6 +492,15 @@ function App() {
           />
 
           <Route
+            path="/healthprofessional/family-messages"
+            element={
+              <ProtectedRoute allowedRoles={["healthprofessional"]}>
+                <HealthProfessionalFamilyMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/caregiver/dashboard"
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
@@ -534,6 +561,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["caregiver"]}>
                 <Elder />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/caregiver/family-member-messages"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <FamilyMemberMessages />
               </ProtectedRoute>
             }
           />
@@ -647,10 +683,28 @@ function App() {
 />
 
           <Route
+  path="/family-member/caregiver-chat"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <CaregiverMessages />
+    </ProtectedRoute>
+  }
+/>
+
+          <Route
   path="/family-member/elder-messages"
   element={
     <ProtectedRoute allowedRoles={["family_member"]}>
       <ElderMessages />
+    </ProtectedRoute>
+  }
+/>
+
+          <Route
+  path="/family-member/healthcare-professional-messages"
+  element={
+    <ProtectedRoute allowedRoles={["family_member"]}>
+      <HealthcareProfessionalMessages />
     </ProtectedRoute>
   }
 />

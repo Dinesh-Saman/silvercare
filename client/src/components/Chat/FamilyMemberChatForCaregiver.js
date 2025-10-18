@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { messagesApi } from '../../services/messagesApi';
-import styles from './Chat.module.css';
+import styles from './FamilyMemberChatForCaregiver.module.css';
 
-const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', receiverType = 'doctor', onClose }) => {
+const FamilyMemberChatForCaregiver = ({ currentUser, selectedFamilyMember, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,12 +16,11 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
 
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
-    if (!currentUser?.user_id || !selectedDoctor?.user_id) {
-      console.log('Missing user IDs in Chat.js:', {
+    if (!currentUser?.user_id || !selectedFamilyMember?.user_id) {
+      console.log('Missing user IDs in FamilyMemberChatForCaregiver.js:', {
         currentUser: currentUser?.user_id,
-        selectedDoctor_user_id: selectedDoctor?.user_id,
-        selectedDoctor_doctor_id: selectedDoctor?.doctor_id,
-        selectedDoctorObject: selectedDoctor
+        selectedFamilyMember_user_id: selectedFamilyMember?.user_id,
+        selectedFamilyMemberObject: selectedFamilyMember
       });
       return;
     }
@@ -32,14 +31,14 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
         setLoading(true);
       }
       
-      console.log('Chat.js - Fetching messages between:', {
-        familyMember: currentUser.user_id,
-        doctor: selectedDoctor.user_id
+      console.log('FamilyMemberChatForCaregiver.js - Fetching messages between:', {
+        caregiver: currentUser.user_id,
+        familyMember: selectedFamilyMember.user_id
       });
       
       const response = await messagesApi.getConversation(
         currentUser.user_id,
-        selectedDoctor.user_id  // Changed from doctor_id to user_id
+        selectedFamilyMember.user_id
       );
 
       if (response.success) {
@@ -51,7 +50,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
           msg => msg.receiver_id === currentUser.user_id && !msg.is_read
         );
         if (hasUnreadMessages) {
-          await messagesApi.markAsRead(selectedDoctor.user_id, currentUser.user_id);  // Changed from doctor_id to user_id
+          await messagesApi.markAsRead(selectedFamilyMember.user_id, currentUser.user_id);
         }
       }
     } catch (error) {
@@ -78,20 +77,20 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     try {
       setSending(true);
       
-      console.log('Chat.js - Sending message:', {
+      console.log('FamilyMemberChatForCaregiver.js - Sending message:', {
         from: currentUser.user_id,
-        to: selectedDoctor.user_id,  // Changed from doctor_id to user_id
-        senderType: senderType,
-        receiverType: receiverType,
+        to: selectedFamilyMember.user_id,
+        senderType: 'caregiver',
+        receiverType: 'family_member',
         message: messageToSend,
-        selectedDoctorObject: selectedDoctor
+        selectedFamilyMemberObject: selectedFamilyMember
       });
       
       const response = await messagesApi.sendMessage(
         currentUser.user_id,
-        selectedDoctor.user_id,  // Changed from doctor_id to user_id
-        senderType,
-        receiverType,
+        selectedFamilyMember.user_id,
+        'caregiver',
+        'family_member',
         messageToSend
       );
 
@@ -100,9 +99,9 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
         const newMsg = {
           message_id: response.message_id,
           sender_id: currentUser.user_id,
-          receiver_id: selectedDoctor.user_id,  // Changed from doctor_id to user_id
-          sender_type: senderType,
-          receiver_type: receiverType,
+          receiver_id: selectedFamilyMember.user_id,
+          sender_type: 'caregiver',
+          receiver_type: 'family_member',
           message_text: messageToSend,
           sent_at: new Date().toISOString(),
           is_read: false,
@@ -164,7 +163,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.user_id, selectedDoctor?.user_id]); // Changed from doctor_id to user_id
+  }, [currentUser?.user_id, selectedFamilyMember?.user_id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -180,7 +179,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     return (
       <div className={styles.chatContainer}>
         <div className={styles.chatHeader}>
-          <h3>💬 Chat with Dr. {selectedDoctor.doctor_name}</h3>
+          <h3>💬 Chat with {selectedFamilyMember.family_member_name}</h3>
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
         <div className={styles.loadingContainer}>
@@ -196,9 +195,12 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
   return (
     <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
-        <div className={styles.doctorInfo}>
-          <h3>💬 Dr. {selectedDoctor.doctor_name}</h3>
-          <span className={styles.specialization}>{selectedDoctor.specialization}</span>
+        <div className={styles.familyMemberInfo}>
+          <h3>💬 {selectedFamilyMember.family_member_name}</h3>
+          <div className={styles.familyMemberMeta}>
+            <span className={styles.relationship}>{selectedFamilyMember.relationship}</span>
+            <span className={styles.eldersCaredFor}>Elders: {selectedFamilyMember.elders_cared_for}</span>
+          </div>
         </div>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
@@ -208,7 +210,36 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
           <div className={styles.noMessages}>
             <div className={styles.noMessagesIcon}>💬</div>
             <h4>Start Your Conversation</h4>
-            <p>Send a message to Dr. {selectedDoctor.doctor_name}</p>
+            <p>Send a message to {selectedFamilyMember.family_member_name}</p>
+            <div className={styles.conversationStarters}>
+              <h5>💡 Conversation starters:</h5>
+              <div className={styles.starterButtons}>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("Hello! I wanted to update you on your elder's care today.")}
+                >
+                  "Daily care update"
+                </button>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("Your elder is doing well. Here's what we did today...")}
+                >
+                  "Progress report"
+                </button>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("I have some questions about the care routine.")}
+                >
+                  "Care routine question"
+                </button>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("Is there anything specific you'd like me to focus on?")}
+                >
+                  "Care priorities"
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([date, dayMessages]) => (
@@ -250,7 +281,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={`Message Dr. ${selectedDoctor.doctor_name}...`}
+            placeholder={`Message ${selectedFamilyMember.family_member_name}...`}
             className={styles.messageInput}
             disabled={sending}
             maxLength={1000}
@@ -268,4 +299,4 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
   );
 };
 
-export default Chat;
+export default FamilyMemberChatForCaregiver;
