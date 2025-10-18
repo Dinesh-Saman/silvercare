@@ -3187,6 +3187,7 @@ const getCaregiversByElderDistrict = async (req, res) => {
         c.certifications,
         c.fixed_line,
         c.district,
+        c.day_rate,
         u.name as caregiver_name,
         u.email as caregiver_email,
         u.phone as caregiver_phone,
@@ -3236,10 +3237,10 @@ const getCaregiverBookingInfo = async (req, res) => {
         c.certifications,
         c.fixed_line,
         c.district,
+        c.day_rate as daily_rate,
         u.name,
         u.email,
-        u.phone,
-        3000 as daily_rate
+        u.phone
       FROM caregiver c
       INNER JOIN "User" u ON c.user_id = u.user_id
       WHERE c.caregiver_id = $1

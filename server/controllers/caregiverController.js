@@ -1,4 +1,5 @@
 const pool = require('../db');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Get all approved caregivers
 const getAllCaregivers = async (req, res) => {
@@ -1395,7 +1396,7 @@ const confirmPaymentAndCreateCareRequest = async (req, res) => {
           tempBooking.elder_id,
           tempBooking.start_date,
           tempBooking.end_date,
-          'confirmed',
+          'pending',
           tempBooking.duration
         ]
       );
@@ -1538,6 +1539,251 @@ const cleanupExpiredCaregiverBookings = async (req, res) => {
   }
 };
 
+// NEW: Get all caregiver bookings for a family member
+const getCaregiverBookingsByFamily = async (req, res) => {
+  const { familyMemberId } = req.params;
+  
+  try {
+    console.log('Fetching caregiver bookings for family member:', familyMemberId);
+    
+    // Get all care requests with payment information
+    const bookingsResult = await pool.query(`
+      SELECT 
+        cr.request_id,
+        cr.elder_id,
+        cr.family_id,
+        cr.caregiver_id,
+        cr.start_date,
+        cr.end_date,
+        cr.duration,
+        cr.status,
+        cr.request_date as created_at,
+        cr.request_date as updated_at,
+        e.name as elder_name,
+        u_caregiver.name as caregiver_name,
+        cp.amount as total_amount,
+        cp.payment_method,
+        cp.transaction_id,
+        cp.payment_status,
+        cp.payment_date
+      FROM carerequest cr
+      INNER JOIN elder e ON cr.elder_id = e.elder_id
+      INNER JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
+      INNER JOIN "User" u_caregiver ON c.user_id = u_caregiver.user_id
+      LEFT JOIN caregiver_payment cp ON cr.request_id = cp.care_request_id
+      WHERE cr.family_id = $1
+      ORDER BY cr.request_date DESC
+    `, [familyMemberId]);
+    
+    const bookings = bookingsResult.rows;
+    
+    // Calculate stats
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    const stats = {
+      total: bookings.length,
+      upcoming: bookings.filter(b => {
+        const startDate = new Date(b.start_date);
+        startDate.setHours(0, 0, 0, 0);
+        return startDate > currentDate && b.status === 'confirmed';
+      }).length,
+      ongoing: bookings.filter(b => {
+        const startDate = new Date(b.start_date);
+        const endDate = new Date(b.end_date);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+        return startDate <= currentDate && endDate >= currentDate && b.status === 'confirmed';
+      }).length,
+      completed: bookings.filter(b => {
+        const endDate = new Date(b.end_date);
+        endDate.setHours(0, 0, 0, 0);
+        return endDate < currentDate && b.status === 'confirmed';
+      }).length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length
+    };
+    
+    console.log('Found caregiver bookings:', bookings.length, 'Stats:', stats);
+    
+    res.json({
+      success: true,
+      bookings: bookings,
+      stats: stats
+    });
+    
+  } catch (err) {
+    console.error('Error fetching caregiver bookings:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching caregiver bookings',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// NEW: Cancel caregiver booking with refund (similar to appointment cancellation)
+const cancelCaregiverBooking = async (req, res) => {
+  const { requestId } = req.params;
+  const { reason } = req.body;
+  
+  try {
+    console.log('Attempting to cancel caregiver booking:', requestId);
+    
+    // Check if booking exists, is confirmed, and within 2-hour cancellation window from creation time
+    const bookingCheck = await pool.query(`
+      SELECT 
+        cr.*,
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cr.request_date)) / 3600 as hours_since_created,
+        cp.payment_id,
+        cp.amount,
+        cp.transaction_id,
+        cp.payment_method,
+        cp.payment_status,
+        e.name as elder_name,
+        u.name as caregiver_name
+      FROM carerequest cr
+      LEFT JOIN caregiver_payment cp ON cr.request_id = cp.care_request_id
+      LEFT JOIN elder e ON cr.elder_id = e.elder_id
+      LEFT JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
+      LEFT JOIN "User" u ON c.user_id = u.user_id
+      WHERE cr.request_id = $1 AND cr.status = 'confirmed'
+    `, [requestId]);
+    
+    if (bookingCheck.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Confirmed caregiver booking not found or cannot be cancelled'
+      });
+    }
+    
+    const booking = bookingCheck.rows[0];
+    const hoursSinceCreated = parseFloat(booking.hours_since_created);
+    
+    console.log('Caregiver booking details:', {
+      id: booking.request_id,
+      status: booking.status,
+      hoursSinceCreated: hoursSinceCreated,
+      createdAt: booking.request_date,
+      startDate: booking.start_date,
+      endDate: booking.end_date,
+      hasPayment: !!booking.payment_id,
+      paymentAmount: booking.amount,
+      transactionId: booking.transaction_id
+    });
+    
+    // Check if within 2-hour cancellation window from creation time
+    if (hoursSinceCreated > 2) {
+      return res.status(400).json({
+        success: false,
+        error: `Cancellation not allowed. Caregiver bookings can only be cancelled within 2 hours of booking. This booking was created ${hoursSinceCreated.toFixed(1)} hours ago.`,
+        canCancel: false,
+        hoursSinceCreated: hoursSinceCreated
+      });
+    }
+    
+    // Start transaction for atomic operation
+    await pool.query('BEGIN');
+    
+    try {
+      // Update booking status to cancelled
+      const cancelResult = await pool.query(
+        `UPDATE carerequest 
+         SET status = 'cancelled'
+         WHERE request_id = $1
+         RETURNING *`,
+        [requestId]
+      );
+      
+      let refundResult = null;
+      
+      // Process refund if payment exists
+      if (booking.payment_id && booking.transaction_id && booking.payment_status === 'completed') {
+        console.log('Processing refund for caregiver payment:', booking.transaction_id);
+        
+        try {
+          // Create refund in Stripe
+          const refund = await stripe.refunds.create({
+            payment_intent: booking.transaction_id,
+            amount: Math.round(parseFloat(booking.amount) * 100), // Convert to cents
+            reason: 'requested_by_customer',
+            metadata: {
+              care_request_id: requestId.toString(),
+              elder_name: booking.elder_name || '',
+              caregiver_name: booking.caregiver_name || '',
+              cancellation_reason: reason || 'Cancelled within 2-hour creation policy',
+              cancelled_at: new Date().toISOString(),
+              hours_since_created: hoursSinceCreated.toString(),
+              platform: 'SilverCare'
+            }
+          });
+          
+          console.log('Stripe refund created:', refund.id);
+          
+          // Update payment status in database
+          await pool.query(
+            `UPDATE caregiver_payment 
+             SET payment_status = 'refunded'
+             WHERE payment_id = $1`,
+            [booking.payment_id]
+          );
+          
+          refundResult = {
+            refund_id: refund.id,
+            amount: parseFloat(booking.amount),
+            status: refund.status,
+            estimated_arrival: refund.created + (5 * 24 * 60 * 60) // Estimate 5-10 business days
+          };
+          
+        } catch (stripeError) {
+          console.error('Stripe refund failed:', stripeError);
+          
+          // Don't fail the entire cancellation if refund fails
+          refundResult = {
+            error: 'Refund processing failed. Please contact support.',
+            details: stripeError.message
+          };
+        }
+      }
+      
+      // Commit transaction
+      await pool.query('COMMIT');
+      
+      console.log('Caregiver booking cancelled successfully:', {
+        requestId,
+        hoursSinceCreated,
+        refundProcessed: !!refundResult,
+        refundAmount: refundResult?.amount
+      });
+      
+      res.json({
+        success: true,
+        message: 'Caregiver booking cancelled successfully',
+        booking: cancelResult.rows[0],
+        refund: refundResult,
+        cancellationInfo: {
+          cancelledAt: new Date().toISOString(),
+          hoursSinceCreated: hoursSinceCreated.toFixed(2),
+          reason: reason || 'Cancelled within 2-hour creation policy',
+          estimatedRefundDays: '5-10 business days'
+        }
+      });
+      
+    } catch (error) {
+      // Rollback transaction on error
+      await pool.query('ROLLBACK');
+      throw error;
+    }
+    
+  } catch (err) {
+    console.error('Error cancelling caregiver booking:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error cancelling caregiver booking',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -1554,7 +1800,9 @@ module.exports = {
   getTemporaryCaregiverBooking,
   confirmPaymentAndCreateCareRequest,
   cancelTemporaryCaregiverBooking,
-  cleanupExpiredCaregiverBookings
+  cleanupExpiredCaregiverBookings,
+  getCaregiverBookingsByFamily,
+  cancelCaregiverBooking
   //getCareRequestById,
   //getAssignedElders,
   //getAssignedFamiliesCount,

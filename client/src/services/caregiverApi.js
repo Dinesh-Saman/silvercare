@@ -558,6 +558,63 @@ export const caregiverApi = {
     }
   },
 
+  // NEW: Get all caregiver bookings for a family member
+  getCaregiverBookingsByFamily: async (familyMemberId) => {
+    try {
+      console.log('API: Fetching caregiver bookings for family member:', familyMemberId);
+      const token = localStorage.getItem('silvercare_token');
+      
+      const response = await fetch(`${API_BASE}/bookings/family/${familyMemberId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      console.log('API: Caregiver bookings response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch caregiver bookings');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error fetching caregiver bookings:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Cancel caregiver booking with refund
+  cancelCaregiverBooking: async (requestId, reason) => {
+    try {
+      console.log('API: Cancelling caregiver booking:', requestId, 'Reason:', reason);
+      const token = localStorage.getItem('silvercare_token');
+      
+      const response = await fetch(`${API_BASE}/bookings/${requestId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason })
+      });
+      
+      const data = await response.json();
+      console.log('API: Cancel booking response:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel caregiver booking');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API: Error cancelling caregiver booking:', error);
+      throw error;
+    }
+  }
+
 };
 
 export default caregiverApi;
