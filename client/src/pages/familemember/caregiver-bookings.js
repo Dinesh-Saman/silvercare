@@ -152,11 +152,11 @@ const CaregiverBookings = () => {
       const response = await caregiverApi.cancelCaregiverBooking(bookingToCancel.request_id, 'Cancelled by family member');
       
       if (response.success) {
-        // Update the booking status in the list
+        // Update the booking status and payment status to refunded
         setBookings(prev => 
           prev.map(b => 
             b.request_id === bookingToCancel.request_id 
-              ? { ...b, status: 'cancelled' }
+              ? { ...b, status: 'cancelled', payment_status: 'refunded' }
               : b
           )
         );
@@ -257,7 +257,7 @@ const CaregiverBookings = () => {
           {/* Header */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <h1 className={styles.title}>🧑‍💼 Caregiver Bookings</h1>
+              <h1 className={styles.title}>Caregiver Bookings</h1>
               <p className={styles.subtitle}>
                 Manage your caregiver bookings and cancellations
               </p>
@@ -277,7 +277,7 @@ const CaregiverBookings = () => {
                 className={`${styles.filterTab} ${filters.type === 'all' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'all' }))}
               >
-                📋 All Bookings
+                All Bookings
               </button>
               <button 
                 className={`${styles.filterTab} ${filters.type === 'upcoming' ? styles.active : ''}`}
@@ -327,7 +327,6 @@ const CaregiverBookings = () => {
           {/* Error Message */}
           {error && (
             <div className={styles.errorMessage}>
-              <span className={styles.errorIcon}>⚠️</span>
               {error}
             </div>
           )}
@@ -391,7 +390,7 @@ const CaregiverBookings = () => {
                         </div>
 
                         <div className={styles.elderSection}>
-                          <span className={styles.infoLabel}>� Elder Care For:</span>
+                          <span className={styles.infoLabel}>Elder Care For:</span>
                           <span className={styles.infoValue}>{booking.elder_name}</span>
                         </div>
 
@@ -411,7 +410,6 @@ const CaregiverBookings = () => {
                         {booking.total_amount && (
                           <div className={styles.durationPriceSection}>
                             <div className={styles.priceBadge} style={{flex: 'initial', width: '100%'}}>
-                              <span className={styles.priceIcon}>💰</span>
                               <span>Rs. {booking.total_amount.toLocaleString()}</span>
                             </div>
                           </div>
@@ -422,7 +420,9 @@ const CaregiverBookings = () => {
                           <div className={styles.paymentStatusSection}>
                             <span className={styles.paymentLabel}>Payment Status:</span>
                             <span className={`${styles.paymentBadge} ${styles[booking.payment_status]}`}>
-                              {booking.payment_status === 'completed' ? '✓ Paid' : booking.payment_status}
+                              {booking.payment_status === 'completed' ? 'Paid' : 
+                               booking.payment_status === 'refunded' ? 'Refunded' : 
+                               booking.payment_status}
                             </span>
                           </div>
                         )}
@@ -433,14 +433,12 @@ const CaregiverBookings = () => {
                         <div className={styles.cancellationAlert}>
                           {canCancel ? (
                             <div className={styles.canCancelAlert}>
-                              <span className={styles.alertIcon}>✓</span>
                               <span className={styles.alertText}>
                                 Can cancel • {(2 - hoursSinceCreated).toFixed(1)}h remaining • Full refund
                               </span>
                             </div>
                           ) : (
                             <div className={styles.cannotCancelAlert}>
-                              <span className={styles.alertIcon}>✗</span>
                               <span className={styles.alertText}>
                                 Cancellation window closed
                               </span>
@@ -455,7 +453,6 @@ const CaregiverBookings = () => {
                           className={styles.detailsButton}
                           onClick={() => openDetailsModal(booking)}
                         >
-                          <span className={styles.buttonIcon}>📋</span>
                           More Details
                         </button>
                         {canCancel && (
@@ -471,7 +468,6 @@ const CaregiverBookings = () => {
                               </>
                             ) : (
                               <>
-                                <span className={styles.buttonIcon}>🚫</span>
                                 Cancel & Refund
                               </>
                             )}
@@ -490,7 +486,7 @@ const CaregiverBookings = () => {
             <div className={styles.modalOverlay} onClick={closeDetailsModal}>
               <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
-                  <h2 className={styles.modalTitle}>📋 Booking Details</h2>
+                  <h2 className={styles.modalTitle}>Booking Details</h2>
                   <button className={styles.modalClose} onClick={closeDetailsModal}>✕</button>
                 </div>
 
@@ -525,7 +521,7 @@ const CaregiverBookings = () => {
 
                   {/* Caregiver Details */}
                   <div className={styles.modalSection}>
-                    <h3 className={styles.sectionTitle}>🧑‍💼 Caregiver Details</h3>
+                    <h3 className={styles.sectionTitle}>Caregiver Details</h3>
                     <div className={styles.modalRow}>
                       <span className={styles.modalLabel}>Name:</span>
                       <span className={styles.modalValue}>{selectedBooking.caregiver_name}</span>
@@ -534,7 +530,7 @@ const CaregiverBookings = () => {
 
                   {/* Elder Details */}
                   <div className={styles.modalSection}>
-                    <h3 className={styles.sectionTitle}>👴 Elder Care Details</h3>
+                    <h3 className={styles.sectionTitle}>Elder Care Details</h3>
                     <div className={styles.modalRow}>
                       <span className={styles.modalLabel}>Elder Name:</span>
                       <span className={styles.modalValue}>{selectedBooking.elder_name}</span>
@@ -577,7 +573,7 @@ const CaregiverBookings = () => {
                   {/* Payment Details */}
                   {selectedBooking.total_amount && (
                     <div className={styles.modalSection}>
-                      <h3 className={styles.sectionTitle}>💰 Payment Information</h3>
+                      <h3 className={styles.sectionTitle}>Payment Information</h3>
                       <div className={styles.modalRow}>
                         <span className={styles.modalLabel}>Total Amount:</span>
                         <span className={styles.modalValueHighlight}>
@@ -594,7 +590,7 @@ const CaregiverBookings = () => {
                         <div className={styles.modalRow}>
                           <span className={styles.modalLabel}>Payment Status:</span>
                           <span className={`${styles.paymentBadge} ${styles[selectedBooking.payment_status]}`}>
-                            {selectedBooking.payment_status === 'completed' ? '✓ Completed' : selectedBooking.payment_status}
+                            {selectedBooking.payment_status === 'completed' ? 'Completed' : selectedBooking.payment_status}
                           </span>
                         </div>
                       )}
@@ -622,11 +618,11 @@ const CaregiverBookings = () => {
                   {/* Cancellation Policy */}
                   {selectedBooking.status === 'confirmed' && getBookingStatus(selectedBooking) === 'Upcoming' && (
                     <div className={styles.modalSection}>
-                      <h3 className={styles.sectionTitle}>📋 Cancellation Policy</h3>
+                      <h3 className={styles.sectionTitle}>Cancellation Policy</h3>
                       <div className={styles.cancellationPolicy}>
-                        <p>✓ Free cancellation within 2 hours of booking</p>
-                        <p>✓ Full refund if cancelled within window</p>
-                        <p>⚠️ No refund after 2-hour window</p>
+                        <p>• Free cancellation within 2 hours of booking</p>
+                        <p>• Full refund if cancelled within window</p>
+                        <p>• No refund after 2-hour window</p>
                       </div>
                     </div>
                   )}
@@ -658,7 +654,6 @@ const CaregiverBookings = () => {
             <div className={styles.modalOverlay} onClick={closeCancelModal}>
               <div className={styles.cancelModalContent} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.cancelModalHeader}>
-                  <span className={styles.cancelModalIcon}>⚠️</span>
                   <h2 className={styles.cancelModalTitle}>Cancel Booking</h2>
                 </div>
 
@@ -679,7 +674,6 @@ const CaregiverBookings = () => {
                   </div>
 
                   <div className={styles.cancelModalNotice}>
-                    <span className={styles.noticeIcon}>💰</span>
                     <span className={styles.noticeText}>A full refund will be processed to your account</span>
                   </div>
                 </div>
