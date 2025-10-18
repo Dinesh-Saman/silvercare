@@ -52,9 +52,9 @@ const CaregiverBookings = () => {
         
         if (response.success) {
           console.log('Caregiver bookings received:', response.bookings);
-          // Sort by latest first (request_date descending)
+          // Sort by latest first (created_at/request_date descending)
           const sortedBookings = (response.bookings || []).sort((a, b) => {
-            return new Date(b.request_date) - new Date(a.request_date);
+            return new Date(b.created_at) - new Date(a.created_at);
           });
           setBookings(sortedBookings);
         } else {
@@ -111,6 +111,11 @@ const CaregiverBookings = () => {
         booking.request_id?.toString().includes(searchLower)
       );
     }
+
+    // Sort filtered results by latest booking date (created_at descending)
+    filtered = filtered.sort((a, b) => {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
     setFilteredBookings(filtered);
   }, [bookings, filters]);
