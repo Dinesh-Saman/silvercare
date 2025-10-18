@@ -438,11 +438,16 @@ const searchCaregivers = async (req, res) => {
 // Update care request status
 const updateCareRequestStatus = async (req, res) => {
   const { requestId } = req.params;
-  const { status } = req.body;
+  let { status } = req.body;
   
   try {
+    // Convert 'approved' to 'confirmed' for database storage
+    if (status === 'approved') {
+      status = 'confirmed';
+    }
+    
     // Validate status
-    const validStatuses = ['pending', 'approved', 'rejected', 'completed', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
