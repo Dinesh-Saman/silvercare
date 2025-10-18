@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { caregiverElderMessageApi } from '../../services/caregiverElderMessageApi';
 import Navbar from '../../components/navbar';
 import CaregiverLayout from '../../components/CaregiverLayout';
-import ElderChatForCaregiver from '../../components/Chat/ElderChatForCaregiver';
+import CaregiverElderChat from '../../components/Chat/CaregiverElderChat';
 import styles from '../../components/css/caregiver/CaregiverElderMessages.module.css';
 
 const CaregiverElderMessages = () => {
@@ -100,40 +100,7 @@ const CaregiverElderMessages = () => {
     return null;
   }
 
-  // Show chat interface if elder is selected
-  if (showChat && selectedElder) {
-    return (
-      <div className={styles.container}>
-        <Navbar />
-        <CaregiverLayout>
-          <div className={styles.content}>
-            <div className={styles.header}>
-              <div className={styles.headerContent}>
-                <h1 className={styles.title}>💬 Chat with {selectedElder.elder_name}</h1>
-                <p className={styles.subtitle}>
-                  Caring for {selectedElder.elder_name} • {selectedElder.assignment_status}
-                </p>
-              </div>
-              <button 
-                className={styles.backButton}
-                onClick={handleBackToList}
-              >
-                ← Back to Elders
-              </button>
-            </div>
 
-            <div className={styles.chatContainer}>
-              <ElderChatForCaregiver
-                currentUser={currentUser}
-                selectedElder={selectedElder}
-                onClose={handleBackToList}
-              />
-            </div>
-          </div>
-        </CaregiverLayout>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
@@ -246,24 +213,34 @@ const CaregiverElderMessages = () => {
             </div>
 
             {/* Chat Section */}
-            {selectedElder ? (
+            {selectedElder && showChat ? (
+              <div className={styles.chatSection}>
+                <CaregiverElderChat
+                  caregiverId={currentUser.caregiver_id}
+                  elderUserId={selectedElder.elder_id}
+                  currentUserRole="caregiver"
+                  currentUserId={currentUser.caregiver_id}
+                  onBack={handleBackToList}
+                />
+              </div>
+            ) : selectedElder ? (
               <div className={styles.chatSection}>
                 <div className={styles.chatHeader}>
                   <h2 className={styles.sectionTitle}>
                     💬 Chat with {selectedElder.elder_name}
                   </h2>
+                  <button 
+                    className={styles.startChatButton}
+                    onClick={() => setShowChat(true)}
+                  >
+                    Start Conversation
+                  </button>
                 </div>
 
                 <div className={styles.chatInterface}>
                   <div className={styles.comingSoon}>
                     <h4>💬 Ready to Chat!</h4>
                     <p>Click the chat button to start messaging {selectedElder.elder_name}</p>
-                    <button 
-                      className={styles.startChatButton}
-                      onClick={() => setShowChat(true)}
-                    >
-                      Start Conversation
-                    </button>
                     <div className={styles.contactInfo}>
                       <p><strong>Contact {selectedElder.elder_name}:</strong></p>
                       <p>📧 {selectedElder.elder_email}</p>
@@ -275,7 +252,15 @@ const CaregiverElderMessages = () => {
                   </div>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className={styles.chatSection}>
+                <div className={styles.noChatSelected}>
+                  <div className={styles.noChatIcon}>💬</div>
+                  <h3>Select an Elder to Start Chatting</h3>
+                  <p>Choose an elder from the list to begin your conversation.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </CaregiverLayout>

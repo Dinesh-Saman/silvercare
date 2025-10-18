@@ -21,30 +21,50 @@ const CaregiverElderChat = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Scroll to bottom when messages change - with delay like FamilyChat
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [messages.length]); // Only scroll when message count changes
 
   useEffect(() => {
-    fetchMessages();
+    // Initial load with loading spinner
+    fetchMessages(false);
     fetchAssignmentDetails();
     
-    // Set up polling for new messages
-    const interval = setInterval(fetchMessages, 5000);
+    // Background polling every 5 seconds - invisible to user
+    const interval = setInterval(() => {
+      fetchMessages(true);
+    }, 5000);
     return () => clearInterval(interval);
   }, [caregiverId, elderUserId]);
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (isBackgroundRefresh = false) => {
+    if (!caregiverId || !elderUserId) return;
+
     try {
+      // Only show loading spinner on initial load, not on background refreshes
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
+
       const response = await caregiverElderMessageApi.getMessages(caregiverId, elderUserId);
       if (response.success) {
         setMessages(response.messages);
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      setError('Failed to load messages');
+      // Only log errors on initial load, silent on background refreshes
+      if (!isBackgroundRefresh) {
+        console.error('Error fetching messages:', error);
+        setError('Failed to load messages');
+      }
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      }
     }
   };
 
@@ -63,47 +83,73 @@ const CaregiverElderChat = ({
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
-    setSending(true);
+    const messageToSend = newMessage.trim();
+    setNewMessage(''); // Clear input immediately for better UX
+
     try {
+      setSending(true);
+      
       const messageData = {
-        message: newMessage.trim(),
+        message: messageToSend,
         senderType: currentUserRole // 'caregiver' or 'elder'
       };
 
       const response = await caregiverElderMessageApi.sendMessage(caregiverId, elderUserId, messageData);
       
       if (response.success) {
-        setNewMessage('');
-        fetchMessages(); // Refresh messages
+        // Immediately add the message to local state for instant feedback
+        const newMsg = {
+          message_id: response.message_id || Date.now(),
+          sender_type: currentUserRole,
+          message: messageToSend,
+          timestamp: new Date().toISOString(),
+          caregiver_name: currentUserRole === 'caregiver' ? 'You' : null,
+          elder_name: currentUserRole === 'elder' ? 'You' : null
+        };
+        setMessages(prev => [...prev, newMsg]);
       } else {
+        // Restore message if send failed
+        setNewMessage(messageToSend);
         setError('Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      // Restore message if send failed
+      setNewMessage(messageToSend);
       setError('Failed to send message');
     } finally {
       setSending(false);
     }
   };
 
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+  // Format timestamp for time only
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-    if (date.toDateString() === today.toDateString()) {
-      return `Today ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    } else {
-      return date.toLocaleString([], { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-    }
+  // Format date for date headers
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Group messages by date like FamilyChat
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
+    messages.forEach(message => {
+      const date = new Date(message.timestamp).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    return groups;
   };
 
   const isCurrentUserMessage = (message) => {
@@ -114,11 +160,17 @@ const CaregiverElderChat = ({
     }
   };
 
-  if (loading) {
+  // Show loading only when initially loading and no messages exist
+  if (loading && messages.length === 0) {
     return (
       <div className={styles.chatContainer}>
+        <div className={styles.chatHeader}>
+          <div className={styles.chatHeaderInfo}>
+            <h3>Loading Chat...</h3>
+          </div>
+        </div>
         <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
+          <div className={styles.loadingSpinner}></div>
           <p>Loading conversation...</p>
         </div>
       </div>
@@ -128,23 +180,20 @@ const CaregiverElderChat = ({
   return (
     <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
-        <button onClick={onBack} className={styles.backButton}>
-          ← Back
-        </button>
         <div className={styles.chatHeaderInfo}>
           <h3>
             {currentUserRole === 'caregiver' 
-              ? `Chat with ${assignmentDetails?.elder_name_user || 'Elder'}`
-              : `Chat with ${assignmentDetails?.caregiver_name || 'Caregiver'}`
+              ? `💬 ${assignmentDetails?.elder_name_user || 'Elder'}`
+              : `💬 ${assignmentDetails?.caregiver_name || 'Caregiver'}`
             }
           </h3>
           {assignmentDetails && (
-            <p className={styles.assignmentInfo}>
+            <span className={styles.assignmentInfo}>
               Care Assignment: {assignmentDetails.assignment_status} 
               {assignmentDetails.start_date && (
                 <span> • Started {new Date(assignmentDetails.start_date).toLocaleDateString()}</span>
               )}
-            </p>
+            </span>
           )}
         </div>
       </div>
@@ -152,38 +201,42 @@ const CaregiverElderChat = ({
       <div className={styles.messagesContainer}>
         {messages.length === 0 ? (
           <div className={styles.noMessages}>
-            <p>No messages yet. Start the conversation!</p>
+            <div className={styles.noMessagesIcon}>💬</div>
+            <h4>Start Your Conversation</h4>
+            <p>Send a message to begin chatting!</p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div
-              key={message.message_id || index}
-              className={`${styles.messageWrapper} ${
-                isCurrentUserMessage(message) ? styles.sent : styles.received
-              }`}
-            >
-              <div className={styles.message}>
-                <div className={styles.messageContent}>
-                  {message.message}
+          (() => {
+            const groupedMessages = groupMessagesByDate(messages);
+            return Object.entries(groupedMessages).map(([date, dayMessages]) => (
+              <div key={date}>
+                <div className={styles.dateHeader}>
+                  <span>{formatDate(dayMessages[0].timestamp)}</span>
                 </div>
-                <div className={styles.messageInfo}>
-                  <span className={styles.senderName}>
-                    {isCurrentUserMessage(message) ? 'You' : 
-                      (message.sender_type === 'caregiver' ? message.caregiver_name : message.elder_name)}
-                  </span>
-                  <span className={styles.timestamp}>
-                    {formatTimestamp(message.timestamp)}
-                  </span>
-                </div>
+                {dayMessages.map((message, index) => (
+                  <div
+                    key={message.message_id || index}
+                    className={`${styles.messageItem} ${
+                      isCurrentUserMessage(message) ? styles.sentMessage : styles.receivedMessage
+                    }`}
+                  >
+                    <div className={styles.messageContent}>
+                      <p>{message.message}</p>
+                      <span className={styles.messageTime}>
+                        {formatTime(message.timestamp)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))
+            ));
+          })()
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className={styles.messageForm}>
-        <div className={styles.messageInputContainer}>
+      <form className={styles.messageForm} onSubmit={handleSendMessage}>
+        <div className={styles.inputContainer}>
           <input
             type="text"
             value={newMessage}
@@ -191,13 +244,14 @@ const CaregiverElderChat = ({
             placeholder="Type your message..."
             className={styles.messageInput}
             disabled={sending}
+            maxLength={1000}
           />
           <button
             type="submit"
-            disabled={!newMessage.trim() || sending}
             className={styles.sendButton}
+            disabled={!newMessage.trim() || sending}
           >
-            {sending ? 'Sending...' : 'Send'}
+            {sending ? '⏳' : '➤'}
           </button>
         </div>
       </form>
