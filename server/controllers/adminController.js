@@ -423,9 +423,39 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const changeStatus = async (req, res) => {
+  try {
+    // Route: PUT /change-status/:id/:status
+    const { id, status } = req.params;
+    console.log(`Changing status for user ID: ${id} to ${status}`);
+
+    // Use clear parameter order: SET status = $1 WHERE user_id = $2
+    const result = await pool.query(
+      'UPDATE caregiver SET status = $1 WHERE user_id = $2 RETURNING *',
+      [status, id]
+    );
+
+    if (!result || result.rows.length === 0) {
+      console.log(`No caregiver row updated for user_id=${id}`);
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    console.log('User status changed successfully:', result.rows[0]);
+    return res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error changing user status:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to change user status',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getAdminDashboard,
   approveProfessional,
   rejectProfessional,
+  changeStatus,
   getAllUsers
 };
