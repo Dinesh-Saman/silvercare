@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
 import { caregiverApi } from '../../services/caregiverApi';
+import { familyMemberApi } from '../../services/familyMemberApi';
 import Navbar from '../../components/navbar';
 import { getImageSrc, handleImageError } from '../../utils/imageUtils';
 import styles from '../../components/css/familymember/dashboard.module.css';
@@ -20,6 +21,10 @@ const FamilyMemberDashboard = () => {
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [caregiversLoading, setCaregiversLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [upcomingCareVisits, setUpcomingCareVisits] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [careVisitsLoading, setCareVisitsLoading] = useState(true);
 
   // Protect the dashboard route
   useEffect(() => {
@@ -130,6 +135,60 @@ const FamilyMemberDashboard = () => {
 
     if (currentUser && currentUser.role === 'family_member') {
       fetchAppointmentsData();
+    }
+  }, [currentUser]);
+
+  // Fetch upcoming sessions data
+  useEffect(() => {
+    const fetchSessionsData = async () => {
+      if (!currentUser?.user_id) return;
+      
+      try {
+        setSessionsLoading(true);
+        
+        const sessionsResponse = await familyMemberApi.getUpcomingSessions(currentUser.user_id);
+        
+        if (sessionsResponse.success) {
+          setUpcomingSessions(sessionsResponse.sessions || []);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching sessions data:', err);
+        setUpcomingSessions([]);
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
+    if (currentUser && currentUser.role === 'family_member') {
+      fetchSessionsData();
+    }
+  }, [currentUser]);
+
+  // Fetch upcoming care visits data
+  useEffect(() => {
+    const fetchCareVisitsData = async () => {
+      if (!currentUser?.user_id) return;
+      
+      try {
+        setCareVisitsLoading(true);
+        
+        const careVisitsResponse = await familyMemberApi.getUpcomingCareVisits(currentUser.user_id);
+        
+        if (careVisitsResponse.success) {
+          setUpcomingCareVisits(careVisitsResponse.careVisits || []);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching care visits data:', err);
+        setUpcomingCareVisits([]);
+      } finally {
+        setCareVisitsLoading(false);
+      }
+    };
+
+    if (currentUser && currentUser.role === 'family_member') {
+      fetchCareVisitsData();
     }
   }, [currentUser]);
 
@@ -633,6 +692,235 @@ const FamilyMemberDashboard = () => {
                   onClick={handleViewAllAppointments}
                 >
                   View All Appointments ({appointmentCount})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Additional Grid Section - Upcoming Sessions and Care Visits Side by Side */}
+        <div className={styles.bottomGridSection}>
+          {/* Upcoming Sessions Section - Left Half */}
+          <div className={styles.appointmentsSection}>
+            <div className={styles.appointmentsSectionHeader}>
+              <h2 className={styles.sectionTitle}>Upcoming Sessions</h2>
+              <p className={styles.appointmentsSubtitle}>
+                {upcomingSessions.length === 0 
+                  ? "No upcoming counseling sessions scheduled" 
+                  : upcomingSessions.length <= 2
+                    ? "Click on any session to view details"
+                    : `Showing 2 of ${upcomingSessions.length} upcoming sessions. Click "View All" to see more.`
+                }
+              </p>
+            </div>
+            
+            <div className={styles.appointmentsContainer}>
+              {sessionsLoading ? (
+                <div className={styles.loadingAppointments}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading sessions...</p>
+                </div>
+              ) : upcomingSessions.length === 0 ? (
+                <div className={styles.noAppointments}>
+                  <div className={styles.noAppointmentsIcon}>🧠</div>
+                  <p className={styles.noAppointmentsText}>No upcoming sessions</p>
+                  <p className={styles.noAppointmentsSubtext}>
+                    Book a counseling session to get started with mental health support
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.appointmentsList}>
+                  {/* Limit to only 2 sessions */}
+                  {upcomingSessions.slice(0, 2).map((session, index) => (
+                    <div 
+                      key={session.appointment_id} 
+                      className={styles.appointmentItem}
+                    >
+                      <div className={styles.appointmentContent}>
+                        <div className={styles.appointmentLeft}>
+                          <div className={styles.appointmentIcon}>
+                            🧠
+                          </div>
+                          <div className={styles.appointmentInfo}>
+                            <h3 className={styles.appointmentTitle}>
+                              {session.specialization || 'Counseling Session'}
+                            </h3>
+                            <div className={styles.appointmentDetails}>
+                              <span className={styles.appointmentDetail}>
+                                👤 {session.elder_name}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                🧑‍⚕️ {session.counselor_name}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                📅 {formatAppointmentDate(session.date_time)}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                📍 {session.counselor_district}
+                              </span>
+                            </div>
+                            {session.notes && (
+                              <p className={styles.appointmentNotes}>
+                                📝 {session.notes.substring(0, 60)}
+                                {session.notes.length > 60 ? '...' : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.appointmentRight}>
+                          {session.status === 'confirmed' ? (
+                            <div className={styles.appointmentActions}>
+                              {session.appointment_type === 'online' && session.meeting_link ? (
+                                <button 
+                                  className={`${styles.primaryBtn} ${styles.joinMeetingBtn}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const meetingUrl = new URL(session.meeting_link);
+                                    meetingUrl.searchParams.set('userInfo.displayName', session.elder_name || 'Patient');
+                                    meetingUrl.searchParams.set('userInfo.email', 'patient@silvercare.com');
+                                    meetingUrl.searchParams.set('config.prejoinPageEnabled', 'false');
+                                    window.open(meetingUrl.toString(), '_blank');
+                                  }}
+                                >
+                                  🎥 Join Session
+                                </button>
+                              ) : (
+                                <button className={styles.secondaryBtn} style={{pointerEvents: 'none'}}>
+                                  Confirmed
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <div 
+                              className={`${styles.appointmentStatus} ${styles[session.status]}`}
+                              style={{ backgroundColor: getStatusColor(session.status) }}
+                            >
+                              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                            </div>
+                          )}
+                          <div className={styles.appointmentArrow}>
+                            <span>→</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.appointmentDivider}></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Show "View All Sessions" button if there are more than 2 sessions */}
+            {upcomingSessions.length > 2 && (
+              <div className={styles.viewAllAppointments}>
+                <button 
+                  className={styles.viewAllAppointmentsButton}
+                  onClick={() => navigate('/family-member/sessions')}
+                >
+                  View All Sessions ({upcomingSessions.length})
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Care Visits Section - Right Half */}
+          <div className={styles.appointmentsSection}>
+            <div className={styles.appointmentsSectionHeader}>
+              <h2 className={styles.sectionTitle}>Upcoming Care Visits</h2>
+              <p className={styles.appointmentsSubtitle}>
+                {upcomingCareVisits.length === 0 
+                  ? "No upcoming care visits scheduled" 
+                  : upcomingCareVisits.length <= 2
+                    ? "Click on any care visit to view details"
+                    : `Showing 2 of ${upcomingCareVisits.length} upcoming care visits. Click "View All" to see more.`
+                }
+              </p>
+            </div>
+            
+            <div className={styles.appointmentsContainer}>
+              {careVisitsLoading ? (
+                <div className={styles.loadingAppointments}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>Loading care visits...</p>
+                </div>
+              ) : upcomingCareVisits.length === 0 ? (
+                <div className={styles.noAppointments}>
+                  <div className={styles.noAppointmentsIcon}>🧑‍🤝‍🧑</div>
+                  <p className={styles.noAppointmentsText}>No upcoming care visits</p>
+                  <p className={styles.noAppointmentsSubtext}>
+                    Schedule a caregiver visit to provide care for your elders
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.appointmentsList}>
+                  {/* Limit to only 2 care visits */}
+                  {upcomingCareVisits.slice(0, 2).map((visit, index) => (
+                    <div 
+                      key={visit.request_id} 
+                      className={styles.appointmentItem}
+                    >
+                      <div className={styles.appointmentContent}>
+                        <div className={styles.appointmentLeft}>
+                          <div className={styles.appointmentIcon}>
+                            🧑‍🤝‍🧑
+                          </div>
+                          <div className={styles.appointmentInfo}>
+                            <h3 className={styles.appointmentTitle}>
+                              Care Visit
+                            </h3>
+                            <div className={styles.appointmentDetails}>
+                              <span className={styles.appointmentDetail}>
+                                👤 {visit.elder_name}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                🧑‍⚕️ {visit.caregiver_name}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                📅 {new Date(visit.start_date).toLocaleDateString()} - {new Date(visit.end_date).toLocaleDateString()}
+                              </span>
+                              <span className={styles.appointmentDetail}>
+                                📍 {visit.caregiver_district}
+                              </span>
+                              {visit.duration && (
+                                <span className={styles.appointmentDetail}>
+                                  ⏱️ {visit.duration} hours
+                                </span>
+                              )}
+                            </div>
+                            {visit.caregiver_phone && (
+                              <p className={styles.appointmentNotes}>
+                                📞 {visit.caregiver_phone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.appointmentRight}>
+                          <div 
+                            className={`${styles.appointmentStatus} ${styles[visit.status]}`}
+                            style={{ backgroundColor: getStatusColor(visit.status) }}
+                          >
+                            {visit.status.charAt(0).toUpperCase() + visit.status.slice(1)}
+                          </div>
+                          <div className={styles.appointmentArrow}>
+                            <span>→</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.appointmentDivider}></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Show "View All Care Visits" button if there are more than 2 visits */}
+            {upcomingCareVisits.length > 2 && (
+              <div className={styles.viewAllAppointments}>
+                <button 
+                  className={styles.viewAllAppointmentsButton}
+                  onClick={() => navigate('/family-member/care-visits')}
+                >
+                  View All Care Visits ({upcomingCareVisits.length})
                 </button>
               </div>
             )}
