@@ -5,6 +5,7 @@ import CaregiverLayout from '../../components/CaregiverLayout';
 import caregiverApi from '../../services/caregiverApi2';
 import { useAuth } from '../../context/AuthContext';
 import DailyCareReportModal from '../../components/DailyCareReportModal.js';
+import ErrorModal from '../../components/ErrorModal';
 
 const Carelogs = () => {
   const { user } = useAuth();
@@ -15,6 +16,50 @@ const Carelogs = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedCarelog, setSelectedCarelog] = useState(null);
+  
+  // Error modal state
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
+  const [reportSubmissionLoading, setReportSubmissionLoading] = useState(false);
+
+  // Handle daily report submission
+  const handleReportSubmit = async (reportData) => {
+    try {
+      setReportSubmissionLoading(true);
+      
+      console.log('=== CARELOG REPORT SUBMISSION ===');
+      console.log('Report data:', reportData);
+      console.log('Selected carelog:', selectedCarelog);
+      
+      const response = await caregiverApi.submitDailyReport(
+        user.caregiver_id,
+        selectedCarelog.elder_id,
+        {
+          ...reportData,
+          date: selectedCarelog.date
+        }
+      );
+      
+      console.log('Report submitted successfully:', response);
+      alert('Daily care report submitted successfully!');
+      
+      // Close modal
+      setShowReportModal(false);
+      setSelectedCarelog(null);
+      
+      // Refresh data after a short delay
+      setTimeout(() => {
+        fetchMonthlyReports(currentMonth, currentYear);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit report. Please try again.';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setReportSubmissionLoading(false);
+    }
+  };
 
   // Fetch monthly reports using the same logic as dashboard
   const fetchMonthlyReports = async (month, year) => {
@@ -127,25 +172,57 @@ const Carelogs = () => {
     const isPast = targetDate < today;
     const isToday = targetDate.getTime() === today.getTime();
     
+    console.log('=== CARELOG DATE CLICK DEBUG ===');
+    console.log('Date:', dateStr);
+    console.log('Is Today:', isToday);
+    console.log('Is Past:', isPast);
+    console.log('Has Report:', dayReport.hasReport);
+    console.log('Existing Report:', dayReport.existingReport);
+    
     if (dayReport.hasReport) {
-      // View existing report (read-only for past, editable for today)
-      setSelectedCarelog({
-        date_logged: dateStr,
-        elder_name: dayReport.elder_name,
-        elder_id: dayReport.elder_id,
-        isReadOnly: isPast,
-        existingReport: dayReport.existingReport || {}
-      });
-      setShowReportModal(true);
-    } else if (isToday || isPast) {
-      // Allow uploading report for today or past dates
-      setSelectedCarelog({
-        date_logged: dateStr,
-        elder_name: dayReport.elder_name,
-        elder_id: dayReport.elder_id,
-        isReadOnly: false
-      });
-      setShowReportModal(true);
+      // Has existing report
+      if (isToday) {
+        // Today's report - can be edited
+        console.log('Opening today\'s report (editable)');
+        setSelectedCarelog({
+          date: dateStr,
+          elder_name: dayReport.elder_name,
+          elder_id: dayReport.elder_id,
+          isReadOnly: false,
+          existingReport: dayReport.existingReport || {}
+        });
+        setShowReportModal(true);
+      } else if (isPast) {
+        // Past date report - read-only
+        console.log('Opening past report (read-only)');
+        setSelectedCarelog({
+          date: dateStr,
+          elder_name: dayReport.elder_name,
+          elder_id: dayReport.elder_id,
+          isReadOnly: true,
+          existingReport: dayReport.existingReport || {}
+        });
+        setShowReportModal(true);
+      }
+    } else {
+      // No existing report
+      if (isToday) {
+        // Today - can upload new report
+        console.log('Opening new report form for today');
+        setSelectedCarelog({
+          date: dateStr,
+          elder_name: dayReport.elder_name,
+          elder_id: dayReport.elder_id,
+          isReadOnly: false,
+          existingReport: null
+        });
+        setShowReportModal(true);
+      } else if (isPast) {
+        // Past date without report - show error
+        console.log('Cannot upload report for past date');
+        setErrorModalMessage('Cannot upload reports for past dates. Reports must be submitted on the same day.');
+        setShowErrorModal(true);
+      }
     }
   };
 
@@ -482,11 +559,22 @@ const Carelogs = () => {
             // Refresh data after closing modal
             fetchMonthlyReports(currentMonth, currentYear);
           }}
+          onSubmit={handleReportSubmit}
           elderName={selectedCarelog?.elder_name}
-          reportDate={selectedCarelog?.date_logged}
+          reportDate={selectedCarelog?.date}
           existingReport={selectedCarelog?.existingReport}
+          isSubmitting={reportSubmissionLoading}
           isReadOnly={selectedCarelog?.isReadOnly || false}
           isCarelogMode={true}
+        />
+
+        {/* Error Modal */}
+        <ErrorModal
+          isOpen={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          title="Upload Restricted"
+          message={errorModalMessage}
+          icon="🚫"
         />
       </CaregiverLayout>
     </>

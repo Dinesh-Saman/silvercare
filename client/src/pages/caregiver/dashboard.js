@@ -444,6 +444,7 @@ const CaregiverDashboard = () => {
     console.log('Elder ID:', dayData.elder_id);
     console.log('Elder name:', dayData.elder_name);
     console.log('Has existing report:', dayData.hasReport);
+    console.log('Existing report data:', dayData.existingReport);
     
     // Check if this is a past date
     const clickedDate = new Date(dayData.date);
@@ -456,24 +457,46 @@ const CaregiverDashboard = () => {
     console.log('Is past date:', clickedDate < today);
     
     const isPastDate = clickedDate < today;
+    const isToday = clickedDate.getTime() === today.getTime();
     
-    // Handle past dates
-    if (isPastDate) {
-      if (dayData.hasReport) {
-        // Past date with existing report - open in read-only mode
-        console.log('Opening past date report in read-only mode');
-        setSelectedReportDay({...dayData, isReadOnly: true});
+    if (dayData.hasReport) {
+      // Has existing report
+      if (isToday) {
+        // Today's report - can be edited
+        console.log('Opening today\'s report (editable)');
+        setSelectedReportDay({
+          ...dayData,
+          isReadOnly: false,
+          existingReport: dayData.existingReport || {}
+        });
         setShowReportModal(true);
-      } else {
-        // Past date without report - show error modal
-        setErrorModalMessage('Cannot upload reports for past dates. Reports must be submitted on the same day or current date.');
-        setShowErrorModal(true);
-        return;
+      } else if (isPastDate) {
+        // Past date report - read-only
+        console.log('Opening past date report (read-only)');
+        setSelectedReportDay({
+          ...dayData,
+          isReadOnly: true,
+          existingReport: dayData.existingReport || {}
+        });
+        setShowReportModal(true);
       }
     } else {
-      // Current or future date - normal operation
-      setSelectedReportDay(dayData);
-      setShowReportModal(true);
+      // No existing report
+      if (isToday) {
+        // Today - can upload new report
+        console.log('Opening new report form for today');
+        setSelectedReportDay({
+          ...dayData,
+          isReadOnly: false,
+          existingReport: null
+        });
+        setShowReportModal(true);
+      } else if (isPastDate) {
+        // Past date without report - show error
+        console.log('Cannot upload report for past date');
+        setErrorModalMessage('Cannot upload reports for past dates. Reports must be submitted on the same day.');
+        setShowErrorModal(true);
+      }
     }
   };
 
