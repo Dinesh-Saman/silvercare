@@ -91,7 +91,9 @@ const CaregiverBookings = () => {
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        if (filters.type === 'upcoming') {
+        if (filters.type === 'pending') {
+          return booking.status === 'pending';
+        } else if (filters.type === 'upcoming') {
           return startDate > currentDate && booking.status === 'confirmed';
         } else if (filters.type === 'ongoing') {
           return startDate <= currentDate && endDate >= currentDate && booking.status === 'confirmed';
@@ -283,6 +285,12 @@ const CaregiverBookings = () => {
                 All Bookings
               </button>
               <button 
+                className={`${styles.filterTab} ${filters.type === 'pending' ? styles.active : ''}`}
+                onClick={() => setFilters(prev => ({ ...prev, type: 'pending' }))}
+              >
+                ⏳ Pending
+              </button>
+              <button 
                 className={`${styles.filterTab} ${filters.type === 'upcoming' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'upcoming' }))}
               >
@@ -324,6 +332,14 @@ const CaregiverBookings = () => {
             <span className={styles.infoIcon}>ℹ️</span>
             <span>
               Caregiver bookings can be cancelled within 2 hours of booking with full refund
+            </span>
+          </div>
+
+          {/* Auto-refund Info Message */}
+          <div className={styles.infoMessage} style={{marginTop: '10px'}}>
+            <span className={styles.infoIcon}>⏰</span>
+            <span>
+              If the caregiver does not accept your booking request within 2 hours, you will get a refund automatically
             </span>
           </div>
 
@@ -432,7 +448,7 @@ const CaregiverBookings = () => {
                       </div>
 
                       {/* Cancellation Alert */}
-                      {(booking.status === 'confirmed' || booking.status === 'pending') && bookingStatus === 'Upcoming' && (
+                      {(booking.status === 'confirmed' || booking.status === 'pending') && (bookingStatus === 'Upcoming' || bookingStatus === 'Pending') && (
                         <div className={styles.cancellationAlert}>
                           {canCancel ? (
                             <div className={styles.canCancelAlert}>
