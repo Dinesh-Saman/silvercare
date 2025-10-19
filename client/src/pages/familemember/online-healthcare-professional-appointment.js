@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
 import Navbar from '../../components/navbar';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
-import styles from '../../components/css/familymember/online-appointment.module.css';
+import styles from '../../components/css/familymember/physical-appointment.module.css';
 
 const OnlineHealthcareProfessionalAppointment = () => {
   const { currentUser, loading, isAuthenticated } = useAuth();
@@ -147,31 +147,41 @@ const OnlineHealthcareProfessionalAppointment = () => {
     }
   }, [currentUser, isAuthenticated, loading, navigate, elderId, counselorId]);
 
-  // Generate calendar days for current month
+  // Generate calendar days for current month with leading blanks to align grid
   const generateCalendarDays = () => {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
     const days = [];
-    
+
+    // Leading empty cells for alignment
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      
+      const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day
+        .toString()
+        .padStart(2, '0')}`;
+
       const date = new Date(currentYear, currentMonth, day);
       const isToday = date.toDateString() === today.toDateString();
       const isPast = date < today;
-      
+
       days.push({
         day,
         date: dateString,
         isToday,
         isPast,
-        isAvailable: !isPast
+        isAvailable: !isPast,
       });
     }
-    
+
     return days;
   };
 
@@ -226,7 +236,7 @@ const OnlineHealthcareProfessionalAppointment = () => {
     navigate(`/family-member/elder/${elderId}/healthcare-booking-summary/${counselorId}?${summaryParams.toString()}`);
   };
 
-  const calendarDays = generateCalendarDays();
+  const days = generateCalendarDays();
   const timeSlots = generateTimeSlots();
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
@@ -362,31 +372,31 @@ const OnlineHealthcareProfessionalAppointment = () => {
                       <h3 className={styles.monthYear}>{currentMonth} {currentYear}</h3>
                     </div>
                     <div className={styles.calendarGrid}>
-                      <div className={styles.weekDays}>
+                      <div className={styles.dayHeaders}>
                         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                          <div key={day} className={styles.weekDay}>{day}</div>
+                          <div key={day} className={styles.dayHeader}>{day}</div>
                         ))}
                       </div>
-                      <div className={styles.monthDays}>
-                        {calendarDays.map(({ day, date, isToday, isPast, isAvailable }) => (
-                          <button
-                            key={day}
-                            className={`${styles.calendarDay} ${
-                              selectedDate === date ? styles.selectedDate : ''
-                            } ${isToday ? styles.today : ''} ${
-                              !isAvailable ? styles.unavailableDate : ''
+                      <div className={styles.daysGrid}>
+                        {days.map((dayInfo, index) => (
+                          <div
+                            key={index}
+                            className={`${styles.dayCell} ${
+                              dayInfo ? (
+                                dayInfo.isToday ? styles.today :
+                                dayInfo.isPast ? styles.pastDay :
+                                dayInfo.date === selectedDate ? styles.selected :
+                                styles.available
+                              ) : styles.empty
                             }`}
-                            onClick={() => isAvailable && handleDateSelection(date)}
-                            disabled={!isAvailable}
-                            title={
-                              isPast 
-                                ? 'Past date' 
-                                : `Select ${formatDateForDisplay(date)}`
-                            }
+                            onClick={() => {
+                              if (dayInfo && dayInfo.isAvailable) {
+                                handleDateSelection(dayInfo.date);
+                              }
+                            }}
                           >
-                            {day}
-                            {isToday && <span className={styles.todayIndicator}>Today</span>}
-                          </button>
+                            {dayInfo?.day}
+                          </div>
                         ))}
                       </div>
                     </div>
