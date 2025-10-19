@@ -177,8 +177,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       submenu: [
         { key: 'book-caregiver', label: 'Book Caregiver', path: '/family-member/elder-caregivers' },
         { key: 'caregiver-bookings', label: 'Caregiver Bookings', path: '/family-member/caregiver-bookings' },
-        { key: 'todays-care-report', label: "Today's Care Report", path: '/family-member/todays-care-report' },
-        { key: 'care-reports', label: 'Care Reports', path: '/family-member/care-reports' }
+        { key: 'todays-care-report', label: 'Care Report', path: '/family-member/todays-care-report' }
       ]
     },
     {
