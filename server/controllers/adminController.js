@@ -76,7 +76,16 @@ const getAdminDashboard = async (req, res) => {
     console.log('Pending health professionals data:', pendingHealthProfessionalsResult.rows);
     
     const pendingHealthProfessionals = pendingHealthProfessionalsResult.rows;
-
+    //get total revenue
+    const revenueQuery = `
+      SELECT 
+        COALESCE(SUM(amount), 0) as total_revenue
+      FROM payment
+    `;
+    
+    const revenueResult = await pool.query(revenueQuery);
+    const revenue = parseFloat(revenueResult.rows[0]?.total_revenue || 0);
+    console.log('Total revenue:', revenue);
     // Get recent registrations
     const recentRegistrationsQuery = `
       SELECT user_id, name, email, role, created_at
@@ -122,7 +131,8 @@ const getAdminDashboard = async (req, res) => {
         pendingHealthProfessionals: pendingHealthProfessionals, // Add health professionals data
         recentRegistrations: recentRegistrations,
         newBookings: newBookings,
-        monthlySignups: monthlySignups
+        monthlySignups: monthlySignups,
+        revenue: revenue
       }
     };
 
@@ -131,6 +141,7 @@ const getAdminDashboard = async (req, res) => {
     console.log('- Stats pending_doctors:', stats.pending_doctors);
     console.log('- Pending health professionals count:', pendingHealthProfessionals.length);
     console.log('- Stats pending_health_professionals:', stats.pending_health_professionals);
+    console.log('- Total revenue:', revenue);
     console.log('=== ADMIN DASHBOARD DEBUG END ===');
 
     res.json(responseData);
