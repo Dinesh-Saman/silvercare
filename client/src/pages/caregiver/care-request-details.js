@@ -51,15 +51,26 @@ const CareRequestDetails = () => {
       
       if (response.success) {
         // Show success message and navigate back
-        const message = (newStatus === 'confirmed') ? 'Care request confirmed successfully!' : 
-                       newStatus === 'cancelled' ? 'Care request cancelled successfully!' : 
-                       `Care request ${newStatus} successfully!`;
+        let message;
+        if (newStatus === 'confirmed') {
+          message = 'Care request confirmed successfully!';
+        } else if (newStatus === 'cancelled') {
+          // Check if refund was processed
+          if (response.refund) {
+            message = 'Care request cancelled successfully! Refund has been processed. The family will receive their refund within 5-10 business days.';
+          } else {
+            message = 'Care request cancelled successfully!';
+          }
+        } else {
+          message = `Care request ${newStatus} successfully!`;
+        }
+        
         showPopupMessage(message, 'success');
         
         // Navigate back after showing popup
         setTimeout(() => {
           navigate('/caregiver/dashboard');
-        }, 2000);
+        }, 3000); // Increased to 3 seconds to show refund message
       } else {
         console.error('API Error:', response.message || response.error); // Debug log
         showPopupMessage('Failed to update care request status', 'error');
@@ -107,7 +118,7 @@ const CareRequestDetails = () => {
   };
 
   const handleCancel = () => {
-    showConfirmationPopup('cancel', 'Are you sure you want to cancel this care request?');
+    showConfirmationPopup('cancel', 'Are you sure you want to cancel this care request? The family member will receive a full refund within 5-10 business days.');
   };
 
   const handleBack = () => {

@@ -66,7 +66,7 @@ const CaregiverPaymentSuccess = () => {
 
           {/* Success Message */}
           <div className={styles.successMessage}>
-            <h1 className={styles.title}>🎉 Payment Successful!</h1>
+            <h1 className={styles.title} style={{ color: '#1e40af' }}>Payment Successful!</h1>
             <p className={styles.subtitle}>
               Your caregiver booking has been confirmed
             </p>
@@ -75,13 +75,12 @@ const CaregiverPaymentSuccess = () => {
           {/* Booking Details Card */}
           <div className={styles.detailsCard}>
             <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>📋 Booking Details</h2>
-              <span className={styles.confirmedBadge}>✓ Confirmed</span>
+              <h2 className={styles.cardTitle}>Booking Details</h2>
+              <span className={styles.confirmedBadge}>Confirmed</span>
             </div>
 
             <div className={styles.detailsGrid}>
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>🆔</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Booking ID</span>
                   <span className={styles.detailValue}>#{careRequestId}</span>
@@ -89,7 +88,6 @@ const CaregiverPaymentSuccess = () => {
               </div>
 
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>👴</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Elder Name</span>
                   <span className={styles.detailValue}>{elderName}</span>
@@ -97,7 +95,6 @@ const CaregiverPaymentSuccess = () => {
               </div>
 
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>🧑‍💼</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Caregiver</span>
                   <span className={styles.detailValue}>{caregiverName}</span>
@@ -105,7 +102,6 @@ const CaregiverPaymentSuccess = () => {
               </div>
 
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>📅</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Duration</span>
                   <span className={styles.detailValue}>{duration} days</span>
@@ -113,7 +109,6 @@ const CaregiverPaymentSuccess = () => {
               </div>
 
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>💰</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Amount Paid</span>
                   <span className={styles.detailValue}>Rs. {parseFloat(amount).toLocaleString()}</span>
@@ -121,7 +116,6 @@ const CaregiverPaymentSuccess = () => {
               </div>
 
               <div className={styles.detailItem}>
-                <span className={styles.detailIcon}>✅</span>
                 <div className={styles.detailContent}>
                   <span className={styles.detailLabel}>Payment Status</span>
                   <span className={styles.detailValue + ' ' + styles.statusSuccess}>Completed</span>
@@ -130,58 +124,21 @@ const CaregiverPaymentSuccess = () => {
             </div>
           </div>
 
-          {/* Next Steps */}
-          <div className={styles.nextStepsCard}>
-            <h3 className={styles.nextStepsTitle}>📌 What's Next?</h3>
-            <ul className={styles.nextStepsList}>
-              <li className={styles.nextStepItem}>
-                <span className={styles.stepIcon}>📧</span>
-                <span>A confirmation email has been sent to your registered email address</span>
-              </li>
-              <li className={styles.nextStepItem}>
-                <span className={styles.stepIcon}>🔔</span>
-                <span>The caregiver will be notified about this booking</span>
-              </li>
-              <li className={styles.nextStepItem}>
-                <span className={styles.stepIcon}>📱</span>
-                <span>You can view and manage your bookings in the Caregivers section</span>
-              </li>
-              <li className={styles.nextStepItem}>
-                <span className={styles.stepIcon}>👋</span>
-                <span>The caregiver will contact you before the first scheduled date</span>
-              </li>
-            </ul>
-          </div>
-
           {/* Action Buttons */}
           <div className={styles.actionButtons}>
             <button 
-              className={styles.primaryButton}
+              className={styles.secondaryButton}
               onClick={handleBackToDashboard}
             >
-              🏠 Back to Dashboard
+              Back to Dashboard
             </button>
             
             <button 
-              className={styles.secondaryButton}
-              onClick={handleBookAnother}
+              className={styles.primaryButton}
+              onClick={handleViewBookings}
             >
-              ➕ Book Another Caregiver
+              See Bookings
             </button>
-          </div>
-
-          {/* Support Information */}
-          <div className={styles.supportInfo}>
-            <p className={styles.supportText}>
-              Need help? Contact our support team at{' '}
-              <a href="mailto:support@silvercare.com" className={styles.supportLink}>
-                support@silvercare.com
-              </a>
-              {' '}or call{' '}
-              <a href="tel:+94112345678" className={styles.supportLink}>
-                +94 11 234 5678
-              </a>
-            </p>
           </div>
         </div>
       </FamilyMemberLayout>

@@ -122,17 +122,17 @@ const ElderCaregivers = () => {
           {/* Header Section */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <button 
-                className={styles.backButton}
-                onClick={handleBackToDashboard}
-              >
-                ← Back to Dashboard
-              </button>
               <h1 className={styles.title}>Book Caregiver Service</h1>
               <p className={styles.subtitle}>
                 Select an elder to book a caregiver service
               </p>
             </div>
+            <button 
+              className={styles.backButton}
+              onClick={handleBackToDashboard}
+            >
+              ← Back to Dashboard
+            </button>
           </div>
 
           {/* Search Section */}
@@ -263,8 +263,7 @@ const ElderCaregivers = () => {
                           className={styles.bookButton}
                           onClick={() => handleBookCaregiver(elder.elder_id)}
                         >
-                          <span className={styles.buttonIcon}>👨‍⚕️</span>
-                          <span>Book Caregiver</span>
+                          Book Caregiver
                         </button>
                       </div>
                     </div>
