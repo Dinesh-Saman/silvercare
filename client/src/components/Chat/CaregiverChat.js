@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { messagesApi } from '../../services/messagesApi';
-import styles from './Chat.module.css';
+import styles from './CaregiverChat.module.css';
 
-const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', receiverType = 'doctor', onClose }) => {
+const CaregiverChat = ({ currentUser, selectedCaregiver, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,12 +16,12 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
 
   // Fetch conversation messages
   const fetchMessages = async (isBackgroundRefresh = false) => {
-    if (!currentUser?.user_id || !selectedDoctor?.user_id) {
-      console.log('Missing user IDs in Chat.js:', {
+    if (!currentUser?.user_id || !selectedCaregiver?.user_id) {
+      console.log('Missing user IDs in CaregiverChat.js:', {
         currentUser: currentUser?.user_id,
-        selectedDoctor_user_id: selectedDoctor?.user_id,
-        selectedDoctor_doctor_id: selectedDoctor?.doctor_id,
-        selectedDoctorObject: selectedDoctor
+        selectedCaregiver_user_id: selectedCaregiver?.user_id,
+        selectedCaregiver_caregiver_id: selectedCaregiver?.caregiver_id,
+        selectedCaregiverObject: selectedCaregiver
       });
       return;
     }
@@ -32,14 +32,14 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
         setLoading(true);
       }
       
-      console.log('Chat.js - Fetching messages between:', {
+      console.log('CaregiverChat.js - Fetching messages between:', {
         familyMember: currentUser.user_id,
-        doctor: selectedDoctor.user_id
+        caregiver: selectedCaregiver.user_id
       });
       
       const response = await messagesApi.getConversation(
         currentUser.user_id,
-        selectedDoctor.user_id  // Changed from doctor_id to user_id
+        selectedCaregiver.user_id
       );
 
       if (response.success) {
@@ -51,7 +51,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
           msg => msg.receiver_id === currentUser.user_id && !msg.is_read
         );
         if (hasUnreadMessages) {
-          await messagesApi.markAsRead(selectedDoctor.user_id, currentUser.user_id);  // Changed from doctor_id to user_id
+          await messagesApi.markAsRead(selectedCaregiver.user_id, currentUser.user_id);
         }
       }
     } catch (error) {
@@ -78,20 +78,20 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     try {
       setSending(true);
       
-      console.log('Chat.js - Sending message:', {
+      console.log('CaregiverChat.js - Sending message:', {
         from: currentUser.user_id,
-        to: selectedDoctor.user_id,  // Changed from doctor_id to user_id
-        senderType: senderType,
-        receiverType: receiverType,
+        to: selectedCaregiver.user_id,
+        senderType: 'family_member',
+        receiverType: 'caregiver',
         message: messageToSend,
-        selectedDoctorObject: selectedDoctor
+        selectedCaregiverObject: selectedCaregiver
       });
       
       const response = await messagesApi.sendMessage(
         currentUser.user_id,
-        selectedDoctor.user_id,  // Changed from doctor_id to user_id
-        senderType,
-        receiverType,
+        selectedCaregiver.user_id,
+        'family_member',
+        'caregiver',
         messageToSend
       );
 
@@ -100,9 +100,9 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
         const newMsg = {
           message_id: response.message_id,
           sender_id: currentUser.user_id,
-          receiver_id: selectedDoctor.user_id,  // Changed from doctor_id to user_id
-          sender_type: senderType,
-          receiver_type: receiverType,
+          receiver_id: selectedCaregiver.user_id,
+          sender_type: 'family_member',
+          receiver_type: 'caregiver',
           message_text: messageToSend,
           sent_at: new Date().toISOString(),
           is_read: false,
@@ -164,7 +164,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.user_id, selectedDoctor?.user_id]); // Changed from doctor_id to user_id
+  }, [currentUser?.user_id, selectedCaregiver?.user_id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -180,7 +180,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
     return (
       <div className={styles.chatContainer}>
         <div className={styles.chatHeader}>
-          <h3>💬 Chat with Dr. {selectedDoctor.doctor_name}</h3>
+          <h3>💬 Chat with {selectedCaregiver.caregiver_name}</h3>
           <button className={styles.closeButton} onClick={onClose}>×</button>
         </div>
         <div className={styles.loadingContainer}>
@@ -196,9 +196,12 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
   return (
     <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
-        <div className={styles.doctorInfo}>
-          <h3>💬 Dr. {selectedDoctor.doctor_name}</h3>
-          <span className={styles.specialization}>{selectedDoctor.specialization}</span>
+        <div className={styles.caregiverInfo}>
+          <h3>💬 {selectedCaregiver.caregiver_name}</h3>
+          <div className={styles.caregiverMeta}>
+            <span className={styles.district}>{selectedCaregiver.caregiver_district}</span>
+            <span className={styles.availability}>{selectedCaregiver.availability}</span>
+          </div>
         </div>
         <button className={styles.closeButton} onClick={onClose}>×</button>
       </div>
@@ -208,7 +211,30 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
           <div className={styles.noMessages}>
             <div className={styles.noMessagesIcon}>💬</div>
             <h4>Start Your Conversation</h4>
-            <p>Send a message to Dr. {selectedDoctor.doctor_name}</p>
+            <p>Send a message to {selectedCaregiver.caregiver_name}</p>
+            <div className={styles.conversationStarters}>
+              <h5>💡 Conversation starters:</h5>
+              <div className={styles.starterButtons}>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("Hello! How is my elder doing today?")}
+                >
+                  "How is my elder doing today?"
+                </button>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("I wanted to check on the care routine.")}
+                >
+                  "Check on care routine"
+                </button>
+                <button 
+                  className={styles.starterButton}
+                  onClick={() => setNewMessage("Is there anything I should know about their health?")}
+                >
+                  "Any health updates?"
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           Object.entries(groupedMessages).map(([date, dayMessages]) => (
@@ -250,7 +276,7 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={`Message Dr. ${selectedDoctor.doctor_name}...`}
+            placeholder={`Message ${selectedCaregiver.caregiver_name}...`}
             className={styles.messageInput}
             disabled={sending}
             maxLength={1000}
@@ -268,4 +294,4 @@ const Chat = ({ currentUser, selectedDoctor, senderType = 'family_member', recei
   );
 };
 
-export default Chat;
+export default CaregiverChat;

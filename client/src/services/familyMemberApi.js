@@ -23,3 +23,36 @@ export const updateFamilyMemberDetails = async (userId, updateData) => {
     throw error;
   }
 };
+
+// New functions for healthcare professional chat
+export const familyMemberApi = {
+  // Get family members who have elders that have appointments with this healthcare professional
+  getFamilyMembersWithAppointments: async (healthcareProfessionalUserId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/messages/family-members-with-appointments/${healthcareProfessionalUserId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching family members with appointments:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch family members',
+        familyMembers: []
+      };
+    }
+  },
+
+  // Get family member details by user_id
+  getFamilyMemberByUserId: async (userId) => {
+    try {
+      const response = await axios.get(`${API_BASE}/family-member/by-user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching family member by user ID:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch family member details',
+        familyMember: null
+      };
+    }
+  }
+};
