@@ -12,6 +12,12 @@ const CareRequestDetails = () => {
   const [careRequest, setCareRequest] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState('success'); // 'success' or 'error'
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [confirmAction, setConfirmAction] = useState('');
+  const [confirmMessage, setConfirmMessage] = useState('');
 
   useEffect(() => {
     fetchCareRequestDetails();
@@ -39,33 +45,69 @@ const CareRequestDetails = () => {
   const handleStatusUpdate = async (newStatus) => {
     try {
       setUpdating(true);
+      console.log('Updating status to:', newStatus); // Debug log
       const response = await caregiverApi.updateCareRequestStatus(requestId, newStatus);
+      console.log('API Response:', response); // Debug log
       
       if (response.success) {
         // Show success message and navigate back
-        alert(`Care request ${newStatus} successfully!`);
-        navigate('/caregiver/dashboard');
+        const message = (newStatus === 'confirmed') ? 'Care request confirmed successfully!' : 
+                       newStatus === 'cancelled' ? 'Care request cancelled successfully!' : 
+                       `Care request ${newStatus} successfully!`;
+        showPopupMessage(message, 'success');
+        
+        // Navigate back after showing popup
+        setTimeout(() => {
+          navigate('/caregiver/dashboard');
+        }, 2000);
       } else {
-        alert('Failed to update care request status');
+        console.error('API Error:', response.message || response.error); // Debug log
+        showPopupMessage('Failed to update care request status', 'error');
       }
     } catch (error) {
       console.error('Error updating care request status:', error);
-      alert('Failed to update care request status');
+      showPopupMessage('Failed to update care request status', 'error');
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleApprove = () => {
-    if (window.confirm('Are you sure you want to approve this care request?')) {
-      handleStatusUpdate('approved');
+  const showPopupMessage = (message, type = 'success') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
+  };
+
+  const showConfirmationPopup = (action, message) => {
+    setConfirmAction(action);
+    setConfirmMessage(message);
+    setShowConfirmPopup(true);
+  };
+
+  const handleConfirmAction = () => {
+    setShowConfirmPopup(false);
+    if (confirmAction === 'confirm') {
+      handleStatusUpdate('confirmed');
+    } else if (confirmAction === 'cancel') {
+      handleStatusUpdate('cancelled');
     }
   };
 
+  const handleCancelAction = () => {
+    setShowConfirmPopup(false);
+  };
+
+  const handleApprove = () => {
+    showConfirmationPopup('confirm', 'Are you sure you want to confirm this care request?');
+  };
+
   const handleCancel = () => {
-    if (window.confirm('Are you sure you want to cancel this care request?')) {
-      handleStatusUpdate('cancelled');
-    }
+    showConfirmationPopup('cancel', 'Are you sure you want to cancel this care request?');
   };
 
   const handleBack = () => {
@@ -216,12 +258,12 @@ const CareRequestDetails = () => {
                     <span>{careRequest?.duration} days</span>
                   </div>
                   {/* Show time left only for pending and approved requests */}
-                  {(careRequest?.status === 'pending' || careRequest?.status === 'approved') && (
+                  {(careRequest?.status === 'pending' ) && (
                     <div className={styles.infoItem}>
                       <label>Time Left:</label>
                       <span className={(() => {
                         const timeLeft = getTimeLeft(careRequest.start_date);
-                        if (careRequest.status === 'approved' && timeLeft === 'Started') {
+                        if (careRequest.status === 'confirmed' && timeLeft === 'Started') {
                           return styles.greenText;
                         }
                         // Show red for overdue requests
@@ -321,7 +363,7 @@ const CareRequestDetails = () => {
                   onClick={handleApprove}
                   disabled={updating}
                 >
-                  {updating ? 'Processing...' : '✓ Approve Request'}
+                  {updating ? 'Processing...' : '✓ confirm Request'}
                 </button>
                 <button 
                   className={`${styles.actionButton} ${styles.cancelButton}`}
@@ -335,6 +377,59 @@ const CareRequestDetails = () => {
           </div>
         </div>
       </CaregiverLayout>
+
+      {/* Success/Error Popup */}
+      {showPopup && (
+        <div className={styles.popupOverlay}>
+          <div className={`${styles.popup} ${styles[popupType]}`}>
+            <div className={styles.popupContent}>
+              <div className={styles.popupIcon}>
+                {popupType === 'success' ? '✅' : '❌'}
+              </div>
+              <p className={styles.popupMessage}>{popupMessage}</p>
+              <button 
+                className={styles.popupClose}
+                onClick={() => setShowPopup(false)}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className={styles.popupOverlay}>
+          <div className={styles.confirmPopup}>
+            <div className={styles.confirmContent}>
+              <div className={styles.confirmIcon}>
+                {confirmAction === 'confirm' ? '✅' : '⚠️'}
+              </div>
+              <h3 className={styles.confirmTitle}>
+                {confirmAction === 'confirm' ? 'Confirmation' : 'Cancellation'}
+              </h3>
+              <p className={styles.confirmMessage}>{confirmMessage}</p>
+              <div className={styles.confirmButtons}>
+                <button 
+                  className={`${styles.confirmBtn} ${styles.okBtn}`}
+                  onClick={handleConfirmAction}
+                  disabled={updating}
+                >
+                  {updating ? 'Processing...' : 'OK'}
+                </button>
+                <button 
+                  className={`${styles.confirmBtn} ${styles.cancelBtn}`}
+                  onClick={handleCancelAction}
+                  disabled={updating}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

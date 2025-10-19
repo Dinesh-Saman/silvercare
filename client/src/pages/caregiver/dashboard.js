@@ -17,7 +17,7 @@ const CaregiverDashboard = () => {
   const [careRequests, setCareRequests] = useState([]);
   const [carelog, setCarelogCount] = useState([]);
   const [completedShifts, setCompletedShifts] = useState(0);
-  const [totalHoursWorked, setTotalHoursWorked] = useState(0);
+ // const [totalHoursWorked, setTotalHoursWorked] = useState(0);
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   // Upcoming shifts fetched from backend
@@ -212,7 +212,7 @@ const CaregiverDashboard = () => {
         setCompletedShifts(completedCount);
 
         // Calculate total hours worked
-        let totalHours = 0;
+        {/*let totalHours = 0;
         if (Array.isArray(data)) {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -250,7 +250,7 @@ const CaregiverDashboard = () => {
             }
           });
         }
-        setTotalHoursWorked(totalHours);
+        setTotalHoursWorked(totalHours);*/}
 
         // Keep your existing careRequests logic
         const transformed = Array.isArray(data)
@@ -475,10 +475,16 @@ const CaregiverDashboard = () => {
   // --- Week-by-week filtering for confirmed shifts ---
 
   // Only show confirmed shifts from the general upcoming shifts for summary card
-  const confirmedShifts = useMemo(() =>
-    upcomingShifts.filter(s => s.status && s.status.toLowerCase() === 'confirmed'),
-    [upcomingShifts]
+  const confirmedShifts = useMemo(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  
+  return upcomingShifts.filter(s => 
+    s.status && 
+    s.status.toLowerCase() === 'confirmed' &&
+    new Date(s.start_date) >= today
   );
+}, [upcomingShifts]);
 
   const { start: weekStart, end: weekEnd } = getWeekRange(currentWeek);
 
@@ -532,7 +538,7 @@ const CaregiverDashboard = () => {
             <span role="img" aria-label="Elders">👥</span>
           </div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Elders</span>
+            <span className={styles.cardLabel}>Assigned Elders</span>
             <span className={styles.cardNumber}>{filteredElders.length}</span>
           </div>
         </div>
@@ -541,11 +547,11 @@ const CaregiverDashboard = () => {
             <span role="img" aria-label="Families">👨‍👩‍👧‍👦</span>
           </div>
           <div className={styles.cardContent}>
-            <span className={styles.cardLabel}>Families</span>
+            <span className={styles.cardLabel}>Assigned Families</span>
             <span className={styles.cardNumber}>{families.length}</span>
           </div>
         </div>
-        <div className={styles.card}>
+        {/*<div className={styles.card}>
           <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #ffb347 0%, #ffcc33 100%)'}}>
             <span role="img" aria-label="Carelogs">📝</span>
           </div>
@@ -553,7 +559,7 @@ const CaregiverDashboard = () => {
             <span className={styles.cardLabel}>Carelogs</span>
             <span className={styles.cardNumber}>{carelog}</span>
           </div>
-        </div>
+        </div>*/}
         <div className={styles.card}>
           <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
             <span role="img" aria-label="Upcoming">📅</span>
@@ -563,11 +569,22 @@ const CaregiverDashboard = () => {
             <span className={styles.cardNumber}>{filteredUpcomingShifts.length}</span>
           </div>
         </div>
+
+        <div className={styles.card}>
+          <div className={styles.cardIcon} style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+            <span role="img" aria-label="Completed">✅</span>
+          </div>
+          <div className={styles.cardContent}>
+            <span className={styles.cardLabel}>Completed Shifts</span>
+            <span className={styles.cardNumber}>{completedShifts}</span>
+          </div>
+        </div>
+
       </div>
 
       <div className={styles.dashboardgrid}>
 
-        <section className={styles.performanceStats}>
+        {/*<section className={styles.performanceStats}>
           <h2 style={{display: 'flex', alignItems: 'center', gap: 8}}>
             <span role="img" aria-label="Performance">🏆</span> Performance Stats
           </h2>
@@ -587,7 +604,7 @@ const CaregiverDashboard = () => {
               <span className={styles.statValue}>{totalHoursWorked}</span>
             </div>
           </div>
-        </section>
+        </section>*/}
 
         <section className={styles.carerequest}>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px'}}>

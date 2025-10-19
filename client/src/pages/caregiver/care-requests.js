@@ -32,13 +32,13 @@ useEffect(() => {
   fetchCareRequests();
 }, [user, debouncedSearchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-update status from 'approved' to 'completed' if end_date has passed
+  // Auto-update status from 'confirmed' to 'completed' if end_date has passed
   useEffect(() => {
     if (!careRequests || careRequests.length === 0) return;
     const today = new Date();
     today.setHours(0,0,0,0);
     careRequests.forEach(async (request) => {
-      if (request.status === 'approved') {
+      if (request.status === 'confirmed' || request.status === 'approved') {
         const endDate = new Date(request.end_date);
         endDate.setHours(0,0,0,0);
         if (endDate.getTime() < today.getTime()) {
@@ -80,7 +80,7 @@ useEffect(() => {
     if (status === 'all') return careRequests;
     // Show completed if status was approved and end_date has passed
     return careRequests.map(request => {
-      if (request.status === 'approved') {
+      if (request.status === 'confirmed' || request.status === 'approved') {
         const endDate = new Date(request.end_date);
         const today = new Date();
         // Remove time part for date-only comparison
@@ -89,11 +89,16 @@ useEffect(() => {
         if (endDate.getTime() < today.getTime()) {
           return { ...request, status: 'completed' };
         } else if (endDate.getTime() === today.getTime()) {
-          return { ...request, status: 'approved' };
+          return { ...request, status: 'confirmed' };
         }
       }
       return request;
-    }).filter(request => request.status === status);
+    }).filter(request => {
+      if (status === 'confirmed') {
+        return request.status === 'confirmed' || request.status === 'approved';
+      }
+      return request.status === status;
+    });
   };
 
   const getTabCount = (status) => {
@@ -189,9 +194,8 @@ useEffect(() => {
   const tabs = [
     { key: 'all', label: 'All Requests', count: getTabCount('all') },
     { key: 'pending', label: 'Pending', count: getTabCount('pending') },
-    { key: 'approved', label: 'Approved', count: getTabCount('approved') },
     { key: 'confirmed', label: 'Confirmed', count: getTabCount('confirmed') },
-    { key: 'cancelled', label: 'Rejected', count: getTabCount('cancelled') },
+    { key: 'cancelled', label: 'Cancelled', count: getTabCount('cancelled') },
     { key: 'completed', label: 'Completed', count: getTabCount('completed') }
   ];
 
@@ -297,7 +301,7 @@ useEffect(() => {
                 {currentRequests.map((request, index) => {
                   // For confirmed status, if start date < today, add green border/background
                   let confirmedPast = false;
-                  if (request.status === 'confirmed') {
+                  if (request.status === 'confirmed' || request.status === 'approved') {
                     const today = new Date();
                     today.setHours(0,0,0,0);
                     const start = new Date(request.start_date);
@@ -314,8 +318,8 @@ useEffect(() => {
                         <div className={styles.requestInfo}>
                           <h3 className={styles.elderName}>{request.elder_name}</h3>
                         </div>
-                        <div className={`${styles.statusBadge} ${styles[request.status]}`}>
-                          {request.status}
+                        <div className={`${styles.statusBadge} ${styles[request.status === 'approved' ? 'confirmed' : request.status]}`}>
+                          {request.status === 'approved' ? 'confirmed' : request.status}
                         </div>
                       </div>
 
@@ -376,21 +380,37 @@ useEffect(() => {
                       </div>
                     </div>
                       {/* Show time left only in pending tab */}
-                      {(request?.status === 'pending' || request?.status === 'approved') && (
-                        <div className={styles.timeLeftRow}>
-                          <span className={styles.label}>Time Left:</span>
-                          <span className={(() => {
-                            const timeLeft = getTimeLeft(request.start_date);
-                            if (request.status === 'approved' && timeLeft === 'Started') {
-                              return styles.greenText;
-                            }
-                            // Existing color logic for other cases
-                            return (new Date(request.start_date) - new Date() < 7 * 24 * 60 * 60 * 1000 ? styles.redText : styles.greenText);
-                          })()}>
-                            {getTimeLeft(request.start_date)}
-                          </span>
-                        </div>
-                      )}
+                      {(request?.status === 'pending' || request?.status === 'confirmed' || request?.status === 'approved') && (() => {
+                        // Don't show time left if status is confirmed/approved and start date < today
+                        if (request.status === 'confirmed' || request.status === 'approved') {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const startDate = new Date(request.start_date);
+                          startDate.setHours(0, 0, 0, 0);
+                          
+                          if (startDate < today) {
+                            return null; // Don't show time left
+                          }
+                        }
+                        // Show time left for pending or confirmed with start date >= today
+                        const timeLeft = getTimeLeft(request.start_date);
+                        const startDate = new Date(request.start_date);
+                        const now = new Date();
+                        const timeDiff = startDate - now;
+                        const hoursLeft = timeDiff / (1000 * 60 * 60);
+                        
+                        // Red if <= 24 hours, green otherwise
+                        const timeLeftClass = hoursLeft <= 24 ? styles.redText : styles.greenText;
+                        
+                        return (
+                          <div className={styles.timeLeftRow}>
+                            <span className={styles.label}>Time Left:</span>
+                            <span className={timeLeftClass}>
+                              {timeLeft}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     <div className={styles.requestActions}>
                       
                       <button 
