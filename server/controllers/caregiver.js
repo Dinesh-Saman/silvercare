@@ -80,6 +80,8 @@ const getAssignedElders = async (req, res) => {
         e.age,
         cr.duration,
         cr.status,
+        cr.start_date,
+        cr.end_date,
         cr.caregiver_id,
         cr.family_id,
         u.user_id
@@ -87,7 +89,8 @@ const getAssignedElders = async (req, res) => {
       JOIN elder e ON cr.elder_id = e.elder_id
       JOIN caregiver cg ON cr.caregiver_id = cg.caregiver_id
       JOIN "User" u ON cg.user_id = u.user_id
-      WHERE cg.caregiver_id = $1`;
+      WHERE cg.caregiver_id = $1
+      ORDER BY cr.end_date DESC`;
 
     const result = await pool.query(query, [caregiverId]);
 

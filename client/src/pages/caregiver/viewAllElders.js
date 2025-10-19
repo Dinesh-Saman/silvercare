@@ -27,18 +27,53 @@ const ViewAllElders = () => {
           setLoading(false);
           return;
         }
+        
+        console.log('🔑 Fetching data for caregiver_id:', caregiverId);
+        console.log('👤 Current user object:', currentUser);
+        
         const data = await caregiverApi.fetchAssignedElders(caregiverId);
         
-        // Filter to only show confirmed and completed elders
+        console.log('📥 Raw API Data:', data.length, 'elders');
+        console.log('📅 Current Date:', new Date().toISOString().split('T')[0]);
+        console.log('📋 All raw data:', JSON.stringify(data.map(e => ({
+          elder_id: e.elder_id,
+          name: e.name,
+          status: e.status,
+          end_date: e.end_date
+        })), null, 2));
+        
+        // Only show confirmed elders (we'll determine confirmed vs completed by date)
         const filteredData = data.filter(elder => 
-          elder.status && (
-            elder.status.toLowerCase() === 'confirmed' || 
-            elder.status.toLowerCase() === 'completed'
-          )
+          elder.status && elder.status.toLowerCase() === 'confirmed'
         );
         
-        setElders(filteredData);
-        setFilteredElders(filteredData);
+        console.log('✅ After status filter:', filteredData.length, 'confirmed elders');
+        console.log('📋 Confirmed data:', JSON.stringify(filteredData.map(e => ({
+          elder_id: e.elder_id,
+          name: e.name,
+          end_date: e.end_date
+        })), null, 2));
+        
+        // Deduplicate elders by elder_id, keeping the one with the latest end_date
+        const elderMap = new Map();
+        filteredData.forEach(elder => {
+          const existingElder = elderMap.get(elder.elder_id);
+          if (!existingElder || new Date(elder.end_date) > new Date(existingElder.end_date)) {
+            elderMap.set(elder.elder_id, elder);
+          }
+        });
+        const uniqueElders = Array.from(elderMap.values());
+        
+        console.log('🎯 Unique elders after deduplication:', uniqueElders.length);
+        const todayString = new Date().toISOString().split('T')[0];
+        uniqueElders.forEach(elder => {
+          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          const status = endDateString < todayString ? 'completed' : 'confirmed';
+          console.log(`  - ${elder.name}: end_date=${endDateString}, display_status=${status}`);
+        });
+        
+        setElders(uniqueElders);
+        setFilteredElders(uniqueElders);
       } catch (err) {
         setError('Failed to fetch elders.');
       } finally {
@@ -62,9 +97,39 @@ const ViewAllElders = () => {
 
     // Filter by status
     if (statusFilter && statusFilter !== 'all') {
-      filtered = filtered.filter(elder =>
-        elder.status && elder.status.toLowerCase() === statusFilter.toLowerCase()
-      );
+      const todayString = new Date().toISOString().split('T')[0];
+      
+      console.log('🔍 Filtering by status:', statusFilter);
+      console.log('📅 Today:', todayString);
+      console.log('📊 Elders before filter:', filtered.length);
+      
+      if (statusFilter === 'completed') {
+        // Show completed: end_date < today (past assignments)
+        filtered = filtered.filter(elder => {
+          if (!elder.end_date) {
+            console.log(`❌ ${elder.name}: No end_date`);
+            return false;
+          }
+          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          const isCompleted = endDateString < todayString;
+          console.log(`${isCompleted ? '✅' : '❌'} ${elder.name}: end_date=${endDateString}, isCompleted=${isCompleted}`);
+          return isCompleted;
+        });
+      } else if (statusFilter === 'confirmed') {
+        // Show confirmed: end_date >= today (active/ongoing)
+        filtered = filtered.filter(elder => {
+          if (!elder.end_date) {
+            console.log(`❌ ${elder.name}: No end_date`);
+            return false;
+          }
+          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          const isConfirmed = endDateString >= todayString;
+          console.log(`${isConfirmed ? '✅' : '❌'} ${elder.name}: end_date=${endDateString}, isConfirmed=${isConfirmed}`);
+          return isConfirmed;
+        });
+      }
+      
+      console.log('📊 Elders after filter:', filtered.length);
     }
 
     setFilteredElders(filtered);
@@ -86,12 +151,27 @@ const ViewAllElders = () => {
     setSearchTerm('');
   };
 
-  const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
+  // Get the display status based on date logic
+  const getDisplayStatus = (elder) => {
+    if (!elder.end_date || elder.status.toLowerCase() !== 'confirmed') {
+      return elder.status;
+    }
+    
+    const todayString = new Date().toISOString().split('T')[0];
+    const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+    
+    // If end_date < today, it's completed (past)
+    // If end_date >= today, it's confirmed (active/ongoing)
+    return endDateString < todayString ? 'completed' : 'confirmed';
+  };
+
+  const getStatusClass = (elder) => {
+    const displayStatus = getDisplayStatus(elder);
+    switch (displayStatus.toLowerCase()) {
       case 'confirmed':
-        return styles.statusConfirmed;
+        return styles.statusConfirmed; // Green
       case 'completed':
-        return styles.statusCompleted;
+        return styles.statusCompleted; // Purple
       default:
         return styles.statusPending;
     }
@@ -100,23 +180,56 @@ const ViewAllElders = () => {
   const getUniqueStatuses = () => {
     const statuses = elders.map(elder => elder.status).filter(status => status); // Filter out null/undefined
     const uniqueStatuses = [...new Set(statuses)];
-    // Only return confirmed and completed statuses since we filter for these
+    // Only return confirmed status since that's what we filter for (completed is date-based)
     return uniqueStatuses.filter(status => 
-      status && (
-        status.toLowerCase() === 'confirmed' || 
-        status.toLowerCase() === 'completed'
-      )
+      status && status.toLowerCase() === 'confirmed'
     );
   };
 
   const getStats = () => {
-    const confirmedCount = elders.filter(e => e.status.toLowerCase() === 'confirmed').length;
-    const completedCount = elders.filter(e => e.status.toLowerCase() === 'completed').length;
+    // Get today's date string in YYYY-MM-DD format (no time component)
+    const todayString = new Date().toISOString().split('T')[0];
+    
+    console.log('📊 getStats() - Calculating stats');
+    console.log('📅 Today:', todayString);
+    console.log('📋 Total elders:', elders.length);
+    
+    // Completed = status is 'confirmed' AND end_date < today (past assignments)
+    const completedElders = elders.filter(e => {
+      if (!e.end_date) {
+        console.log(`  ⚠️ ${e.name}: No end_date`);
+        return false;
+      }
+      if (e.status.toLowerCase() !== 'confirmed') {
+        console.log(`  ⚠️ ${e.name}: Status is ${e.status}, not confirmed`);
+        return false;
+      }
+      // Get just the date part from end_date
+      const endDateString = new Date(e.end_date).toISOString().split('T')[0];
+      const isCompleted = endDateString < todayString;
+      console.log(`  ${isCompleted ? '✅ COMPLETED' : '❌ NOT COMPLETED'}: ${e.name} - end_date=${endDateString}, isCompleted=${isCompleted}`);
+      return isCompleted;
+    });
+    
+    // Confirmed = status is 'confirmed' AND end_date >= today (active/ongoing)
+    const confirmedElders = elders.filter(e => {
+      if (!e.end_date || e.status.toLowerCase() !== 'confirmed') return false;
+      const endDateString = new Date(e.end_date).toISOString().split('T')[0];
+      return endDateString >= todayString;
+    });
+    
+    console.log('📈 STATS RESULT:', {
+      total: elders.length,
+      confirmed: confirmedElders.length,
+      completed: completedElders.length
+    });
+    console.log('📝 Completed elders:', completedElders.map(e => e.name));
+    console.log('📝 Confirmed elders:', confirmedElders.map(e => e.name));
     
     return {
-      total: elders.length, // Only confirmed and completed elders
-      confirmed: confirmedCount, // Will show 0 if no confirmed elders
-      completed: completedCount, // Will show 0 if no completed elders
+      total: elders.length,
+      confirmed: confirmedElders.length,
+      completed: completedElders.length,
     };
   };
 
@@ -152,10 +265,10 @@ const ViewAllElders = () => {
           {/* Header */}
           <div className={styles.header}>
             <h1 className={styles.title}>
-              Assigned Elders 
-              {statusFilter === 'all' && ' (All Statuses)'}
-              {statusFilter === 'confirmed' && ' (Confirmed Only)'}
-              {statusFilter === 'completed' && ' (Completed Only)'}
+              
+              {statusFilter === 'all' && ' Total Elders'}
+              {statusFilter === 'confirmed' && ' Current Elders'}
+              {statusFilter === 'completed' && ' Past Elders'}
             </h1>
           </div>
 
@@ -168,18 +281,7 @@ const ViewAllElders = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
             />
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                console.log('Dropdown changed to:', e.target.value);
-                setStatusFilter(e.target.value);
-              }}
-              className={styles.filterSelect}
-            >
-              <option value="all">All Statuses</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-            </select>
+            
             <button onClick={handleClearFilters} className={styles.clearButton}>
               Clear Filters
             </button>
@@ -195,6 +297,7 @@ const ViewAllElders = () => {
               <p className={styles.statNumber}>{stats.total}</p>
               <p className={styles.statLabel}>Total Elders</p>
             </div>
+            {/*confirmed - active/ongoing (today <= end_date)*/}
             <div 
               className={`${styles.statCard} ${statusFilter === 'confirmed' ? styles.statCardActive : ''}`}
               onClick={() => handleStatCardClick('confirmed')}
@@ -203,6 +306,7 @@ const ViewAllElders = () => {
               <p className={styles.statNumber}>{stats.confirmed}</p>
               <p className={styles.statLabel}>Confirmed</p>
             </div>
+            {/*completed - past assignments (today > end_date)*/}
             <div 
               className={`${styles.statCard} ${statusFilter === 'completed' ? styles.statCardActive : ''}`}
               onClick={() => handleStatCardClick('completed')}
@@ -211,6 +315,7 @@ const ViewAllElders = () => {
               <p className={styles.statNumber}>{stats.completed}</p>
               <p className={styles.statLabel}>Completed</p>
             </div>
+            
           </div>
 
           {/* Loading State */}
@@ -231,48 +336,51 @@ const ViewAllElders = () => {
           {/* No Data State */}
           {!loading && !error && filteredElders.length === 0 && elders.length === 0 && (
             <div className={styles.noDataMessage}>
-              📋 No confirmed or completed elders assigned yet.
+              📋 No Elders assigned yet.
             </div>
           )}
 
           {/* No Results State */}
           {!loading && !error && filteredElders.length === 0 && elders.length > 0 && (
             <div className={styles.noDataMessage}>
-              🔍 No elders match your search criteria.
+              📋 No Past elders.
             </div>
           )}
 
           {/* Elders Grid */}
           {!loading && !error && filteredElders.length > 0 && (
             <div className={styles.eldersGrid}>
-              {filteredElders.map((elder) => (
-                <div key={elder.elder_id} className={styles.elderCard}>
-                  <div className={styles.elderHeader}>
-                    <h3 className={styles.elderName}>{elder.name}</h3>
-                    <span className={`${styles.statusBadge} ${getStatusClass(elder.status)}`}>
-                      {elder.status}
-                    </span>
-                  </div>
-
-                  <div className={styles.elderDetails}>
-                    <div className={styles.elderDetail}>
-                      <span className={styles.detailIcon}>👤</span>
-                      <span>Age: {elder.age} years</span>
+              {filteredElders.map((elder) => {
+                const displayStatus = getDisplayStatus(elder);
+                return (
+                  <div key={elder.elder_id} className={styles.elderCard}>
+                    <div className={styles.elderHeader}>
+                      <h3 className={styles.elderName}>{elder.name}</h3>
+                      <span className={`${styles.statusBadge} ${getStatusClass(elder)}`}>
+                        {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
+                      </span>
                     </div>
-                    <div className={styles.elderDetail}>
-                      <span className={styles.detailIcon}>⏱️</span>
-                      <span>Duration: {elder.duration}</span>
-                    </div>
-                  </div>
 
-                  <button
-                    onClick={() => handleElderClick(elder)}
-                    className={styles.viewButton}
-                  >
-                    View Elder Details
-                  </button>
-                </div>
-              ))}
+                    <div className={styles.elderDetails}>
+                      <div className={styles.elderDetail}>
+                        <span className={styles.detailIcon}>👤</span>
+                        <span>Age: {elder.age} years</span>
+                      </div>
+                      <div className={styles.elderDetail}>
+                        <span className={styles.detailIcon}>⏱️</span>
+                        <span>Duration: {elder.duration}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleElderClick(elder)}
+                      className={styles.viewButton}
+                    >
+                      View Elder Details
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

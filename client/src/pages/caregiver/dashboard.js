@@ -106,6 +106,10 @@ const CaregiverDashboard = () => {
     try {
       console.log('Refreshing dashboard data...');
       
+      // Get today's date for comparison
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
       const results = await Promise.all([
         caregiverApi.fetchCareRequests(caregiverId),
         caregiverApi.fetchUpcomingShifts(caregiverId)
@@ -135,8 +139,13 @@ const CaregiverDashboard = () => {
           }));
         setCareRequests(pendingRequests);
         
-        // Update completion stats
-        const completedCount = careRequestsData.filter(request => request.status === 'completed').length;
+        // Update completion stats - check if end_date < today for confirmed requests
+        const completedCount = careRequestsData.filter(request => {
+          if (request.status !== 'confirmed') return false;
+          const endDate = new Date(request.end_date);
+          endDate.setHours(0, 0, 0, 0);
+          return endDate < today;
+        }).length;
         setCompletedShifts(completedCount);
       }
       
@@ -195,9 +204,13 @@ const CaregiverDashboard = () => {
         setCarelogCount(0);
       }),
       caregiverApi.fetchCareRequests(caregiverId).then((data) => {
+        // Get today's date for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         // Get all family IDs from carerequest table for this caregiver, status approved or completed
         const allFamilyIds = Array.isArray(data)
-          ? data.filter(request => request.status === 'confirmed' || request.status === 'completed')
+          ? data.filter(request => request.status === 'confirmed' )
               .map(request => request.family_id)
               .filter(Boolean)
           : [];
@@ -205,9 +218,14 @@ const CaregiverDashboard = () => {
         const uniqueFamilyIdsFromRequests = Array.from(new Set(allFamilyIds));
         setFamilies(uniqueFamilyIdsFromRequests);
 
-        // Count completed shifts
+        // Count completed shifts - check if end_date < today for confirmed requests
         const completedCount = Array.isArray(data)
-          ? data.filter(request => request.status === 'completed').length
+          ? data.filter(request => {
+              if (request.status !== 'confirmed') return false;
+              const endDate = new Date(request.end_date);
+              endDate.setHours(0, 0, 0, 0);
+              return endDate < today;
+            }).length
           : 0;
         setCompletedShifts(completedCount);
 
@@ -515,7 +533,7 @@ const CaregiverDashboard = () => {
   const isNextWeekDisabled = false;
 
   // Filter elders with status 'approved' or 'completed'
-  const filteredElders = elders.filter(e => e.status === 'confirmed' || e.status === 'completed');
+  const filteredElders = elders.filter(e => e.status === 'confirmed');
   // Get unique family IDs from filtered elders
   //const uniqueFamilyIds = Array.from(new Set(filteredElders.map(e => e.family_id))).filter(Boolean);
 
@@ -638,7 +656,7 @@ const CaregiverDashboard = () => {
                     <div className={styles.requestDetail}>
                       <span className={styles.label}>Duration:</span>
                       <span className={styles.value}>
-                        {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                        {request.duration}
                       </span>
                     </div>
                     
