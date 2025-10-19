@@ -115,12 +115,6 @@ const CaregiversByDistrict = () => {
           {/* Header Section */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <button 
-                className={styles.backButton}
-                onClick={handleBackToElders}
-              >
-                ← Back to Elders
-              </button>
               <h1 className={styles.title}>Available Caregivers</h1>
               {elderInfo && (
                 <div className={styles.elderInfoBanner}>
@@ -141,6 +135,12 @@ const CaregiversByDistrict = () => {
                 </div>
               )}
             </div>
+            <button 
+              className={styles.backButton}
+              onClick={handleBackToElders}
+            >
+              ← Back to Elders
+            </button>
           </div>
 
           {/* Search Section */}
@@ -276,7 +276,6 @@ const CaregiversByDistrict = () => {
                         className={styles.bookButton}
                         onClick={() => handleBookCaregiver(caregiver.caregiver_id)}
                       >
-                        <span className={styles.buttonIcon}>📅</span>
                         <span>Book This Caregiver</span>
                       </button>
                     </div>
