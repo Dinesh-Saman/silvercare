@@ -299,7 +299,7 @@ const Caregivers = () => {
           {/* Page Header */}
           <div className={styles.pageHeader}>
             <div className={styles.headerContent}>
-              <h1>👨‍⚕️ My Caregivers</h1>
+              <h1>My Caregivers</h1>
               <p>View and manage your care assignments</p>
             </div>
           </div>
@@ -307,7 +307,7 @@ const Caregivers = () => {
           {/* Upcoming Care Schedule Section */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2>📅 Upcoming Care Schedule</h2>
+              <h2>Upcoming Care Schedule</h2>
               <p>Your scheduled care sessions in the coming days</p>
             </div>
 
@@ -337,34 +337,15 @@ const Caregivers = () => {
                           <span className={styles.infoValue}>{assignment.caregiver_phone}</span>
                         </div>
                         
-                        {assignment.caregiver_fixed_line && (
-                          <div className={styles.infoRow}>
-                            <span className={styles.infoLabel}>☎️ Fixed Line:</span>
-                            <span className={styles.infoValue}>{assignment.caregiver_fixed_line}</span>
-                          </div>
-                        )}
-                        
                         <div className={styles.infoRow}>
-                          <span className={styles.infoLabel}>📍 District:</span>
-                          <span className={styles.infoValue}>{assignment.caregiver_district}</span>
-                        </div>
-                        
-                        <div className={styles.infoRow}>
-                          <span className={styles.infoLabel}>📆 Start Date:</span>
+                          <span className={styles.infoLabel}> Start Date:</span>
                           <span className={styles.infoValue}>{formatDate(assignment.start_date)}</span>
                         </div>
                         
                         <div className={styles.infoRow}>
-                          <span className={styles.infoLabel}>📆 End Date:</span>
+                          <span className={styles.infoLabel}>End Date:</span>
                           <span className={styles.infoValue}>{formatDate(assignment.end_date)}</span>
                         </div>
-                        
-                        {assignment.duration && (
-                          <div className={styles.infoRow}>
-                            <span className={styles.infoLabel}>⏱️ Duration:</span>
-                            <span className={styles.infoValue}>{assignment.duration}</span>
-                          </div>
-                        )}
                         
                         {assignment.certifications && (
                           <div className={styles.certificationsRow}>
