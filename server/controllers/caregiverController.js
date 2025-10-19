@@ -456,23 +456,142 @@ const updateCareRequestStatus = async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      'UPDATE carerequest SET status = $1 WHERE request_id = $2 RETURNING *',
-      [status, requestId]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Care request not found'
+    // If cancelling, handle refund
+    if (status === 'cancelled') {
+      // Get care request details with payment info
+      const requestCheck = await pool.query(`
+        SELECT 
+          cr.*,
+          EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cr.request_date)) / 3600 as hours_since_created,
+          cp.payment_id,
+          cp.amount,
+          cp.transaction_id,
+          cp.payment_method,
+          cp.payment_status,
+          e.name as elder_name,
+          u.name as caregiver_name
+        FROM carerequest cr
+        LEFT JOIN caregiver_payment cp ON cr.request_id = cp.care_request_id
+        LEFT JOIN elder e ON cr.elder_id = e.elder_id
+        LEFT JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
+        LEFT JOIN "User" u ON c.user_id = u.user_id
+        WHERE cr.request_id = $1
+      `, [requestId]);
+
+      if (requestCheck.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Care request not found'
+        });
+      }
+
+      const request = requestCheck.rows[0];
+      
+      // Start transaction for atomic operation
+      await pool.query('BEGIN');
+
+      try {
+        // Update care request status to cancelled
+        const cancelResult = await pool.query(
+          `UPDATE carerequest 
+           SET status = 'cancelled'
+           WHERE request_id = $1
+           RETURNING *`,
+          [requestId]
+        );
+
+        let refundResult = null;
+
+        // Process refund if payment exists
+        if (request.payment_id && request.transaction_id && request.payment_status === 'completed') {
+          console.log('Processing refund for caregiver cancellation:', request.transaction_id);
+
+          try {
+            // Create refund in Stripe
+            const refund = await stripe.refunds.create({
+              payment_intent: request.transaction_id,
+              amount: Math.round(parseFloat(request.amount) * 100), // Convert to cents
+              reason: 'requested_by_customer',
+              metadata: {
+                care_request_id: requestId.toString(),
+                elder_name: request.elder_name || '',
+                caregiver_name: request.caregiver_name || '',
+                cancellation_reason: 'Cancelled by caregiver',
+                cancelled_at: new Date().toISOString(),
+                platform: 'SilverCare'
+              }
+            });
+
+            console.log('Stripe refund created:', refund.id);
+
+            // Update payment status in database
+            await pool.query(
+              `UPDATE caregiver_payment 
+               SET payment_status = 'refunded'
+               WHERE payment_id = $1`,
+              [request.payment_id]
+            );
+
+            refundResult = {
+              refund_id: refund.id,
+              amount: parseFloat(request.amount),
+              status: refund.status,
+              estimated_arrival: refund.created + (5 * 24 * 60 * 60) // Estimate 5-10 business days
+            };
+
+          } catch (stripeError) {
+            console.error('Stripe refund failed:', stripeError);
+
+            // Don't fail the entire cancellation if refund fails
+            refundResult = {
+              error: 'Refund processing failed. Please contact support.',
+              details: stripeError.message
+            };
+          }
+        }
+
+        // Commit transaction
+        await pool.query('COMMIT');
+
+        console.log('Care request cancelled successfully with refund:', {
+          requestId,
+          refundProcessed: !!refundResult,
+          refundAmount: refundResult?.amount
+        });
+
+        return res.json({
+          success: true,
+          message: 'Care request cancelled successfully. Refund has been processed.',
+          careRequest: cancelResult.rows[0],
+          refund: refundResult
+        });
+
+      } catch (error) {
+        // Rollback transaction on error
+        await pool.query('ROLLBACK');
+        throw error;
+      }
+
+    } else {
+      // For non-cancellation status updates, just update the status
+      const result = await pool.query(
+        'UPDATE carerequest SET status = $1 WHERE request_id = $2 RETURNING *',
+        [status, requestId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Care request not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Care request status updated successfully',
+        careRequest: result.rows[0]
       });
     }
-    
-    res.json({
-      success: true,
-      message: 'Care request status updated successfully',
-      careRequest: result.rows[0]
-    });
     
   } catch (err) {
     console.error('Error updating care request status:', err);
@@ -1789,6 +1908,111 @@ const cancelCaregiverBooking = async (req, res) => {
   }
 };
 
+// Auto-cancel pending care requests after 10 hours with refund
+const autoCancelExpiredCareRequests = async () => {
+  try {
+    console.log('Running auto-cancel for expired care requests...');
+
+    // Find pending requests older than 10 hours
+    const expiredRequests = await pool.query(`
+      SELECT 
+        cr.request_id,
+        cr.status,
+        EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cr.request_date)) / 3600 as hours_since_created,
+        cp.payment_id,
+        cp.amount,
+        cp.transaction_id,
+        cp.payment_method,
+        cp.payment_status,
+        e.name as elder_name,
+        u.name as caregiver_name
+      FROM carerequest cr
+      LEFT JOIN caregiver_payment cp ON cr.request_id = cp.care_request_id
+      LEFT JOIN elder e ON cr.elder_id = e.elder_id
+      LEFT JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
+      LEFT JOIN "User" u ON c.user_id = u.user_id
+      WHERE cr.status = 'pending'
+      AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cr.request_date)) / 3600 > 10
+    `);
+
+    console.log(`Found ${expiredRequests.rows.length} expired pending care requests`);
+
+    for (const request of expiredRequests.rows) {
+      try {
+        console.log(`Auto-cancelling expired care request ${request.request_id}`);
+
+        // Start transaction
+        await pool.query('BEGIN');
+
+        // Update status to cancelled
+        await pool.query(
+          `UPDATE carerequest 
+           SET status = 'cancelled'
+           WHERE request_id = $1`,
+          [request.request_id]
+        );
+
+        // Process refund if payment exists
+        if (request.payment_id && request.transaction_id && request.payment_status === 'completed') {
+          console.log(`Processing auto-refund for expired request ${request.request_id}`);
+
+          try {
+            // Create refund in Stripe
+            const refund = await stripe.refunds.create({
+              payment_intent: request.transaction_id,
+              amount: Math.round(parseFloat(request.amount) * 100),
+              reason: 'requested_by_customer',
+              metadata: {
+                care_request_id: request.request_id.toString(),
+                elder_name: request.elder_name || '',
+                caregiver_name: request.caregiver_name || '',
+                cancellation_reason: 'Auto-cancelled: Caregiver did not accept within 10 hours',
+                cancelled_at: new Date().toISOString(),
+                platform: 'SilverCare',
+                auto_cancelled: 'true'
+              }
+            });
+
+            console.log(`Auto-refund created: ${refund.id}`);
+
+            // Update payment status
+            await pool.query(
+              `UPDATE caregiver_payment 
+               SET payment_status = 'refunded'
+               WHERE payment_id = $1`,
+              [request.payment_id]
+            );
+          } catch (stripeError) {
+            console.error(`Stripe auto-refund failed for request ${request.request_id}:`, stripeError);
+            // Continue with cancellation even if refund fails
+          }
+        }
+
+        // Commit transaction
+        await pool.query('COMMIT');
+
+        console.log(`Successfully auto-cancelled care request ${request.request_id}`);
+      } catch (error) {
+        // Rollback on error
+        await pool.query('ROLLBACK');
+        console.error(`Error auto-cancelling request ${request.request_id}:`, error);
+      }
+    }
+
+    return {
+      success: true,
+      cancelledCount: expiredRequests.rows.length
+    };
+
+  } catch (err) {
+    console.error('Error in auto-cancel expired care requests:', err);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+};
+
 module.exports = {
   getAllCaregivers,
   getActiveCaregiverCount,
@@ -1807,7 +2031,8 @@ module.exports = {
   cancelTemporaryCaregiverBooking,
   cleanupExpiredCaregiverBookings,
   getCaregiverBookingsByFamily,
-  cancelCaregiverBooking
+  cancelCaregiverBooking,
+  autoCancelExpiredCareRequests
   //getCareRequestById,
   //getAssignedElders,
   //getAssignedFamiliesCount,
