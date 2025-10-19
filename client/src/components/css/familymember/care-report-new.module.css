@@ -216,6 +216,7 @@
   background: white;
   border-radius: 16px;
   overflow: hidden;
+  padding-top: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(226, 232, 240, 0.6);
   transition: all 0.3s ease;
