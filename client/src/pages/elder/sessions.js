@@ -52,6 +52,7 @@ const AllSessions = () => {
           const sessionsResponse = await getAllSessions(elderData.elder_id);
           
           if (sessionsResponse.data.success) {
+            console.log('Sessions data:', sessionsResponse.data.sessions);
             setSessions(sessionsResponse.data.sessions);
           } else {
             setError(sessionsResponse.data.error || 'Failed to fetch sessions');
@@ -135,17 +136,23 @@ const AllSessions = () => {
         return;
       }
 
+      console.log('Attempting to join session:', sessionId, 'for elder:', elderDetails.elder_id);
       const response = await joinSession(elderDetails.elder_id, sessionId);
       
       if (response.data.success) {
         // Redirect to the meeting link
-        window.open(response.data.meetingLink, '_blank');
+        window.open(response.data.meetingUrl, '_blank');
       } else {
+        console.error('Session join failed:', response.data);
         alert(response.data.error || 'Failed to join session');
       }
-    } catch (err) {
-      console.error('Error joining session:', err);
-      alert('Failed to join session. Please try again.');
+    } catch (error) {
+      console.error('Error joining session:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Show the actual error message from the server
+      const errorMessage = error.response?.data?.error || 'Failed to join session. Please try again.';
+      alert(errorMessage);
     }
   };
 
