@@ -339,7 +339,7 @@ const CaregiverBookings = () => {
           <div className={styles.infoMessage} style={{marginTop: '10px'}}>
             <span className={styles.infoIcon}>⏰</span>
             <span>
-              If the caregiver does not accept your booking request within 2 hours, you will get a refund automatically
+              If the caregiver does not accept your booking request within 10 hours, you will get a refund automatically
             </span>
           </div>
 

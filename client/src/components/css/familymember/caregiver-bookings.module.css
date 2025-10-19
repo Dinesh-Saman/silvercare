@@ -1,22 +1,11 @@
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: #ffffff;
   margin: 0;
   padding: 0;
   position: relative;
 }
 
-.container::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 300px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
-  opacity: 0.05;
-  z-index: 0;
-}
 
 .content {
   max-width: 1400px;
@@ -508,6 +497,11 @@
 }
 
 /* Status Badge Variants */
+.pending {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+}
+
 .upcoming {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
@@ -1327,15 +1321,16 @@
 
 .modalOverlay {
   position: fixed;
-  top: 0;
+  top: 70px; /* below navbar (navbar height ~70px) */
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* align to top so modal does not overlap navbar */
   justify-content: center;
-  z-index: 1000;
+  padding-top: 20px; /* provide a small gap under navbar */
+  z-index: 999; /* keep navbar (1000) above the overlay */
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out;
 }

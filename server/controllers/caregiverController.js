@@ -1753,7 +1753,7 @@ const cancelCaregiverBooking = async (req, res) => {
   try {
     console.log('Attempting to cancel caregiver booking:', requestId);
     
-    // Check if booking exists, is confirmed, and within 2-hour cancellation window from creation time
+    // Check if booking exists, is pending or confirmed, and within 2-hour cancellation window from creation time
     const bookingCheck = await pool.query(`
       SELECT 
         cr.*,
@@ -1770,13 +1770,13 @@ const cancelCaregiverBooking = async (req, res) => {
       LEFT JOIN elder e ON cr.elder_id = e.elder_id
       LEFT JOIN caregiver c ON cr.caregiver_id = c.caregiver_id
       LEFT JOIN "User" u ON c.user_id = u.user_id
-      WHERE cr.request_id = $1 AND cr.status = 'confirmed'
+      WHERE cr.request_id = $1 AND cr.status IN ('pending', 'confirmed')
     `, [requestId]);
     
     if (bookingCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'Confirmed caregiver booking not found or cannot be cancelled'
+        error: 'Caregiver booking not found or cannot be cancelled'
       });
     }
     
