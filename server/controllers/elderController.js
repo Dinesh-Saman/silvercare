@@ -2071,17 +2071,15 @@ const getElderAppointments = async (req, res) => {
   try {
     console.log('Getting appointments for elder ID:', elderId);
     
-    // Query for both doctor and healthcare professional appointments using UNION
+    // Query for only doctor appointments (no counselor appointments)
     const result = await pool.query(
       `SELECT 
         a.appointment_id,
         a.elder_id,
         a.family_id,
         a.doctor_id,
-        NULL::INTEGER as counselor_id,
-        a.doctor_id as provider_id,
         a.date_time,
-        a.status,
+        a.status::text as status,
         a.notes,
         a.appointment_type,
         a.created_at,
@@ -2096,36 +2094,8 @@ const getElderAppointments = async (req, res) => {
       INNER JOIN doctor d ON a.doctor_id = d.doctor_id
       INNER JOIN "User" u ON d.user_id = u.user_id
       INNER JOIN elder e ON a.elder_id = e.elder_id
-      WHERE a.elder_id = $1 AND a.doctor_id IS NOT NULL
-      
-      UNION ALL
-      
-      SELECT 
-        ca.appointment_id,
-        ca.elder_id,
-        ca.family_id,
-        NULL::INTEGER as doctor_id,
-        ca.counselor_id,
-        ca.counselor_id as provider_id,
-        ca.date_time,
-        ca.status,
-        ca.notes,
-        ca.appointment_type,
-        ca.created_at,
-        ca.updated_at,
-        u.name as provider_name,
-        c.specialization,
-        c.current_institution,
-        e.name as elder_name,
-        'healthcare_professional' as provider_type,
-        'counselor' as provider_role
-      FROM counselor_appointment ca 
-      INNER JOIN counselor c ON ca.counselor_id = c.counselor_id
-      INNER JOIN "User" u ON c.user_id = u.user_id
-      INNER JOIN elder e ON ca.elder_id = e.elder_id
-      WHERE ca.elder_id = $1
-      
-      ORDER BY date_time DESC`,
+      WHERE a.elder_id = $1 
+      ORDER BY a.date_time DESC`,
       [elderId]
     );
     
