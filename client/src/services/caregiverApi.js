@@ -664,3 +664,13 @@ export const getCareAssignmentsByMonth = (elderId, month) => {
 export const getCareAssignmentStats = (elderId) => {
   return axios.get(`${ELDER_API_BASE}/${elderId}/care-assignments/stats`);
 };
+
+// get the caregiver rating from the database
+export const getCaregiverFeedback = (caregiverId) => {
+  return axios.get(`${API_BASE}/${caregiverId}/feedback`);
+}
+
+// add feedback for caregiver
+export const addFeedbackForCaregiver = (caregiverId, feedbackData) => {
+  return axios.post(`${API_BASE}/${caregiverId}/feedback`, feedbackData);
+}

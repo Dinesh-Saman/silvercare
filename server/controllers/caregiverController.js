@@ -1788,6 +1788,44 @@ const cancelCaregiverBooking = async (req, res) => {
     });
   }
 };
+const getFeedbackByCaregiverId = async (req, res) => {
+  const { caregiverId } = req.params;
+  try {
+    console.log('Fetching feedback for caregiver ID:', caregiverId);
+    const result = await pool.query(`
+      SELECT rating,feedback from feedback_caregiver where caregiver_id = $1
+    `, [caregiverId]);
+    res.status(200).json({
+      success: true,
+      feedbacks: result.rows
+    });
+    console.log('Feedback fetched:', result.rows);
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const addFeedbackForCaregiver = async (req, res) => {
+  const { caregiverId } = req.params;
+  const { rating, feedback } = req.body;
+  try {
+    console.log('Adding feedback for caregiver ID:', caregiverId);
+    const result = await pool.query(`
+      INSERT INTO feedback_caregiver (caregiver_id, rating, feedback)
+      VALUES ($1, $2, $3)
+      RETURNING caregiver_id, rating, feedback
+    `, [caregiverId, rating, feedback]);
+    res.status(201).json({
+      success: true,
+      feedback: result.rows[0]
+    });
+    console.log('Feedback added:', result.rows[0]);
+  } catch (error) {
+    console.error('Error adding feedback:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 module.exports = {
   getAllCaregivers,
@@ -1798,6 +1836,10 @@ module.exports = {
   getCareRequestsByFamily,
   searchCaregivers,
   updateCareRequestStatus,
+
+  //caregiver feedback
+  getFeedbackByCaregiverId,
+  addFeedbackForCaregiver,
   
   // NEW: Caregiver booking functions
   getBlockedDates,
