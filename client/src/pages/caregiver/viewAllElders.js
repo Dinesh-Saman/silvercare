@@ -66,8 +66,19 @@ const ViewAllElders = () => {
         
         console.log('🎯 Unique elders after deduplication:', uniqueElders.length);
         const todayString = new Date().toISOString().split('T')[0];
+        
+        // Helper function to convert UTC date to Sri Lanka timezone date string
+        const getLocalDateString = (utcDateString) => {
+          if (!utcDateString) return null;
+          const date = new Date(utcDateString);
+          // Convert to Sri Lanka time (UTC+5:30)
+          const localDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+          return localDate.toISOString().split('T')[0];
+        };
+        
         uniqueElders.forEach(elder => {
-          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          // Convert to Sri Lanka timezone to get correct local date
+          const endDateString = elder.end_date ? getLocalDateString(elder.end_date) : null;
           const status = endDateString < todayString ? 'completed' : 'confirmed';
           console.log(`  - ${elder.name}: end_date=${endDateString}, display_status=${status}`);
         });
@@ -110,7 +121,8 @@ const ViewAllElders = () => {
             console.log(`❌ ${elder.name}: No end_date`);
             return false;
           }
-          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          // Extract date string directly without timezone conversion
+          const endDateString = elder.end_date.split('T')[0];
           const isCompleted = endDateString < todayString;
           console.log(`${isCompleted ? '✅' : '❌'} ${elder.name}: end_date=${endDateString}, isCompleted=${isCompleted}`);
           return isCompleted;
@@ -122,7 +134,8 @@ const ViewAllElders = () => {
             console.log(`❌ ${elder.name}: No end_date`);
             return false;
           }
-          const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+          // Extract date string directly without timezone conversion
+          const endDateString = elder.end_date.split('T')[0];
           const isConfirmed = endDateString >= todayString;
           console.log(`${isConfirmed ? '✅' : '❌'} ${elder.name}: end_date=${endDateString}, isConfirmed=${isConfirmed}`);
           return isConfirmed;
@@ -157,8 +170,18 @@ const ViewAllElders = () => {
       return elder.status;
     }
     
+    // Helper function to convert UTC date to Sri Lanka timezone date string
+    const getLocalDateString = (utcDateString) => {
+      if (!utcDateString) return null;
+      const date = new Date(utcDateString);
+      // Convert to Sri Lanka time (UTC+5:30)
+      const localDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+      return localDate.toISOString().split('T')[0];
+    };
+    
     const todayString = new Date().toISOString().split('T')[0];
-    const endDateString = new Date(elder.end_date).toISOString().split('T')[0];
+    // Convert to Sri Lanka timezone to get correct local date
+    const endDateString = getLocalDateString(elder.end_date);
     
     // If end_date < today, it's completed (past)
     // If end_date >= today, it's confirmed (active/ongoing)
@@ -190,6 +213,15 @@ const ViewAllElders = () => {
     // Get today's date string in YYYY-MM-DD format (no time component)
     const todayString = new Date().toISOString().split('T')[0];
     
+    // Helper function to convert UTC date to Sri Lanka timezone date string
+    const getLocalDateString = (utcDateString) => {
+      if (!utcDateString) return null;
+      const date = new Date(utcDateString);
+      // Convert to Sri Lanka time (UTC+5:30)
+      const localDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+      return localDate.toISOString().split('T')[0];
+    };
+    
     console.log('📊 getStats() - Calculating stats');
     console.log('📅 Today:', todayString);
     console.log('📋 Total elders:', elders.length);
@@ -204,8 +236,8 @@ const ViewAllElders = () => {
         console.log(`  ⚠️ ${e.name}: Status is ${e.status}, not confirmed`);
         return false;
       }
-      // Get just the date part from end_date
-      const endDateString = new Date(e.end_date).toISOString().split('T')[0];
+      // Convert to Sri Lanka timezone before comparison
+      const endDateString = getLocalDateString(e.end_date);
       const isCompleted = endDateString < todayString;
       console.log(`  ${isCompleted ? '✅ COMPLETED' : '❌ NOT COMPLETED'}: ${e.name} - end_date=${endDateString}, isCompleted=${isCompleted}`);
       return isCompleted;
@@ -214,7 +246,8 @@ const ViewAllElders = () => {
     // Confirmed = status is 'confirmed' AND end_date >= today (active/ongoing)
     const confirmedElders = elders.filter(e => {
       if (!e.end_date || e.status.toLowerCase() !== 'confirmed') return false;
-      const endDateString = new Date(e.end_date).toISOString().split('T')[0];
+      // Convert to Sri Lanka timezone before comparison
+      const endDateString = getLocalDateString(e.end_date);
       return endDateString >= todayString;
     });
     
