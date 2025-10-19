@@ -330,11 +330,11 @@ const getElderDashboardStats = async (req, res) => {
       [elderId]
     );
 
-    // Get upcoming sessions count
+    // Get upcoming sessions count (from counselor_appointment table)
     const upcomingSessionsResult = await pool.query(
       `
       SELECT COUNT(*) as count
-      FROM session 
+      FROM counselor_appointment 
       WHERE elder_id = $1 
       AND date_time > NOW()
       AND status IN ('confirmed')
@@ -344,16 +344,23 @@ const getElderDashboardStats = async (req, res) => {
     );
 
     // Get upcoming campaigns count (booked campaigns)
-    const upcomingCampaignsResult = await pool.query(
-      `
-      SELECT COUNT(*) as count
-      FROM campaignbooking cb
-      INNER JOIN campaignevent c ON cb.campaign_id = c.campaign_id
-      WHERE cb.elder_id = $1 
-      AND c.start_date > NOW()
-    `,
-      [elderId]
-    );
+    let upcomingCampaignsCount = 0;
+    try {
+      const upcomingCampaignsResult = await pool.query(
+        `
+        SELECT COUNT(*) as count
+        FROM campaignbooking cb
+        INNER JOIN campaignevent c ON cb.campaign_id = c.campaign_id
+        WHERE cb.elder_id = $1 
+        AND c.start_date > NOW()
+      `,
+        [elderId]
+      );
+      upcomingCampaignsCount = parseInt(upcomingCampaignsResult.rows[0].count) || 0;
+    } catch (campaignErr) {
+      console.log("Campaign table not found or error:", campaignErr.message);
+      upcomingCampaignsCount = 0;
+    }
 
     // Get active caregivers count (caregivers who have recent logs)
     const activeCaregiversResult = await pool.query(
@@ -369,7 +376,7 @@ const getElderDashboardStats = async (req, res) => {
       upcomingAppointments:
         parseInt(upcomingAppointmentsResult.rows[0].count) || 0,
       upcomingSessions: parseInt(upcomingSessionsResult.rows[0].count) || 0,
-      upcomingCampaigns: parseInt(upcomingCampaignsResult.rows[0].count) || 0,
+      upcomingCampaigns: upcomingCampaignsCount,
       assignedCaregivers: parseInt(activeCaregiversResult.rows[0].count) || 0,
     };
 

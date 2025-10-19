@@ -74,7 +74,7 @@ const CaregiverBooking = () => {
             email: response.caregiver.email,
             phone: response.caregiver.phone,
             fixed_line: response.caregiver.fixed_line,
-            daily_rate: response.caregiver.daily_rate || 3000
+            daily_rate: response.caregiver.daily_rate
           });
           
           setElderInfo({
@@ -186,14 +186,58 @@ const CaregiverBooking = () => {
     return days;
   };
 
-  // Handle date selection/deselection
+  // Handle date selection with automatic range filling
   const handleDateToggle = (dateString) => {
     if (selectedDates.includes(dateString)) {
-      // Deselect
+      // Deselect - remove this date
       setSelectedDates(selectedDates.filter(d => d !== dateString));
     } else {
       // Select
-      setSelectedDates([...selectedDates, dateString]);
+      if (selectedDates.length === 0) {
+        // First date selection
+        setSelectedDates([dateString]);
+      } else {
+        // Get all currently selected dates and the new date, then sort them
+        const allDates = [...selectedDates, dateString].sort();
+        const startDate = allDates[0];
+        const endDate = allDates[allDates.length - 1];
+        
+        // Generate all dates between start and end (inclusive)
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dateRange = [];
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const formattedDate = `${year}-${month}-${day}`;
+          
+          // Check if date is not blocked and not past
+          const dateObj = new Date(d);
+          dateObj.setHours(0, 0, 0, 0);
+          
+          const isPast = dateObj < today;
+          const isBlocked = blockedDates.includes(formattedDate);
+          
+          if (!isPast && !isBlocked) {
+            dateRange.push(formattedDate);
+          }
+        }
+        
+        // Check if any dates in the range are blocked
+        const totalDaysInRange = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        if (dateRange.length < totalDaysInRange) {
+          setError('Cannot select this range: Some dates are unavailable or already booked');
+          setTimeout(() => setError(null), 4000);
+          return;
+        }
+        
+        setSelectedDates(dateRange);
+      }
     }
   };
 
@@ -225,6 +269,22 @@ const CaregiverBooking = () => {
       return;
     }
 
+    // Check for gaps in the selected date range
+    if (selectedDates.length > 1) {
+      const sortedDates = selectedDates.sort();
+      const startDate = new Date(sortedDates[0]);
+      const endDate = new Date(sortedDates[sortedDates.length - 1]);
+      
+      // Calculate the number of days between start and end
+      const daysDifference = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // If the number of selected dates doesn't match the range, there are gaps
+      if (selectedDates.length !== daysDifference) {
+        setError('Please select a continuous date range without gaps. Remove any gaps between your start and end dates.');
+        return;
+      }
+    }
+
     // Navigate to booking summary with selected dates
     const datesParam = selectedDates.sort().join(',');
     navigate(`/family-member/caregiver-booking-summary?caregiver=${caregiverId}&elder=${elderId}&dates=${datesParam}`);
@@ -237,7 +297,7 @@ const CaregiverBooking = () => {
 
   // Calculate total cost
   const calculateTotalCost = () => {
-    const dailyRate = caregiverInfo?.daily_rate || 3000;
+    const dailyRate = caregiverInfo?.daily_rate || 0;
     return selectedDates.length * dailyRate;
   };
 
@@ -325,7 +385,7 @@ const CaregiverBooking = () => {
                 👨‍⚕️ Book Caregiver Service
               </h1>
               <p className={styles.subtitle}>
-                Select dates for caregiver service (You can select multiple dates)
+                Select dates as a range - Click two dates to automatically select all dates in between
               </p>
             </div>
             <button 
@@ -337,67 +397,6 @@ const CaregiverBooking = () => {
           </div>
 
           {/* Error Message */}
-          {error && (
-            <div className={styles.errorMessage}>
-              <span className={styles.errorIcon}>⚠️</span>
-              {error}
-            </div>
-          )}
-
-          {/* Info Cards */}
-          <div className={styles.infoCards}>
-            <div className={styles.infoCard}>
-              <div className={styles.cardIcon}>👨‍⚕️</div>
-              <div className={styles.cardContent}>
-                <h3>Caregiver Information</h3>
-                {caregiverInfo && (
-                  <>
-                    <p><strong>{caregiverInfo.name}</strong></p>
-                    <p>📍 {caregiverInfo.district}</p>
-                    <p>📞 {caregiverInfo.phone}</p>
-                    {caregiverInfo.fixed_line && (
-                      <p>☎️ {caregiverInfo.fixed_line}</p>
-                    )}
-                    <p>📧 {caregiverInfo.email}</p>
-                    {caregiverInfo.certifications && (
-                      <p><strong>Certifications:</strong> {caregiverInfo.certifications}</p>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.infoCard}>
-              <div className={styles.cardIcon}>👴</div>
-              <div className={styles.cardContent}>
-                <h3>Elder Information</h3>
-                {elderInfo && (
-                  <>
-                    <p><strong>{elderInfo.name}</strong></p>
-                    <p>Age: {elderInfo.age} years</p>
-                    <p>Gender: {elderInfo.gender}</p>
-                    <p>📍 {elderInfo.district}</p>
-                    <p>📞 {elderInfo.contact}</p>
-                    {elderInfo.medical_conditions && (
-                      <p><strong>Medical Conditions:</strong> {elderInfo.medical_conditions.substring(0, 100)}...</p>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.infoCard}>
-              <div className={styles.cardIcon}>💰</div>
-              <div className={styles.cardContent}>
-                <h3>Service Details</h3>
-                <p><strong>Service Type:</strong> Home Care</p>
-                <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate || 3000}</p>
-                <p><strong>Selected Days:</strong> {selectedDates.length}</p>
-                <p><strong>Total Cost:</strong> Rs. {calculateTotalCost().toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Calendar Section */}
           <div className={styles.bookingForm}>
             <div className={styles.calendarSection}>
@@ -500,19 +499,12 @@ const CaregiverBooking = () => {
                     <div key={date} className={styles.selectedDateItem}>
                       <span className={styles.dateNumber}>{index + 1}.</span>
                       <span className={styles.dateText}>{formatDateForDisplay(date)}</span>
-                      <button
-                        className={styles.removeDateButton}
-                        onClick={() => handleDateToggle(date)}
-                        title="Remove this date"
-                      >
-                        ×
-                      </button>
                     </div>
                   ))}
                 </div>
                 <div className={styles.summaryTotal}>
                   <p><strong>Total Days:</strong> {selectedDates.length}</p>
-                  <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate || 3000}</p>
+                  <p><strong>Daily Rate:</strong> Rs. {caregiverInfo?.daily_rate?.toLocaleString() || 'N/A'}</p>
                   <p className={styles.totalCost}>
                     <strong>Total Cost:</strong> Rs. {calculateTotalCost().toLocaleString()}
                   </p>
@@ -522,6 +514,12 @@ const CaregiverBooking = () => {
 
             {/* Book Button */}
             <div className={styles.submitSection}>
+              {error && (
+                <div className={styles.errorMessage}>
+                  <span className={styles.errorIcon}>⚠️</span>
+                  {error}
+                </div>
+              )}
               <button
                 className={styles.submitButton}
                 onClick={handleProceedToSummary}

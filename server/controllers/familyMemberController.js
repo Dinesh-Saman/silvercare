@@ -108,6 +108,133 @@ const updateFamilyMemberDetails = async (req, res) => {
   }
 };
 
+// Get carelog data for a specific elder on a specific date
+const getElderCarelogByDate = async (req, res) => {
+  const { userId, elderId } = req.params;
+  const { date } = req.query;
+  
+  try {
+    console.log('Fetching carelog for elder ID:', elderId, 'date:', date);
+    
+    // First verify that this family member has access to this elder
+    const familyResult = await pool.query(`
+      SELECT fm.family_id 
+      FROM familymember fm
+      JOIN elder e ON fm.family_id = e.family_id
+      WHERE fm.user_id = $1 AND e.elder_id = $2
+    `, [userId, elderId]);
+    
+    if (familyResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found or not accessible'
+      });
+    }
+    
+    // Get carelog data for the specific date
+    const carelogQuery = `
+      SELECT 
+        cl.log_id,
+        cl.elder_id,
+        cl.caregiver_id,
+        cl.notes,
+        cl.mood,
+        cl.date,
+        cl.health_status,
+        cl.medications_given,
+        cl.activities,
+        cl.concerns,
+        e.name as elder_name,
+        c.user_id as caregiver_user_id,
+        u.name as caregiver_name,
+        u.phone as caregiver_phone,
+        u.email as caregiver_email
+      FROM carelog cl
+      JOIN elder e ON cl.elder_id = e.elder_id
+      JOIN caregiver c ON cl.caregiver_id = c.caregiver_id
+      JOIN "User" u ON c.user_id = u.user_id
+      WHERE cl.elder_id = $1 
+        AND cl.date IS NOT NULL
+        AND DATE(cl.date) = $2
+      ORDER BY cl.date DESC
+    `;
+    
+    const carelogResult = await pool.query(carelogQuery, [elderId, date]);
+    
+    console.log('Carelog data fetched successfully');
+    
+    res.json({
+      success: true,
+      carelogs: carelogResult.rows
+    });
+    
+  } catch (err) {
+    console.error('Error fetching carelog data:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching carelog data' 
+    });
+  }
+};
+
+// Get carelog status for multiple dates (for calendar display)
+const getElderCarelogStatus = async (req, res) => {
+  const { userId, elderId } = req.params;
+  const { startDate, endDate } = req.query;
+  
+  try {
+    console.log('Fetching carelog status for elder ID:', elderId, 'from:', startDate, 'to:', endDate);
+    
+    // First verify that this family member has access to this elder
+    const familyResult = await pool.query(`
+      SELECT fm.family_id 
+      FROM familymember fm
+      JOIN elder e ON fm.family_id = e.family_id
+      WHERE fm.user_id = $1 AND e.elder_id = $2
+    `, [userId, elderId]);
+    
+    if (familyResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Elder not found or not accessible'
+      });
+    }
+    
+    // Get dates where carelogs exist
+    const statusQuery = `
+      SELECT 
+        DATE(cl.date)::text as log_date,
+        COUNT(*) as report_count,
+        array_agg(DISTINCT u.name) as caregiver_names
+      FROM carelog cl
+      JOIN caregiver c ON cl.caregiver_id = c.caregiver_id
+      JOIN "User" u ON c.user_id = u.user_id
+      WHERE cl.elder_id = $1 
+        AND cl.date IS NOT NULL
+        AND DATE(cl.date) >= $2 
+        AND DATE(cl.date) <= $3
+      GROUP BY DATE(cl.date)
+      ORDER BY log_date DESC
+    `;
+    
+    const statusResult = await pool.query(statusQuery, [elderId, startDate, endDate]);
+    
+    console.log('Carelog status fetched successfully');
+    
+    res.json({
+      success: true,
+      carelogStatus: statusResult.rows
+    });
+    
+  } catch (err) {
+    console.error('Error fetching carelog status:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching carelog status' 
+    });
+  }
+};
+
 // Get appointment statistics for family member
 const getAppointmentStatistics = async (req, res) => {
   const { userId } = req.params;
@@ -219,5 +346,7 @@ const getAppointmentStatistics = async (req, res) => {
 module.exports = {
   getFamilyMemberDetails,
   updateFamilyMemberDetails,
-  getAppointmentStatistics
+  getAppointmentStatistics,
+  getElderCarelogByDate,
+  getElderCarelogStatus
 };

@@ -16,6 +16,27 @@ class MeetingService {
     };
   }
 
+  // Create or update meeting link for a counselor_appointment
+  static async ensureCounselorMeetingLink(appointmentId) {
+    try {
+      const result = await pool.query('SELECT * FROM counselor_appointment WHERE appointment_id = $1', [appointmentId]);
+      if (result.rows.length === 0) throw new Error('Counselor appointment not found');
+      const appt = result.rows[0];
+      if (appt.appointment_type !== 'online') return appt;
+      if (appt.meeting_link) return appt;
+      const meetingData = this.generateMeetingLink(appt.appointment_id, null, appt.elder_id);
+      const update = await pool.query(
+        `UPDATE counselor_appointment SET meeting_link = $1, updated_at = CURRENT_TIMESTAMP WHERE appointment_id = $2 RETURNING *`,
+        [meetingData.meetingLink, appointmentId]
+      );
+      console.log(`✅ Generated meeting link for counselor_appointment ${appointmentId}: ${meetingData.meetingLink}`);
+      return update.rows[0];
+    } catch (err) {
+      console.error('Error ensuring counselor meeting link:', err);
+      throw err;
+    }
+  }
+
   // Create or update meeting link for an appointment
   static async ensureMeetingLink(appointmentId) {
     try {

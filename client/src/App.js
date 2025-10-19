@@ -52,6 +52,7 @@ import CaregiverBooking from './pages/familemember/caregiver-booking';
 import CaregiverBookingSummary from './pages/familemember/caregiver-booking-summary';
 import CaregiverPayment from './pages/familemember/caregiver-payment';
 import CaregiverPaymentSuccess from './pages/familemember/caregiver-payment-success';
+import CaregiverBookings from './pages/familemember/caregiver-bookings';
 import TodaysCareReport from './pages/familemember/todays-care-report';
 import ElderCareSchedule from './pages/familemember/elder-care-schedule';
 
@@ -94,6 +95,11 @@ import ElderChat from "./pages/doctor/ElderChat";
 import HealthProfessionalElderMessages from "./pages/healthproffesional/ElderMessages";
 import CaregiverMessages from "./pages/familemember/CaregiverMessages";
 import FamilyMemberMessages from "./pages/caregiver/FamilyMemberMessages";
+
+// Import caregiver-elder messaging components
+import CaregiverElderMessages from "./pages/caregiver/CaregiverElderMessages";
+import ElderCaregiverMessages from "./pages/elder/ElderCaregiverMessages";
+
 import HealthcareProfessionalMessages from "./pages/familemember/HealthcareProfessionalMessages";
 import HealthProfessionalFamilyMessages from "./pages/healthproffesional/FamilyMessages";
 
@@ -384,6 +390,12 @@ function App() {
   </ProtectedRoute>
 } />
 
+<Route path="/family-member/caregiver-bookings" element={
+  <ProtectedRoute allowedRoles={['family_member']}>
+    <CaregiverBookings />
+  </ProtectedRoute>
+} />
+
 <Route path="/family-member/todays-care-report" element={
   <ProtectedRoute allowedRoles={['family_member']}>
     <TodaysCareReport />
@@ -574,6 +586,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/caregiver/elder-messages"
+            element={
+              <ProtectedRoute allowedRoles={["caregiver"]}>
+                <CaregiverElderMessages />
+              </ProtectedRoute>
+            }
+          />
+
 
           <Route
             path="/admin/dashboard"
@@ -741,6 +762,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["elder"]}>
                 <CounselorMessages />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/elder/caregiver-messages"
+            element={
+              <ProtectedRoute allowedRoles={["elder"]}>
+                <ElderCaregiverMessages />
               </ProtectedRoute>
             }
           />

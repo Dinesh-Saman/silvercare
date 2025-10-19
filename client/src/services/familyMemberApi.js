@@ -54,5 +54,39 @@ export const familyMemberApi = {
         familyMember: null
       };
     }
+  },
+
+  // Get carelog data for specific elder and date
+  getElderCarelogByDate: async (userId, elderId, date) => {
+    try {
+      const response = await axios.get(`${API_BASE}/family-member/${userId}/elder/${elderId}/carelog`, {
+        params: { date }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching carelog data:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch carelog data',
+        carelogs: []
+      };
+    }
+  },
+
+  // Get carelog status for date range (for calendar display)
+  getElderCarelogStatus: async (userId, elderId, startDate, endDate) => {
+    try {
+      const response = await axios.get(`${API_BASE}/family-member/${userId}/elder/${elderId}/carelog-status`, {
+        params: { startDate, endDate }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching carelog status:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch carelog status',
+        carelogStatus: []
+      };
+    }
   }
 };

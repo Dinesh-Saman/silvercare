@@ -72,7 +72,7 @@ const ElderSidebar = ({ onItemClick }) => {
         navigate('/elder/family-chat');
         break;
       case 'caregiver-chat':
-        navigate('/elder/caregiver-chat');
+        navigate('/elder/caregiver-messages');
         break;
       case 'counselor-chat':
         navigate('/elder/counselor-chat');
@@ -172,7 +172,7 @@ const ElderSidebar = ({ onItemClick }) => {
         { key: 'family-chat', label: 'Family Chat', path: '/elder/family-chat' },
         { key: 'doctor-chat', label: 'Doctor Chat', path: '/elder/doctor-chat' },
         { key: 'counselor-chat', label: 'Counselor Chat', path: '/elder/counselor-chat' },
-        { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/elder/caregiver-chat' }
+        { key: 'caregiver-chat', label: 'Caregiver Chat', path: '/elder/caregiver-messages' }
       ]
     },
     { key: 'my-profile', label: 'My Profile', icon: '👤', path: '/elder/profile' },

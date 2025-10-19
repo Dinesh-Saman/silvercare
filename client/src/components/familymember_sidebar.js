@@ -81,8 +81,8 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       case 'book-caregiver':
         navigate('/family-member/elder-caregivers');
         break;
-      case 'assigned-caregivers':
-        navigate('/family-member/assigned-caregivers');
+      case 'caregiver-bookings':
+        navigate('/family-member/caregiver-bookings');
         break;
       case 'care-reports':
         navigate('/family-member/care-reports');
@@ -176,7 +176,7 @@ const FamilyMemberSidebar = ({ onItemClick }) => {
       hasSubmenu: true,
       submenu: [
         { key: 'book-caregiver', label: 'Book Caregiver', path: '/family-member/elder-caregivers' },
-        { key: 'assigned-caregivers', label: 'Assigned Caregivers', path: 'assigned-caregivers' },
+        { key: 'caregiver-bookings', label: 'Caregiver Bookings', path: '/family-member/caregiver-bookings' },
         { key: 'todays-care-report', label: "Today's Care Report", path: '/family-member/todays-care-report' },
         { key: 'care-reports', label: 'Care Reports', path: '/family-member/care-reports' }
       ]
