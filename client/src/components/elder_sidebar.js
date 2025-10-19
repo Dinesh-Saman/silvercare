@@ -80,9 +80,6 @@ const ElderSidebar = ({ onItemClick }) => {
       case 'caregivers':
         navigate('/elder/caregivers');
         break;
-      case 'events':
-        navigate('/elder/events');
-        break;
       case 'my-caregivers':
         navigate('/elder/caregivers');
         break;
@@ -156,12 +153,6 @@ const ElderSidebar = ({ onItemClick }) => {
       label: 'My Care',
       icon: '🤝',
       path: '/elder/caregivers'
-    },
-    {
-      key: 'events',
-      label: 'Events',
-      icon: '💡',
-      path: '/elder/events'
     },
     {
       key: 'messages',

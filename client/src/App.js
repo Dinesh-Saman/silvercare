@@ -63,7 +63,6 @@ import AppointmentDetails from "./pages/elder/appointment-details";
 import AllSessions from "./pages/elder/sessions";
 import SessionDetails from "./pages/elder/session-details";
 import ElderCaregivers from "./pages/elder/caregivers";
-import ElderEvents from "./pages/elder/events";
 
 
 import DoctorDashboard from './pages/doctor/dashboard';
@@ -729,15 +728,6 @@ function App() {
     </ProtectedRoute>
   }
 />
-
-          <Route
-            path="/elder/events"
-            element={
-              <ProtectedRoute allowedRoles={["elder"]}>
-                <ElderEvents />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/elder/family-chat"

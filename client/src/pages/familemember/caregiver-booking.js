@@ -382,7 +382,7 @@ const CaregiverBooking = () => {
           <div className={styles.header}>
             <div className={styles.headerContent}>
               <h1 className={styles.title}>
-                👨‍⚕️ Book Caregiver Service
+                Book Caregiver Service
               </h1>
               <p className={styles.subtitle}>
                 Select dates as a range - Click two dates to automatically select all dates in between
@@ -396,11 +396,10 @@ const CaregiverBooking = () => {
             </button>
           </div>
 
-          {/* Error Message */}
           {/* Calendar Section */}
           <div className={styles.bookingForm}>
             <div className={styles.calendarSection}>
-              <h2 className={styles.sectionTitle}>📅 Select Dates (Multiple)</h2>
+              <h2 className={styles.sectionTitle}>Select Dates</h2>
               <p className={styles.calendarInstructions}>
                 Click on available dates to select them. Click again to deselect. You can select multiple dates for booking.
               </p>
@@ -455,7 +454,6 @@ const CaregiverBooking = () => {
                         }
                       >
                         {dayInfo?.day}
-                        {dayInfo?.isBlocked && <span className={styles.blockedIcon}>🚫</span>}
                       </div>
                     ))}
                   </div>
@@ -486,7 +484,7 @@ const CaregiverBooking = () => {
             {selectedDates.length > 0 && (
               <div className={styles.selectedDatesSummary}>
                 <div className={styles.summaryHeader}>
-                  <h3>📋 Selected Dates ({selectedDates.length})</h3>
+                  <h3>Selected Dates ({selectedDates.length})</h3>
                   <button 
                     className={styles.clearButton}
                     onClick={handleClearDates}
@@ -516,7 +514,6 @@ const CaregiverBooking = () => {
             <div className={styles.submitSection}>
               {error && (
                 <div className={styles.errorMessage}>
-                  <span className={styles.errorIcon}>⚠️</span>
                   {error}
                 </div>
               )}
