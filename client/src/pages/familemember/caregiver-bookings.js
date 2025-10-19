@@ -199,7 +199,8 @@ const CaregiverBookings = () => {
   };
 
   const canCancelBooking = (booking) => {
-    if (booking.status !== 'confirmed') return false;
+    // Allow cancellation for both 'pending' and 'confirmed' bookings
+    if (booking.status !== 'confirmed' && booking.status !== 'pending') return false;
     
     const createdAt = new Date(booking.created_at);
     const currentDate = new Date();
@@ -209,6 +210,9 @@ const CaregiverBookings = () => {
   };
 
   const getBookingStatus = (booking) => {
+    if (booking.status === 'cancelled') return 'Cancelled';
+    if (booking.status === 'pending') return 'Pending';
+    
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
     const startDate = new Date(booking.start_date);
@@ -216,7 +220,6 @@ const CaregiverBookings = () => {
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(0, 0, 0, 0);
 
-    if (booking.status === 'cancelled') return 'Cancelled';
     if (startDate > currentDate) return 'Upcoming';
     if (startDate <= currentDate && endDate >= currentDate) return 'Ongoing';
     if (endDate < currentDate) return 'Completed';
@@ -429,7 +432,7 @@ const CaregiverBookings = () => {
                       </div>
 
                       {/* Cancellation Alert */}
-                      {booking.status === 'confirmed' && bookingStatus === 'Upcoming' && (
+                      {(booking.status === 'confirmed' || booking.status === 'pending') && bookingStatus === 'Upcoming' && (
                         <div className={styles.cancellationAlert}>
                           {canCancel ? (
                             <div className={styles.canCancelAlert}>
