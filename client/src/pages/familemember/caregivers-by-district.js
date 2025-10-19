@@ -257,17 +257,15 @@ const CaregiversByDistrict = () => {
                               <span>Daily Care Assistance</span>
                             </div>
                             <div className={styles.serviceFeature}>
-                              <span className={styles.featureIcon}>💊</span>
-                              <span>Medication Management</span>
-                            </div>
-                            <div className={styles.serviceFeature}>
                               <span className={styles.featureIcon}>❤️</span>
                               <span>Health Monitoring</span>
                             </div>
-                            <div className={styles.serviceFeature}>
-                              <span className={styles.featureIcon}>🤝</span>
-                              <span>Companionship</span>
-                            </div>
+                          </div>
+                          <div className={styles.dayRateSection}>
+                            <span className={styles.dayRateLabel}>Daily Rate:</span>
+                            <span className={styles.dayRateValue}>
+                              Rs. {caregiver.day_rate ? caregiver.day_rate.toLocaleString() : '2,500'}/day
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -295,7 +293,6 @@ const CaregiversByDistrict = () => {
               <div className={styles.bannerContent}>
                 <h4>Important Information</h4>
                 <ul>
-                  <li>All caregivers are verified and certified professionals</li>
                   <li>Caregiver services are provided at the elder's home location</li>
                   <li>You can select multiple dates for booking in the next step</li>
                   <li>Payment will be processed after confirming your booking details</li>
