@@ -24,7 +24,8 @@ const CaregiverPaymentForm = ({
   onPaymentError, 
   processing, 
   setProcessing,
-  bookingData 
+  bookingData,
+  onCancel
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -160,7 +161,7 @@ const CaregiverPaymentForm = ({
   return (
     <form onSubmit={handleSubmit} className={styles.paymentForm}>
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>💳 Card Information</h3>
+        <h3 className={styles.sectionTitle}>Card Information</h3>
         
         <div className={styles.cardElementGroup}>
           <label className={styles.cardElementLabel}>Card Number</label>
@@ -196,13 +197,13 @@ const CaregiverPaymentForm = ({
 
         {cardError && (
           <div className={styles.cardError}>
-            ⚠️ {cardError}
+            {cardError}
           </div>
         )}
       </div>
 
       <div className={styles.formSection}>
-        <h3 className={styles.sectionTitle}>📋 Billing Details</h3>
+        <h3 className={styles.sectionTitle}>Billing Details</h3>
         
         <div className={styles.inputGroup}>
           <label className={styles.inputLabel}>Full Name *</label>
@@ -258,9 +259,18 @@ const CaregiverPaymentForm = ({
         )}
       </button>
 
-      <div className={styles.securePayment}>
-        <span className={styles.lockIcon}>🔒</span>
-        <span>Secure payment powered by Stripe</span>
+      <div className={styles.securePaymentContainer}>
+        <div className={styles.securePayment}>
+          <span>Secure payment powered by Stripe</span>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className={styles.cancelButton}
+          disabled={processing}
+        >
+          Cancel Booking
+        </button>
       </div>
     </form>
   );
@@ -472,7 +482,7 @@ const CaregiverPayment = () => {
         <Navbar />
         <FamilyMemberLayout>
           <div className={styles.successMessage}>
-            <div className={styles.successIcon}>✅</div>
+            <div className={styles.successIcon}>✓</div>
             <h2>Payment Successful!</h2>
             <p>Redirecting to confirmation page...</p>
           </div>
@@ -488,7 +498,7 @@ const CaregiverPayment = () => {
         <Navbar />
         <FamilyMemberLayout>
           <div className={styles.expiredContainer}>
-            <div className={styles.expiredIcon}>⏰</div>
+            <div className={styles.expiredIcon}>!</div>
             <h2>Booking Expired</h2>
             <p>Your booking reservation has expired. Redirecting to dashboard...</p>
           </div>
@@ -505,14 +515,13 @@ const CaregiverPayment = () => {
           {/* Header with Timer */}
           <div className={styles.header}>
             <div className={styles.headerContent}>
-              <h1 className={styles.title}>💰 Complete Your Payment</h1>
+              <h1 className={styles.title}>Complete Your Payment</h1>
               <p className={styles.subtitle}>
                 Secure payment for caregiver booking
               </p>
             </div>
             <div className={styles.timerContainer}>
               <div className={styles.timer}>
-                <span className={styles.timerIcon}>⏰</span>
                 <span className={styles.timerText}>Time remaining:</span>
                 <span className={`${styles.timerValue} ${timeLeft <= 60 ? styles.timerCritical : ''}`}>
                   {formatTime(timeLeft)}
@@ -520,7 +529,7 @@ const CaregiverPayment = () => {
               </div>
               {timeLeft <= 60 && (
                 <div className={styles.timerWarning}>
-                  ⚠️ Hurry! Your booking will expire soon
+                  Hurry! Your booking will expire soon
                 </div>
               )}
             </div>
@@ -529,33 +538,33 @@ const CaregiverPayment = () => {
           <div className={styles.paymentLayout}>
             {/* Left Side - Booking Summary */}
             <div className={styles.bookingSummaryCard}>
-              <h2 className={styles.summaryTitle}>📋 Booking Summary</h2>
+              <h2 className={styles.summaryTitle}>Booking Summary</h2>
               
               <div className={styles.summarySection}>
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>👴 Elder:</span>
+                  <span className={styles.summaryLabel}>Elder:</span>
                   <span className={styles.summaryValue}>{elderName}</span>
                 </div>
 
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>🧑‍💼 Caregiver:</span>
+                  <span className={styles.summaryLabel}>Caregiver:</span>
                   <span className={styles.summaryValue}>{caregiverName}</span>
                 </div>
 
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>📅 Duration:</span>
+                  <span className={styles.summaryLabel}>Duration:</span>
                   <span className={styles.summaryValue}>{duration} days</span>
                 </div>
 
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>📆 Selected Dates:</span>
+                  <span className={styles.summaryLabel}>Selected Dates:</span>
                   <div className={styles.datesList}>
                     {selectedDates.slice(0, 3).map((date, index) => (
                       <span key={index} className={styles.dateItem}>{date}</span>
                     ))}
                     {selectedDates.length > 3 && (
                       <span className={styles.moreDates}>
-                        +{selectedDates.length - 3} more dates
+                        +{selectedDates.length - 3} more
                       </span>
                     )}
                   </div>
@@ -568,8 +577,7 @@ const CaregiverPayment = () => {
               </div>
 
               <div className={styles.paymentNote}>
-                <span className={styles.noteIcon}>ℹ️</span>
-                <p>Your booking will be confirmed immediately after successful payment. The selected dates will be reserved for 10 minutes during payment processing.</p>
+                <p>Your booking will be confirmed immediately after successful payment.</p>
               </div>
             </div>
 
@@ -577,7 +585,6 @@ const CaregiverPayment = () => {
             <div className={styles.paymentCard}>
               {paymentError && (
                 <div className={styles.errorAlert}>
-                  <span className={styles.errorIcon}>⚠️</span>
                   <div>
                     <strong>Payment Failed</strong>
                     <p>{paymentError}</p>
@@ -592,6 +599,7 @@ const CaregiverPayment = () => {
                   onPaymentError={handlePaymentError}
                   processing={processing}
                   setProcessing={setProcessing}
+                  onCancel={handleCancel}
                   bookingData={{
                     tempBookingId,
                     elderId,
@@ -603,14 +611,6 @@ const CaregiverPayment = () => {
                   }}
                 />
               </Elements>
-
-              <button
-                onClick={handleCancel}
-                className={styles.cancelButton}
-                disabled={processing}
-              >
-                Cancel Booking
-              </button>
             </div>
           </div>
         </div>

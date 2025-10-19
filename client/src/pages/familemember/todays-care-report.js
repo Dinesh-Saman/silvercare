@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { elderApi } from '../../services/elderApi';
-import { getImageSrc, handleImageError } from '../../utils/imageUtils';
 import Navbar from '../../components/navbar';
-import styles from '../../components/css/familymember/todays-care-report.module.css';
+import styles from '../../components/css/familymember/care-report-new.module.css';
 import FamilyMemberLayout from '../../components/FamilyMemberLayout';
 
 const TodaysCareReport = () => {
@@ -74,6 +73,23 @@ const TodaysCareReport = () => {
     (elder.email && elder.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Function to get the correct image URL (same as elder-caregivers page)
+  const getElderImageUrl = (profilePhoto) => {
+    if (!profilePhoto) return null;
+    
+    if (profilePhoto.startsWith('http')) {
+      return profilePhoto;
+    }
+    
+    const normalizedPath = profilePhoto.replace(/\\/g, '/');
+    
+    if (normalizedPath.startsWith('uploads/')) {
+      return `http://localhost:5000/${normalizedPath}`;
+    }
+    
+    return `http://localhost:5000/uploads/profiles/${normalizedPath}`;
+  };
+
   // Get current date
   const getCurrentDate = () => {
     return new Date().toLocaleDateString('en-US', { 
@@ -112,53 +128,11 @@ const TodaysCareReport = () => {
       <div className={styles.content}>
         {/* Header Section */}
         <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1 className={styles.title}>Today's Care Report</h1>
-            <p className={styles.subtitle}>
-              {getCurrentDate()} - Care overview for all registered elders
-            </p>
-            <div className={styles.reportInfo}>
-              <span className={styles.reportBadge}>📋 Daily Report</span>
-              <span className={styles.reportDate}>Generated at {new Date().toLocaleTimeString()}</span>
-            </div>
-          </div>
+          <h1 className={styles.title}>Care Report</h1>
+          <p className={styles.subtitle}>Select an elder to view their detailed care report</p>
         </div>
 
-        {/* Summary Stats */}
-        <div className={styles.summarySection}>
-          <div className={styles.statsGrid}>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>👥</div>
-              <div className={styles.statContent}>
-                <h3 className={styles.statNumber}>{elders.length}</h3>
-                <p className={styles.statLabel}>Total Elders</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>✅</div>
-              <div className={styles.statContent}>
-                <h3 className={styles.statNumber}>{elders.length}</h3>
-                <p className={styles.statLabel}>Active Today</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>🏥</div>
-              <div className={styles.statContent}>
-                <h3 className={styles.statNumber}>{elders.filter(elder => elder.medical_conditions).length}</h3>
-                <p className={styles.statLabel}>With Medical Conditions</p>
-              </div>
-            </div>
-            <div className={styles.statCard}>
-              <div className={styles.statIcon}>📞</div>
-              <div className={styles.statContent}>
-                <h3 className={styles.statNumber}>{elders.length}</h3>
-                <p className={styles.statLabel}>Contactable</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filter Section */}
+        {/* Search Section */}
         <div className={styles.searchSection}>
           <div className={styles.searchContainer}>
             <input
@@ -169,9 +143,6 @@ const TodaysCareReport = () => {
               className={styles.searchInput}
             />
             <div className={styles.searchIcon}>🔍</div>
-          </div>
-          <div className={styles.elderCount}>
-            {dataLoading ? 'Loading...' : `${filteredElders.length} elder${filteredElders.length !== 1 ? 's' : ''} in report`}
           </div>
         </div>
 
@@ -192,7 +163,7 @@ const TodaysCareReport = () => {
         {dataLoading ? (
           <div className={styles.loadingContent}>
             <div className={styles.loadingSpinner}></div>
-            <p>Loading today's care report...</p>
+            <p>Loading elders...</p>
           </div>
         ) : filteredElders.length === 0 ? (
           <div className={styles.emptyState}>
@@ -211,8 +182,8 @@ const TodaysCareReport = () => {
             ) : (
               <>
                 <div className={styles.emptyIcon}>📋</div>
-                <h2>No Care Data Available</h2>
-                <p>You haven't registered any elders yet. Register elders to see their care reports.</p>
+                <h2>No Elders Registered</h2>
+                <p>You haven't registered any elders yet. Register elders to view their care reports.</p>
                 <button 
                   className={styles.registerButton}
                   onClick={() => navigate('/family-member/elder-signup')}
@@ -223,185 +194,83 @@ const TodaysCareReport = () => {
             )}
           </div>
         ) : (
-          <div className={styles.eldersList}>
-            <div className={styles.listHeader}>
-              <h2 className={styles.listTitle}>
-                📋 Assigned Elders Care Overview ({filteredElders.length})
-              </h2>
-            </div>
-            
-            {filteredElders.map((elder, index) => (
-              <div key={elder.elder_id} className={styles.elderReportCard}>
-                {/* Elder Header */}
-                <div className={styles.elderReportHeader}>
-                  <div className={styles.elderNumber}>
-                    #{index + 1}
+          <div className={styles.eldersGrid}>
+            {filteredElders.map((elder) => {
+              const imageUrl = getElderImageUrl(elder.profile_photo);
+              
+              return (
+                <div 
+                  key={elder.elder_id} 
+                  className={styles.elderCard}
+                  onClick={() => navigate(`/family-member/elder/${elder.elder_id}/care-schedule`)}
+                >
+                  <div className={styles.elderImageContainer}>
+                    {elder.profile_photo ? (
+                      <>
+                        <img 
+                          src={imageUrl}
+                          alt={elder.name}
+                          className={styles.elderImage}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const fallback = e.target.parentNode.querySelector('.fallback-initial');
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                        <div 
+                          className={`${styles.elderInitial} fallback-initial`}
+                          style={{ display: 'none' }}
+                        >
+                          {elder.name.charAt(0).toUpperCase()}
+                        </div>
+                      </>
+                    ) : (
+                      <div className={styles.elderInitial}>
+                        {elder.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <div className={styles.elderAvatar}>
-                    <img 
-                      src={getImageSrc(elder.profile_photo, 'elder', elder.gender, elder.elder_id)}
-                      alt={elder.name}
-                      className={styles.elderPhoto}
-                      onError={(e) => handleImageError(e, 'elder', elder.gender, elder.elder_id)}
-                    />
-                  </div>
-                  <div className={styles.elderBasicInfo}>
+                  
+                  <div className={styles.elderInfo}>
                     <h3 className={styles.elderName}>{elder.name}</h3>
-                    <div className={styles.elderMeta}>
-                      <span className={styles.elderAge}>
-                        {elder.gender} • {new Date().getFullYear() - new Date(elder.dob).getFullYear()} years old
-                      </span>
-                      <span className={styles.elderStatus}>
-                        <div className={styles.statusDot}></div>
-                        Active
-                      </span>
-                    </div>
-                  </div>
-                  <div className={styles.elderActions}>
-                    <button 
-                      className={styles.viewButton}
-                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}`)}
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-
-                {/* Elder Care Details */}
-                <div className={styles.elderCareDetails}>
-                  <div className={styles.careGrid}>
-                    {/* Contact Information */}
-                    <div className={styles.careSection}>
-                      <h4 className={styles.careSectionTitle}>
-                        <span className={styles.careSectionIcon}>📞</span>
-                        Contact Information
-                      </h4>
-                      <div className={styles.careDetails}>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Phone:</span>
-                          <span className={styles.careValue}>{elder.contact}</span>
-                        </div>
-                        {elder.email && (
-                          <div className={styles.careItem}>
-                            <span className={styles.careLabel}>Email:</span>
-                            <span className={styles.careValue}>{elder.email}</span>
-                          </div>
-                        )}
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>NIC:</span>
-                          <span className={styles.careValue}>{elder.nic}</span>
-                        </div>
+                    
+                    <div className={styles.elderDetails}>
+                      <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Age:</span>
+                        <span className={styles.detailValue}>
+                          {new Date().getFullYear() - new Date(elder.dob).getFullYear()} years
+                        </span>
                       </div>
-                    </div>
-
-                    {/* Location Information */}
-                    <div className={styles.careSection}>
-                      <h4 className={styles.careSectionTitle}>
-                        <span className={styles.careSectionIcon}>📍</span>
-                        Location & Address
-                      </h4>
-                      <div className={styles.careDetails}>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>District:</span>
-                          <span className={styles.careValue}>
-                            {elder.district || 'Not specified'}
-                          </span>
-                        </div>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Address:</span>
-                          <span className={styles.careValue}>
-                            {elder.address || 'Not provided'}
-                          </span>
-                        </div>
+                      
+                      <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Gender:</span>
+                        <span className={styles.detailValue}>{elder.gender}</span>
                       </div>
+                      
+                      <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>District:</span>
+                      <span className={styles.detailValue}>{elder.district || 'Not specified'}</span>
                     </div>
-
-                    {/* Medical Information */}
-                    <div className={styles.careSection}>
-                      <h4 className={styles.careSectionTitle}>
-                        <span className={styles.careSectionIcon}>🏥</span>
-                        Medical Information
-                      </h4>
-                      <div className={styles.careDetails}>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Date of Birth:</span>
-                          <span className={styles.careValue}>
-                            {new Date(elder.dob).toLocaleDateString()}
-                          </span>
-                        </div>
-                        {elder.medical_conditions ? (
-                          <div className={styles.careItem}>
-                            <span className={styles.careLabel}>Medical Conditions:</span>
-                            <span className={styles.careValue}>
-                              {elder.medical_conditions}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className={styles.careItem}>
-                            <span className={styles.careLabel}>Medical Conditions:</span>
-                            <span className={styles.careValue}>None reported</span>
-                          </div>
-                        )}
+                    
+                    {elder.medical_conditions && (
+                      <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Medical Conditions:</span>
+                        <span className={styles.detailValue}>{elder.medical_conditions}</span>
                       </div>
-                    </div>
-
-                    {/* Care Status */}
-                    <div className={styles.careSection}>
-                      <h4 className={styles.careSectionTitle}>
-                        <span className={styles.careSectionIcon}>💚</span>
-                        Care Status
-                      </h4>
-                      <div className={styles.careDetails}>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Registration Date:</span>
-                          <span className={styles.careValue}>
-                            {elder.created_at ? new Date(elder.created_at).toLocaleDateString() : 'Not available'}
-                          </span>
-                        </div>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Care Level:</span>
-                          <span className={styles.careValue}>
-                            {elder.medical_conditions ? 'Special Care Required' : 'Regular Care'}
-                          </span>
-                        </div>
-                        <div className={styles.careItem}>
-                          <span className={styles.careLabel}>Last Updated:</span>
-                          <span className={styles.careValue}>
-                            {elder.updated_at ? new Date(elder.updated_at).toLocaleDateString() : 'Not available'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
-
-                  {/* Quick Actions */}
-                  <div className={styles.quickActions}>
-                    <button 
-                      className={styles.actionButton}
-                      onClick={() => navigate(`/family-member/elder/${elder.elder_id}/care-schedule`)}
-                    >
-                      <span className={styles.actionIcon}>📊</span>
-                      See Report
-                    </button>
-                  </div>
+                  
+                  <button className={styles.viewReportButton}>
+                    View Care Report
+                  </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
-
-        {/* Report Footer */}
-        <div className={styles.reportFooter}>
-          <div className={styles.footerContent}>
-            <p className={styles.footerText}>
-              Report generated on {getCurrentDate()} at {new Date().toLocaleTimeString()}
-            </p>
-            <p className={styles.footerNote}>
-              This report shows all elders currently assigned to your care. 
-              For more detailed information, click on "View Details" for each elder.
-            </p>
-          </div>
-        </div>
       </div>
       </FamilyMemberLayout>
     </div>

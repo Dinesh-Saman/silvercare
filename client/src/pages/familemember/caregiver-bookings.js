@@ -91,7 +91,9 @@ const CaregiverBookings = () => {
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        if (filters.type === 'upcoming') {
+        if (filters.type === 'pending') {
+          return booking.status === 'pending';
+        } else if (filters.type === 'upcoming') {
           return startDate > currentDate && booking.status === 'confirmed';
         } else if (filters.type === 'ongoing') {
           return startDate <= currentDate && endDate >= currentDate && booking.status === 'confirmed';
@@ -199,7 +201,8 @@ const CaregiverBookings = () => {
   };
 
   const canCancelBooking = (booking) => {
-    if (booking.status !== 'confirmed') return false;
+    // Allow cancellation for both 'pending' and 'confirmed' bookings
+    if (booking.status !== 'confirmed' && booking.status !== 'pending') return false;
     
     const createdAt = new Date(booking.created_at);
     const currentDate = new Date();
@@ -209,6 +212,9 @@ const CaregiverBookings = () => {
   };
 
   const getBookingStatus = (booking) => {
+    if (booking.status === 'cancelled') return 'Cancelled';
+    if (booking.status === 'pending') return 'Pending';
+    
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
     const startDate = new Date(booking.start_date);
@@ -216,7 +222,6 @@ const CaregiverBookings = () => {
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(0, 0, 0, 0);
 
-    if (booking.status === 'cancelled') return 'Cancelled';
     if (startDate > currentDate) return 'Upcoming';
     if (startDate <= currentDate && endDate >= currentDate) return 'Ongoing';
     if (endDate < currentDate) return 'Completed';
@@ -280,6 +285,12 @@ const CaregiverBookings = () => {
                 All Bookings
               </button>
               <button 
+                className={`${styles.filterTab} ${filters.type === 'pending' ? styles.active : ''}`}
+                onClick={() => setFilters(prev => ({ ...prev, type: 'pending' }))}
+              >
+                ⏳ Pending
+              </button>
+              <button 
                 className={`${styles.filterTab} ${filters.type === 'upcoming' ? styles.active : ''}`}
                 onClick={() => setFilters(prev => ({ ...prev, type: 'upcoming' }))}
               >
@@ -321,6 +332,14 @@ const CaregiverBookings = () => {
             <span className={styles.infoIcon}>ℹ️</span>
             <span>
               Caregiver bookings can be cancelled within 2 hours of booking with full refund
+            </span>
+          </div>
+
+          {/* Auto-refund Info Message */}
+          <div className={styles.infoMessage} style={{marginTop: '10px'}}>
+            <span className={styles.infoIcon}>⏰</span>
+            <span>
+              If the caregiver does not accept your booking request within 10 hours, you will get a refund automatically
             </span>
           </div>
 
@@ -429,7 +448,7 @@ const CaregiverBookings = () => {
                       </div>
 
                       {/* Cancellation Alert */}
-                      {booking.status === 'confirmed' && bookingStatus === 'Upcoming' && (
+                      {(booking.status === 'confirmed' || booking.status === 'pending') && (bookingStatus === 'Upcoming' || bookingStatus === 'Pending') && (
                         <div className={styles.cancellationAlert}>
                           {canCancel ? (
                             <div className={styles.canCancelAlert}>
