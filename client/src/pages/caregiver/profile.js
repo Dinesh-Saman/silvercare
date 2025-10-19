@@ -41,8 +41,9 @@ const Profile = () => {
   useEffect(() => {
     console.log('=== PROFILE DATA CHANGED ===');
     console.log('Current profileData:', profileData);
+    console.log('Current profileData.availability:', profileData?.availability);
     console.log('Current profileData.day_rate:', profileData?.day_rate);
-    console.log('Type:', typeof profileData?.day_rate);
+    console.log('Day rate type:', typeof profileData?.day_rate);
   }, [profileData]);
 
   const fetchProfileData = async () => {
@@ -142,14 +143,16 @@ const Profile = () => {
       console.log('Type of day_rate:', typeof response.caregiver?.day_rate);
       
       if (response.success) {
-        console.log('Setting profileData to:', response.caregiver);
-        console.log('Day rate in response.caregiver:', response.caregiver.day_rate);
+        console.log('=== UPDATING STATE WITH RESPONSE ===');
+        console.log('Response caregiver object:', response.caregiver);
+        console.log('Availability from response:', response.caregiver.availability);
+        console.log('Day rate from response:', response.caregiver.day_rate);
+        
+        // Update profileData with response
         setProfileData(response.caregiver);
         
-        // Log after state update (will show in next render)
-        console.log('After setProfileData, checking profileData.day_rate...');
-        
-        setEditForm({
+        // Update editForm with response data
+        const newEditForm = {
           name: response.caregiver.caregiver_name || '',
           email: response.caregiver.caregiver_email || '',
           phone: response.caregiver.caregiver_phone || '',
@@ -158,10 +161,20 @@ const Profile = () => {
           fixed_line: response.caregiver.fixed_line || '',
           district: response.caregiver.district || '',
           day_rate: response.caregiver.day_rate || ''
-        });
+        };
+        
+        console.log('New editForm values:', newEditForm);
+        console.log('New editForm.availability:', newEditForm.availability);
+        console.log('New editForm.day_rate:', newEditForm.day_rate);
+        
+        setEditForm(newEditForm);
         setIsEditing(false);
         setSuccess('Profile updated successfully!');
         setTimeout(() => setSuccess(null), 3000);
+        
+        // Re-fetch profile data to ensure sync with database
+        console.log('Re-fetching profile data to confirm update...');
+        await fetchProfileData();
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -299,7 +312,6 @@ const Profile = () => {
           </button>
           <div className={styles.header}>
             <h1>My Profile</h1>
-            <p>Manage your professional information and settings</p>
           </div>
 
           {/* Success/Error Messages */}
@@ -463,7 +475,6 @@ const Profile = () => {
                         className={styles.select}
                       >
                         <option value="available">Available</option>
-                        <option value="busy">Busy</option>
                         <option value="unavailable">Unavailable</option>
                       </select>
                     ) : (
