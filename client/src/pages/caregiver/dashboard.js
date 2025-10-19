@@ -668,8 +668,8 @@ const CaregiverDashboard = () => {
                         // Overdue - red color
                         colorClass = styles.timeLeftRed;
                       } else if (startDateOnly.getTime() === today.getTime()) {
-                        // Started today - normal color
-                        colorClass = '';
+                        // Started today - red color
+                        colorClass = styles.timeLeftRed;
                       } else {
                         // Future date - green or red based on days
                         const diffMs = start - now;
@@ -719,11 +719,11 @@ const CaregiverDashboard = () => {
                   setCurrentWeek(currentWeek - 1);
                 }}
                 disabled={isPrevWeekDisabled}
-                style={{fontSize: '18px', padding: '6px 8px'}}
+                style={{padding: '6px 8px'}}
               >
                 ← Prev Week
               </button>
-              <span className={styles.weekNavLabel} style={{margin: '0 4px', fontSize: '18px', whiteSpace: 'nowrap', textAlign: 'center'}}>
+              <span className={styles.weekNavLabel} style={{margin: '0 4px', whiteSpace: 'nowrap', textAlign: 'center'}}>
                 {weekRangeLabel}
               </span>
               <button
@@ -732,7 +732,7 @@ const CaregiverDashboard = () => {
                   setCurrentWeek(currentWeek + 1);
                 }}
                 disabled={isNextWeekDisabled}
-                style={{fontSize: '18px', padding: '6px 8px'}}
+                style={{padding: '6px 8px'}}
               >
                 Next Week→
               </button>
@@ -777,8 +777,8 @@ const CaregiverDashboard = () => {
                     // Overdue - red color
                     colorClass = styles.timeLeftRed;
                   } else if (startDateOnly.getTime() === today.getTime()) {
-                    // Started today - normal color
-                    colorClass = '';
+                    // Started today - red color
+                    colorClass = styles.timeLeftRed;
                   } else {
                     // Future date - green or red based on days
                     const diffMs = start - now;
@@ -792,7 +792,6 @@ const CaregiverDashboard = () => {
                         <span className={styles.shiftDate}>
                           {start.toLocaleDateString()} - {shift.end_date ? new Date(shift.end_date).toLocaleDateString() : 'TBD'}
                         </span>
-                        <span className={styles.shiftTime}>{shift.duration}</span>
                       </div>
                       <div className={styles.shiftDetails}>
                         <span className={styles.label}>Location:</span>
@@ -847,11 +846,11 @@ const CaregiverDashboard = () => {
             <button
               className={styles.weekNavBtn}
               onClick={() => setCurrentReportWeek(prev => prev - 1)}
-              style={{fontSize: '18px', padding: '6px 8px'}}
+              style={{padding: '6px 8px'}}
             >
               ← Prev Week
             </button>
-            <span className={styles.weekNavLabel} style={{margin: '0 4px', fontSize: '18px', whiteSpace: 'nowrap', textAlign: 'center'}}>
+            <span className={styles.weekNavLabel} style={{margin: '0 4px', whiteSpace: 'nowrap', textAlign: 'center'}}>
               {(() => {
                 const { start: reportStart, end: reportEnd } = getWeekRange(currentReportWeek);
                 const formatDateWithMonth = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -869,7 +868,7 @@ const CaregiverDashboard = () => {
             <button
               className={styles.weekNavBtn}
               onClick={() => setCurrentReportWeek(prev => prev + 1)}
-              style={{fontSize: '18px', padding: '6px 8px'}}
+              style={{padding: '6px 8px'}}
             >
               Next Week→
             </button>

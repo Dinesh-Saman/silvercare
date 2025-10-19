@@ -706,7 +706,7 @@ const getWeeklyReports = async (req, res) => {
     // Update caregiver availability before fetching reports
     await StatusUpdateService.updateCaregiverAvailability(caregiverId);
     
-    // First, get all care assignments for the caregiver in the date range (confirmed status only)
+    // First, get all care assignments for the caregiver in the date range (confirmed and completed status)
     const assignmentQuery = `
       SELECT DISTINCT
         cr.elder_id,
@@ -717,14 +717,14 @@ const getWeeklyReports = async (req, res) => {
       FROM carerequest cr
       JOIN elder e ON cr.elder_id = e.elder_id
       WHERE cr.caregiver_id = $1
-        AND cr.status = 'confirmed'
+        AND cr.status IN ('confirmed', 'completed')
         AND cr.start_date <= $3::date 
         AND cr.end_date >= $2::date
       ORDER BY e.name;
     `;
     
     const assignmentResult = await pool.query(assignmentQuery, [caregiverId, startDate, endDate]);
-    console.log('Found confirmed assignments:', assignmentResult.rows);
+    console.log('Found confirmed and completed assignments:', assignmentResult.rows);
     
     // Get existing reports for the date range
     const reportsQuery = `
@@ -792,7 +792,7 @@ const getWeeklyReports = async (req, res) => {
       }
       
       if (dayAssignment) {
-        // There's a confirmed assignment for this day
+        // There's a confirmed or completed assignment for this day
         const elderId = dayAssignment.elder_id;
         const reportData = reportsByDate[dateKey] && reportsByDate[dateKey][elderId];
         
@@ -800,11 +800,12 @@ const getWeeklyReports = async (req, res) => {
           date: dateKey,
           elder_id: elderId,
           elder_name: dayAssignment.elder_name,
+          status: dayAssignment.status,
           hasReport: reportData ? reportData.hasReport : false,
           existingReport: reportData ? reportData.existingReport : null
         });
       } else {
-        // No confirmed assignment for this day
+        // No confirmed or completed assignment for this day
         weeklyReports.push({
           date: dateKey,
           elder_id: null,
@@ -889,4 +890,3 @@ module.exports = {
   getWeeklyReports,
   submitDailyReport
 };
-
