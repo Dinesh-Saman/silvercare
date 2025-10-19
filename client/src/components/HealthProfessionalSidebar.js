@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './css/doctor_sidebar.module.css';
 
 const HealthProfessionalSidebar = ({ onToggleCollapse }) => {
-  const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
+  const [activeMenuItem, setActiveMenuItem] = useState('dashboard'); // Default to 'dashboard'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // To track current path
 
   const handleToggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -13,18 +14,24 @@ const HealthProfessionalSidebar = ({ onToggleCollapse }) => {
   };
 
   const handleMenuItemClick = (item) => {
-    setActiveMenuItem(item.key);
-    navigate(item.path);
+    setActiveMenuItem(item.key); // Update active item when clicked
+    navigate(item.path); // Navigate to the corresponding path
   };
 
   const sidebarItems = [
     { key: 'dashboard', label: 'Dashboard', icon: '🏠', path: '/healthprofessional/dashboard' },
-    { key: 'profile', label: 'Profile', icon: '🧑‍⚕️', path: '/healthprofessional/profile' },
+    { key: 'profile', label: 'Profile', icon: '🧑', path: '/healthprofessional/profile' },
     { key: 'elders', label: 'Patients', icon: '👴', path: '/healthprofessional/elders' },
-    { key: 'sessions', label: 'Sessions', icon: '🗓️', path: '/healthprofessional/sessions' },
-    { key: 'consultations', label: 'Consultations', icon: '💬', path: '/healthprofessional/consultations' },
+    { key: 'sessions', label: 'Appointments', icon: '🗓️', path: '/healthprofessional/sessions' },
     { key: 'messages', label: 'Messages', icon: '✉️', path: '/healthprofessional/messages' },
   ];
+
+  // Sync activeMenuItem with current URL
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const activeItem = sidebarItems.find(item => item.path === currentPath);
+    if (activeItem) setActiveMenuItem(activeItem.key);
+  }, [location.pathname, sidebarItems]);
 
   return (
     <div className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''}`}>
@@ -69,4 +76,4 @@ const HealthProfessionalSidebar = ({ onToggleCollapse }) => {
   );
 };
 
-export default HealthProfessionalSidebar; 
+export default HealthProfessionalSidebar;
